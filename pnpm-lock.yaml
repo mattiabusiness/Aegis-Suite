@@ -132,6 +132,9 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.19.3
+      tailwindcss:
+        specifier: ^3.4.19
+        version: 3.4.19
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
