@@ -1,0 +1,14 @@
+{
+  "name": "@aegis/config",
+  "version": "1.0.0",
+  "private": true,
+  "files": [
+    "eslint",
+    "typescript",
+    "tailwind"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2"
+  }
+}
