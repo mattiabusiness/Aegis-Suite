@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Aegis Beauty - Gestione Salone",
-  description: "Piattaforma di gestione per parrucchieri e centri estetici",
+  title: 'Aegis Beauty',
+  description: 'Gestisci il tuo salone con Aegis Beauty',
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it">
-      <body className="antialiased">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

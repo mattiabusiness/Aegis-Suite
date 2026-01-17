@@ -8,10 +8,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.48.1",
-    "@aegis/types": "workspace:*"
+    "@aegis/types": "workspace:*",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.48.1"
   },
   "devDependencies": {
+    "@types/node": "^22.19.3",
     "typescript": "^5.7.2"
   }
 }
