@@ -38,6 +38,12 @@ export interface RegisterFormProps {
   error?: string;
   success?: string;
   showPhone?: boolean;
+  // Initial values for pre-filling (e.g., from invite)
+  initialName?: string;
+  initialEmail?: string;
+  initialPhone?: string;
+  // Lock email field (for invited users)
+  emailReadOnly?: boolean;
 }
 
 // ============================================================================
@@ -60,15 +66,32 @@ export function RegisterForm({
   error,
   success,
   showPhone = true,
+  initialName = '',
+  initialEmail = '',
+  initialPhone = '',
+  emailReadOnly = false,
 }: RegisterFormProps) {
-  const [fullName, setFullName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [phone, setPhone] = React.useState('');
+  const [fullName, setFullName] = React.useState(initialName);
+  const [email, setEmail] = React.useState(initialEmail);
+  const [phone, setPhone] = React.useState(initialPhone);
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [acceptedTerms, setAcceptedTerms] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [formError, setFormError] = React.useState('');
+
+  // Update state when initial values change
+  React.useEffect(() => {
+    if (initialName) setFullName(initialName);
+  }, [initialName]);
+  
+  React.useEffect(() => {
+    if (initialEmail) setEmail(initialEmail);
+  }, [initialEmail]);
+  
+  React.useEffect(() => {
+    if (initialPhone) setPhone(initialPhone);
+  }, [initialPhone]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,9 +194,11 @@ export function RegisterForm({
             label="Email"
             placeholder="nome@esempio.it"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => !emailReadOnly && setEmail(e.target.value)}
             autoComplete="email"
             required
+            disabled={emailReadOnly}
+            className={emailReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}
           />
 
           {showPhone && (

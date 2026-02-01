@@ -1,66 +1,70 @@
 // ============================================================================
-// AEGIS BEAUTY - AUTH CALLBACK ROUTE
+// AEGIS BEAUTY - AUTH CALLBACK
 // File: apps/aegis-beauty/app/auth/callback/route.ts
+// Handles: Email confirmation, Magic links, Invites
 // ============================================================================
 
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createServerSupabaseClient } from '@aegis/core';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const token_hash = requestUrl.searchParams.get('token_hash');
+  const code = requestUrl.searchParams.get('code');
   const type = requestUrl.searchParams.get('type');
-
-  console.log('=== CALLBACK START ===');
-
-  if (token_hash && type) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
-    const { data, error } = await supabase.auth.verifyOtp({
-      token_hash,
-      type: type as any,
-    });
-
-    console.log('verifyOtp error:', error);
-
-    if (!error && data.user) {
-      const user = data.user;
-      console.log('User ID:', user.id);
-
-      // Usa RPC per inserire il profilo (bypassa RLS)
+  const next = requestUrl.searchParams.get('next') || '/dashboard';
+  
+  if (code) {
+    const cookieStore = await cookies();
+    const supabase = createServerSupabaseClient(cookieStore) as any;
+    
+    // Exchange code for session
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (error) {
+      console.error('Auth callback error:', error);
+      return NextResponse.redirect(new URL('/login?error=auth_failed', request.url));
+    }
+    
+    const user = data?.user;
+    const metadata = user?.user_metadata || {};
+    
+    // Check if this is an invite
+    if (type === 'invite' || metadata.invited_by_business) {
+      // Build query params for register page
+      const params = new URLSearchParams();
+      params.set('invite', 'true');
+      
+      if (metadata.full_name) params.set('name', metadata.full_name);
+      if (user?.email) params.set('email', user.email);
+      if (metadata.phone) params.set('phone', metadata.phone);
+      if (metadata.business_name) params.set('business', metadata.business_name);
+      
+      // Redirect to register page with pre-filled data
+      return NextResponse.redirect(new URL(`/register?${params.toString()}`, request.url));
+    }
+    
+    // Check if user has a profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+    
+    if (!profile) {
+      // Create profile for new user
       const { error: profileError } = await supabase.rpc('create_profile', {
         user_id: user.id,
-        user_email: user.email || '',
-        user_full_name: user.user_metadata?.full_name || '',
-        user_phone: user.user_metadata?.phone || null,
+        user_email: user.email,
+        user_full_name: metadata.full_name || '',
+        user_phone: metadata.phone || null,
       });
-
-      console.log('Profile RPC error:', profileError);
-
-      // Controlla se è un business owner
-      const { data: businessMember } = await supabase
-        .from('business_members')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
-
-      if (businessMember && ['owner', 'admin', 'staff'].includes((businessMember as any).role)) {
-        return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
-      } else {
-        return NextResponse.redirect(new URL('/bookings', requestUrl.origin));
+      
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
       }
     }
   }
-
-  return NextResponse.redirect(new URL('/login', requestUrl.origin));
+  
+  return NextResponse.redirect(new URL(next, request.url));
 }
