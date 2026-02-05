@@ -154,6 +154,9 @@ export async function POST(request: NextRequest) {
               .eq('id', businessId)
               .single();
             
+            // ================================================================
+            // MODIFICATO: Aggiunto customer_id e business_slug ai metadata
+            // ================================================================
             const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
               customerEmail.toLowerCase(),
               {
@@ -162,6 +165,8 @@ export async function POST(request: NextRequest) {
                   phone: customerPhone,
                   invited_by_business: businessId,
                   business_name: business?.name || 'Salone',
+                  business_slug: business?.slug || '',      // AGGIUNTO
+                  customer_id: finalCustomerId,              // AGGIUNTO
                 },
                 redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?type=invite`,
               }

@@ -22,6 +22,7 @@ import {
   type Service,
   type Staff,
   type AppointmentFormData,
+  type StaffServicesMap,
 } from '@aegis/ui';
 import { Plus, X } from 'lucide-react';
 
@@ -51,6 +52,11 @@ interface ServiceData {
   categoryName?: string;
 }
 
+interface StaffServiceData {
+  staff_id: string;
+  service_id: string;
+}
+
 interface CalendarioContentProps {
   initialEvents: CalendarEventData[];
   staffList: StaffMember[];
@@ -59,6 +65,7 @@ interface CalendarioContentProps {
   closures: ClosureData[];
   customers: CustomerData[];
   services: ServiceData[];
+  staffServices: StaffServiceData[];
 }
 
 // ============================================================================
@@ -73,6 +80,7 @@ export function CalendarioContent({
   closures,
   customers,
   services,
+  staffServices,
 }: CalendarioContentProps) {
   const router = useRouter();
   
@@ -88,6 +96,38 @@ export function CalendarioContent({
   const [modalInitialDate, setModalInitialDate] = useState<Date | undefined>();
   const [modalInitialTime, setModalInitialTime] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Build staffServices map for AppointmentModal
+  const staffServicesMap: StaffServicesMap = {};
+  staffServices.forEach(ss => {
+    if (!staffServicesMap[ss.staff_id]) {
+      staffServicesMap[ss.staff_id] = [];
+    }
+    staffServicesMap[ss.staff_id].push(ss.service_id);
+  });
+
+  // Transform data for AppointmentModal
+  const modalCustomers: Customer[] = customers.map(c => ({
+    id: c.id,
+    name: c.name,
+    phone: c.phone,
+    email: c.email,
+  }));
+
+  const modalServices: Service[] = services.map(s => ({
+    id: s.id,
+    name: s.name,
+    duration: s.duration,
+    price: s.price,
+    categoryId: s.categoryId,
+    categoryName: s.categoryName,
+  }));
+
+  const modalStaff: Staff[] = staffList.map(s => ({
+    id: s.id,
+    name: s.full_name,
+    color: s.color || undefined,
+  }));
 
   // Filtra eventi per staff selezionato
   const filteredEvents = selectedStaff
@@ -112,14 +152,12 @@ export function CalendarioContent({
   };
 
   const handleSlotClick = (date: Date, hour: number, minutes: number) => {
-    // Apri modal con data/ora precompilata
     setModalInitialDate(date);
     setModalInitialTime(`${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
     setIsModalOpen(true);
   };
 
   const handleNewClick = () => {
-    // Apri modal senza data/ora precompilata
     setModalInitialDate(undefined);
     setModalInitialTime(undefined);
     setIsModalOpen(true);
@@ -132,7 +170,6 @@ export function CalendarioContent({
   const handleModalSubmit = async (data: AppointmentFormData) => {
     setIsSubmitting(true);
     try {
-      // Chiama API per creare appuntamento
       const response = await fetch('/api/appointments/create', {
         method: 'POST',
         headers: {
@@ -179,7 +216,6 @@ export function CalendarioContent({
       setEvents(prev => [...prev, newEvent]);
       setIsModalOpen(false);
       
-      // Mostra messaggio se invito inviato
       if (result.inviteSent) {
         console.log('✅ Invito inviato a:', data.customerEmail);
       }
@@ -192,166 +228,162 @@ export function CalendarioContent({
     }
   };
 
-  // Transform data for modal
-  const modalCustomers: Customer[] = customers.map(c => ({
-    id: c.id,
-    name: c.name,
-    phone: c.phone,
-    email: c.email,
-  }));
-
-  const modalServices: Service[] = services.map(s => ({
-    id: s.id,
-    name: s.name,
-    duration: s.duration,
-    price: s.price,
-    categoryId: s.categoryId,
-    categoryName: s.categoryName,
-  }));
-
-  const modalStaff: Staff[] = staffList.map(s => ({
-    id: s.id,
-    name: s.full_name,
-    color: s.color || undefined,
-  }));
-
   return (
     <>
-      <div className="h-[calc(100vh-7rem)]">
+      <div className="min-h-[calc(100vh-7rem)]">
         {/* Header */}
         <PageHeader
           title="Calendario"
           description="Gestisci gli appuntamenti del tuo salone"
+          actions={[
+            {
+              label: 'Nuovo appuntamento',
+              onClick: handleNewClick,
+              icon: <Plus className="w-4 h-4" />,
+            },
+          ]}
         />
 
-      {/* Main content */}
-      <div className="flex gap-6 h-[calc(100%-5rem)]">
-        {/* Calendar */}
-        <div className="flex-1">
-          <Calendar
-            events={filteredEvents}
-            view={view}
-            selectedDate={selectedDate}
-            businessHours={businessHours}
-            closures={closures}
-            onViewChange={setView}
-            onDateChange={setSelectedDate}
-            onEventClick={handleEventClick}
-            onSlotClick={handleSlotClick}
-          />
-        </div>
+        {/* Layout calendario + sidebar */}
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Calendario principale */}
+          <div className="lg:col-span-3">
+            <Calendar
+              view={view}
+              onViewChange={setView}
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              events={filteredEvents}
+              onEventClick={handleEventClick}
+              onSlotClick={handleSlotClick}
+              staffMembers={staffList.map(s => ({
+                id: s.id,
+                name: s.full_name,
+                color: s.color || '#9333ea',
+              }))}
+              selectedStaffId={selectedStaff}
+              onStaffFilter={handleStaffFilter}
+              businessHours={businessHours}
+              closures={closures}
+            />
+          </div>
 
-        {/* Sidebar - Today's appointments */}
-        <div className="w-72 flex-shrink-0 hidden xl:flex flex-col gap-4">
-          {/* Bottone Nuovo Appuntamento */}
-          <button
-            onClick={handleNewClick}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors shadow-sm"
-          >
-            <Plus className="w-5 h-5" />
-            Nuovo appuntamento
-          </button>
-
-          {/* Card appuntamenti di oggi */}
-          <Card className="flex-1 overflow-hidden">
-            <div className="p-3 border-b border-gray-200">
-              <h3 className="font-semibold text-gray-900 text-sm">Appuntamenti di oggi</h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {todayEvents.length} appuntament{todayEvents.length === 1 ? 'o' : 'i'}
-              </p>
-            </div>
-            
-            <div className="p-2 overflow-auto flex-1">
-              {todayEvents.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <p className="text-sm">Nessun appuntamento oggi</p>
+          {/* Sidebar */}
+          <div className="space-y-4">
+            {/* Appuntamenti di oggi */}
+            <Card padding="md">
+              <h3 className="font-semibold text-gray-900 mb-3">
+                Oggi ({todayEvents.length})
+              </h3>
+              {todayEvents.length > 0 ? (
+                <div className="space-y-2">
+                  {todayEvents
+                    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+                    .map(event => (
+                      <CalendarEventListItem
+                        key={event.id}
+                        event={event}
+                        onClick={() => handleEventClick(event)}
+                      />
+                    ))}
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {todayEvents.map((event) => (
-                    <CalendarEventListItem
-                      key={event.id}
-                      event={event}
-                      onClick={handleEventClick}
-                    />
-                  ))}
-                </div>
+                <p className="text-sm text-gray-500 text-center py-4">
+                  Nessun appuntamento oggi
+                </p>
               )}
-            </div>
-          </Card>
+            </Card>
+
+            {/* Quick stats */}
+            <Card padding="md">
+              <h3 className="font-semibold text-gray-900 mb-3">Statistiche</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Questa settimana</span>
+                  <span className="font-medium">{events.length} app.</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Confermati</span>
+                  <span className="font-medium text-green-600">
+                    {events.filter(e => e.status === 'confirmed').length}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">In attesa</span>
+                  <span className="font-medium text-amber-600">
+                    {events.filter(e => e.status === 'pending').length}
+                  </span>
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
 
       {/* Event detail modal */}
       {selectedEvent && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={() => setSelectedEvent(null)}
-        >
+        <div className="fixed inset-0 z-50 overflow-y-auto">
           <div 
-            className="bg-white rounded-xl shadow-lg w-full max-w-md mx-4"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {selectedEvent.title}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {selectedEvent.startTime.toLocaleDateString('it-IT', {
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setSelectedEvent(null)}
+          />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="absolute right-4 top-4 p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {selectedEvent.title}
+              </h3>
+
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Cliente</span>
+                  <span className="font-medium">{selectedEvent.customerName || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Operatore</span>
+                  <span className="font-medium">{selectedEvent.staffName || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Data</span>
+                  <span className="font-medium">
+                    {new Date(selectedEvent.startTime).toLocaleDateString('it-IT', {
                       weekday: 'long',
                       day: 'numeric',
                       month: 'long',
                     })}
-                  </p>
+                  </span>
                 </div>
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">Orario</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {selectedEvent.startTime.toLocaleTimeString('it-IT', {
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Orario</span>
+                  <span className="font-medium">
+                    {new Date(selectedEvent.startTime).toLocaleTimeString('it-IT', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
                     {' - '}
-                    {selectedEvent.endTime.toLocaleTimeString('it-IT', {
+                    {new Date(selectedEvent.endTime).toLocaleTimeString('it-IT', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
                   </span>
                 </div>
-
-                {selectedEvent.customerName && (
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-500">Cliente</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {selectedEvent.customerName}
-                    </span>
+                {selectedEvent.notes && (
+                  <div>
+                    <span className="text-gray-500 block mb-1">Note</span>
+                    <p className="text-gray-700 bg-gray-50 p-2 rounded-lg">
+                      {selectedEvent.notes}
+                    </p>
                   </div>
                 )}
-
-                {selectedEvent.staffName && (
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-sm text-gray-500">Staff</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {selectedEvent.staffName}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-gray-500">Stato</span>
-                  <span className={`
-                    px-2 py-1 rounded-full text-xs font-medium
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-gray-500">Stato</span>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full
                     ${selectedEvent.status === 'confirmed' ? 'bg-green-100 text-green-700' : ''}
                     ${selectedEvent.status === 'pending' ? 'bg-amber-100 text-amber-700' : ''}
                     ${selectedEvent.status === 'completed' ? 'bg-gray-100 text-gray-600' : ''}
@@ -376,7 +408,6 @@ export function CalendarioContent({
                 </button>
                 <button
                   onClick={() => {
-                    // TODO: Aprire modal modifica
                     console.log('Edit event:', selectedEvent.id);
                   }}
                   className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
@@ -388,7 +419,6 @@ export function CalendarioContent({
           </div>
         </div>
       )}
-      </div>
 
       {/* Modal Nuovo Appuntamento */}
       <AppointmentModal
@@ -398,6 +428,7 @@ export function CalendarioContent({
         customers={modalCustomers}
         services={modalServices}
         staff={modalStaff}
+        staffServices={staffServicesMap}
         businessHours={businessHours}
         closures={closures}
         initialDate={modalInitialDate}

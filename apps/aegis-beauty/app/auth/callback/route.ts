@@ -14,6 +14,23 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type');
   const next = requestUrl.searchParams.get('next') || '/dashboard';
   
+  // ================================================================
+  // CASO 1: Implicit flow (hash fragment con access_token)
+  // Supabase invites usano questo flow - il token è nel # fragment
+  // Ma il server non può leggere il hash, quindi serve una pagina client
+  // Redirect a una pagina client che gestisce il hash
+  // ================================================================
+  
+  // Se non c'è code ma c'è type=invite, probabilmente è implicit flow
+  // Il browser deve gestire il hash fragment lato client
+  if (!code && type === 'invite') {
+    // Redirect alla pagina register che gestirà il token lato client
+    return NextResponse.redirect(new URL('/register?from_invite=true', request.url));
+  }
+  
+  // ================================================================
+  // CASO 2: PKCE flow (code nei query params)
+  // ================================================================
   if (code) {
     const cookieStore = await cookies();
     const supabase = createServerSupabaseClient(cookieStore) as any;
@@ -39,6 +56,9 @@ export async function GET(request: NextRequest) {
       if (user?.email) params.set('email', user.email);
       if (metadata.phone) params.set('phone', metadata.phone);
       if (metadata.business_name) params.set('business', metadata.business_name);
+      if (metadata.business_slug) params.set('business_slug', metadata.business_slug);
+      if (metadata.customer_id) params.set('customer_id', metadata.customer_id);
+      if (user?.id) params.set('user_id', user.id);
       
       // Redirect to register page with pre-filled data
       return NextResponse.redirect(new URL(`/register?${params.toString()}`, request.url));

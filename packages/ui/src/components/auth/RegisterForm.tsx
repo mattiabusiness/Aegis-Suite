@@ -42,8 +42,12 @@ export interface RegisterFormProps {
   initialName?: string;
   initialEmail?: string;
   initialPhone?: string;
-  // Lock email field (for invited users)
+  // Lock email field (for invited users) - DEPRECATED: use inviteMode instead
   emailReadOnly?: boolean;
+  // ================================================================
+  // NUOVO: Invite mode - blocca tutti i campi precompilati e nasconde link login
+  // ================================================================
+  inviteMode?: boolean;
 }
 
 // ============================================================================
@@ -70,6 +74,7 @@ export function RegisterForm({
   initialEmail = '',
   initialPhone = '',
   emailReadOnly = false,
+  inviteMode = false,
 }: RegisterFormProps) {
   const [fullName, setFullName] = React.useState(initialName);
   const [email, setEmail] = React.useState(initialEmail);
@@ -79,6 +84,11 @@ export function RegisterForm({
   const [acceptedTerms, setAcceptedTerms] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [formError, setFormError] = React.useState('');
+
+  // In invite mode, all pre-filled fields are read-only
+  const isNameReadOnly = inviteMode && !!initialName;
+  const isEmailReadOnly = inviteMode || emailReadOnly;
+  const isPhoneReadOnly = inviteMode && !!initialPhone;
 
   // Update state when initial values change
   React.useEffect(() => {
@@ -157,6 +167,9 @@ export function RegisterForm({
 
   const displayError = error || formError;
 
+  // Stile per campi read-only
+  const readOnlyClassName = 'bg-gray-100 cursor-not-allowed';
+
   return (
     <Card className="w-full max-w-md mx-auto" padding="lg">
       <CardHeader className="text-center">
@@ -184,9 +197,11 @@ export function RegisterForm({
             label="Nome completo"
             placeholder="Mario Rossi"
             value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            onChange={(e) => !isNameReadOnly && setFullName(e.target.value)}
             autoComplete="name"
             required
+            disabled={isNameReadOnly}
+            className={isNameReadOnly ? readOnlyClassName : ''}
           />
 
           <Input
@@ -194,11 +209,11 @@ export function RegisterForm({
             label="Email"
             placeholder="nome@esempio.it"
             value={email}
-            onChange={(e) => !emailReadOnly && setEmail(e.target.value)}
+            onChange={(e) => !isEmailReadOnly && setEmail(e.target.value)}
             autoComplete="email"
             required
-            disabled={emailReadOnly}
-            className={emailReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}
+            disabled={isEmailReadOnly}
+            className={isEmailReadOnly ? readOnlyClassName : ''}
           />
 
           {showPhone && (
@@ -207,10 +222,12 @@ export function RegisterForm({
               label="Telefono"
               placeholder="+39 333 1234567"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => !isPhoneReadOnly && setPhone(e.target.value)}
               autoComplete="tel"
               hint="Per ricevere promemoria appuntamenti"
               required
+              disabled={isPhoneReadOnly}
+              className={isPhoneReadOnly ? readOnlyClassName : ''}
             />
           )}
 
@@ -270,7 +287,8 @@ export function RegisterForm({
         </form>
       </CardContent>
 
-      {onLogin && (
+      {/* Nasconde il link "Accedi" quando in inviteMode */}
+      {onLogin && !inviteMode && (
         <CardFooter className="text-center">
           <p className="text-gray-600">
             {loginText}{' '}

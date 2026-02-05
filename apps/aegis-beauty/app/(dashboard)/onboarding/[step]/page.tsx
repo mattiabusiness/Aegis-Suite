@@ -78,12 +78,12 @@ export default async function OnboardingStepPage({ params }: PageProps) {
   //   redirect('/dashboard');
   // }
 
-  // Ottieni profilo utente per lo Step 7
+  // Ottieni profilo utente per lo Step 7 (nome, email, telefono)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name')
+    .select('full_name, phone')
     .eq('id', user.id)
-    .single() as { data: { full_name: string } | null };
+    .single() as { data: { full_name: string; phone: string | null } | null };
 
   // Conta i giorni di apertura per lo Step 8
   const { data: businessHours } = await supabase
@@ -169,6 +169,8 @@ export default async function OnboardingStepPage({ params }: PageProps) {
             businessType={business.business_type}
             userFullName={profile?.full_name || ''}
             userId={user.id}
+            userEmail={user.email || ''}
+            userPhone={profile?.phone || null}
           />
         )}
 

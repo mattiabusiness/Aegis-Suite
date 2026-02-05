@@ -41,6 +41,12 @@ export {
 export { Calendar } from './components/dashboard/Calendar';
 export { CalendarEvent, CalendarEventListItem } from './components/dashboard/CalendarEvent';
 export { AppointmentModal } from './components/dashboard/AppointmentModal';
+export { ServiceList } from './components/dashboard/Servicelist';
+export { ServiceModal } from './components/dashboard/ServiceModal';
+export { CategoryModal } from './components/dashboard/CategoryModal';
+export { StaffList } from './components/dashboard/StaffList';
+export { StaffModal, StaffServicesModal, StaffHoursModal } from './components/dashboard/StaffModal';
+export { QRCodeDisplay, QRCodeModal } from './components/QRCodeDisplay';
 
 // ============================================================================
 // THEMES
@@ -132,7 +138,45 @@ export type {
   Customer,
   Service,
   Staff,
+  StaffServicesMap,
 } from './components/dashboard/AppointmentModal';
+
+export type {
+  ServiceListProps,
+  ServiceItem,
+  ServiceCategory,
+} from './components/dashboard/Servicelist';
+
+export type {
+  ServiceModalProps,
+  ServiceFormData,
+  ServiceModalCategory,
+} from './components/dashboard/ServiceModal';
+
+export type {
+  CategoryModalProps,
+  CategoryFormData,
+} from './components/dashboard/CategoryModal';
+
+export type {
+  StaffListProps,
+  StaffMember,
+} from './components/dashboard/StaffList';
+
+export type {
+  StaffModalProps,
+  StaffFormData,
+  StaffRole,
+  StaffServicesModalProps,
+  ServiceOption,
+  StaffHoursModalProps,
+  DayHours,
+} from './components/dashboard/StaffModal';
+
+export type {
+  QRCodeDisplayProps,
+  QRCodeModalProps,
+} from './components/QRCodeDisplay';
 
 export type {
   HeaderTheme,

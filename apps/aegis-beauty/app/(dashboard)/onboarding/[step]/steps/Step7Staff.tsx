@@ -9,13 +9,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@aegis/ui';
 import { createClient } from '@aegis/core';
-import type { BusinessUpdate, BusinessType } from '@aegis/types';
+import type { BusinessType } from '@aegis/types';
 
 interface Step7Props {
   businessId: string;
   businessType: BusinessType | null;
   userFullName: string;
   userId: string;
+  userEmail: string;
+  userPhone: string | null;
 }
 
 interface StaffMember {
@@ -48,23 +50,11 @@ function getStaffLabel(type: BusinessType | null): { singular: string; plural: s
   }
 }
 
-function getBusinessLabel(type: BusinessType | null): string {
-  switch (type) {
-    case 'hair_salon':
-      return 'salone';
-    case 'beauty_center':
-      return 'centro';
-    default:
-      return 'salone';
-  }
-}
-
-export function Step7Staff({ businessId, businessType, userFullName, userId }: Step7Props) {
+export function Step7Staff({ businessId, businessType, userFullName, userId, userEmail, userPhone }: Step7Props) {
   const router = useRouter();
   const supabase = createClient();
   
   const staffLabel = getStaffLabel(businessType);
-  const businessLabel = getBusinessLabel(businessType);
   
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([
     {
@@ -134,21 +124,32 @@ export function Step7Staff({ businessId, businessType, userFullName, userId }: S
       for (let i = 0; i < staffMembers.length; i++) {
         const member = staffMembers[i];
         
-        const { data: staffData, error: staffError } = await supabase
+        // Costruisci i dati per l'insert
+        const staffInsertData: Record<string, unknown> = {
+          business_id: businessId,
+          full_name: member.name,
+          display_order: i,
+          is_active: true,
+          color: STAFF_COLORS[i % STAFF_COLORS.length],
+        };
+
+        if (member.isOwner) {
+          // TITOLARE: collega tutti i dati dell'account esistente
+          staffInsertData.user_id = userId;
+          staffInsertData.email = userEmail;
+          staffInsertData.phone = userPhone;
+          staffInsertData.role = 'owner';
+        } else {
+          // COLLABORATORE: solo nome, verrà completato dalla dashboard
+          staffInsertData.user_id = null;
+          staffInsertData.email = null;
+          staffInsertData.phone = null;
+          staffInsertData.role = 'employee';
+        }
+
+        const { data: insertedStaff, error: staffError } = await supabase
           .from('staff')
-          .insert({
-            business_id: businessId,
-            user_id: member.isOwner ? userId : null,
-            full_name: member.name,
-            nickname: null,
-            email: null,
-            phone: null,
-            bio: null,
-            display_order: i,
-            is_active: true,
-            accepts_bookings: true,
-            color: STAFF_COLORS[i % STAFF_COLORS.length],
-          } as any)
+          .insert(staffInsertData as never)
           .select('id')
           .single();
 
@@ -158,15 +159,15 @@ export function Step7Staff({ businessId, businessType, userFullName, userId }: S
         }
 
         // Associa tutti i servizi a questo staff member
-        if (services && services.length > 0 && staffData) {
+        if (services && services.length > 0 && insertedStaff) {
           const staffServices = services.map(service => ({
-            staff_id: (staffData as any).id,
-            service_id: (service as any).id,
+            staff_id: (insertedStaff as { id: string }).id,
+            service_id: (service as { id: string }).id,
           }));
 
           const { error: servicesError } = await supabase
             .from('staff_services')
-            .insert(staffServices as any);
+            .insert(staffServices as never);
 
           if (servicesError) {
             console.error('Staff services insert error:', servicesError);
@@ -175,11 +176,9 @@ export function Step7Staff({ businessId, businessType, userFullName, userId }: S
       }
 
       // Aggiorna step
-      const { error: updateError } = await (supabase as any)
+      const { error: updateError } = await supabase
         .from('businesses')
-        .update({
-          onboarding_step: 8,
-        } as any)
+        .update({ onboarding_step: 8 } as never)
         .eq('id', businessId);
 
       if (updateError) {
