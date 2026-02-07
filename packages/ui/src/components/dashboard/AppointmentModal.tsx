@@ -96,8 +96,10 @@ export interface AppointmentModalProps {
   initialDate?: Date;
   /** Pre-selected time (optional) */
   initialTime?: string;
-  /** Pre-selected staff (optional) */
+ /** Pre-selected staff (optional) */
   initialStaffId?: string;
+  /** Pre-selected customer (optional) */
+  initialCustomerId?: string;
   /** Loading state */
   isLoading?: boolean;
   /** Labels customization for different verticals */
@@ -212,11 +214,11 @@ export function AppointmentModal({
   closures,
   initialDate,
   initialTime,
-  initialStaffId,
+   initialStaffId,
+  initialCustomerId,
   isLoading = false,
   labels: customLabels,
-}: AppointmentModalProps) {
-  const labels = { ...defaultLabels, ...customLabels };
+}: AppointmentModalProps) {  const labels = { ...defaultLabels, ...customLabels };
   const timeSlots = React.useMemo(() => generateTimeSlots(), []);
   
   // Form state
@@ -287,14 +289,19 @@ export function AppointmentModal({
   }, [formData.staffId, formData.serviceId, staffServices, services, staff]);
 
   // Reset form when modal opens
-  React.useEffect(() => {
+React.useEffect(() => {
     if (isOpen) {
+      const prefillCustomer = initialCustomerId
+        ? customers.find(c => c.id === initialCustomerId)
+        : null;
+      const nameParts = prefillCustomer?.name.split(' ') || [];
+
       setFormData({
-        customerId: null,
-        customerFirstName: '',
-        customerLastName: '',
-        customerPhone: '',
-        customerEmail: '',
+        customerId: prefillCustomer?.id || null,
+        customerFirstName: nameParts[0] || '',
+        customerLastName: nameParts.slice(1).join(' ') || '',
+        customerPhone: prefillCustomer?.phone || '',
+        customerEmail: prefillCustomer?.email || '',
         serviceId: '',
         staffId: initialStaffId || '',
         date: initialDate ? formatDate(initialDate) : formatDate(new Date()),
@@ -303,7 +310,7 @@ export function AppointmentModal({
         isNewCustomer: false,
         sendInvite: true,
       });
-      setCustomerSearch('');
+      setCustomerSearch(prefillCustomer?.name || '');
       setServiceSearch('');
       setShowServiceList(false);
       setStaffSearch('');
@@ -632,7 +639,7 @@ export function AppointmentModal({
 
               {/* New Customer Form */}
               {formData.isNewCustomer && (
-                <div className="p-4 bg-gray-50 rounded-xl space-y-3">
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-3">
                   <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
                     <Plus className="w-4 h-4" />
                     Dati nuovo cliente

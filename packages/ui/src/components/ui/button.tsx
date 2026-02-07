@@ -31,9 +31,9 @@ const baseStyles = `
 
 const variantStyles: Record<string, string> = {
   primary: `
-    bg-purple-600 text-white
-    hover:bg-purple-700
-    focus:ring-purple-500
+    bg-accent-600 text-white
+    hover:bg-accent-700
+    focus:ring-accent-500
   `,
   secondary: `
     bg-gray-100 text-gray-900
@@ -41,9 +41,9 @@ const variantStyles: Record<string, string> = {
     focus:ring-gray-500
   `,
   outline: `
-    border-2 border-purple-600 text-purple-600
-    hover:bg-purple-50
-    focus:ring-purple-500
+    border-2 border-accent-600 text-accent-600
+    hover:bg-accent-50
+    focus:ring-accent-500
   `,
   ghost: `
     text-gray-600

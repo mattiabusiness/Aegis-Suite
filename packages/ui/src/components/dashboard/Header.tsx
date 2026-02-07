@@ -157,7 +157,7 @@ const headerStyles = {
     last:border-b-0
   `,
   notificationItemUnread: `
-    bg-purple-50/50
+    bg-accent-50/50
   `,
   notificationTitle: `
     font-medium text-gray-900
@@ -181,8 +181,8 @@ const headerStyles = {
   `,
   notificationFooterLink: `
     text-sm font-medium
-    text-purple-600
-    hover:text-purple-700
+    text-accent-600
+    hover:text-accent-700
     cursor-pointer
   `,
   notificationEmpty: `
@@ -204,12 +204,12 @@ const headerStyles = {
   userAvatar: `
     w-9 h-9
     rounded-full
-    bg-purple-100
+    bg-accent-100
     flex items-center justify-center
     overflow-hidden
   `,
   userAvatarImage: 'w-full h-full object-cover',
-  userAvatarFallback: 'w-5 h-5 text-purple-600',
+  userAvatarFallback: 'w-5 h-5 text-accent-600',
   userInfo: `
     hidden sm:block
     text-left

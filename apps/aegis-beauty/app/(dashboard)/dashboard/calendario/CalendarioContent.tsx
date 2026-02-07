@@ -14,6 +14,7 @@ import {
   CalendarEventListItem,
   EmptyAppointments,
   AppointmentModal,
+  EventDetailModal,
   type CalendarEventData,
   type CalendarView,
   type BusinessHoursData,
@@ -24,7 +25,8 @@ import {
   type AppointmentFormData,
   type StaffServicesMap,
 } from '@aegis/ui';
-import { Plus, X } from 'lucide-react';
+import { createClient } from '@aegis/core';
+import { Plus } from 'lucide-react';
 
 // ============================================================================
 // TYPES
@@ -83,6 +85,7 @@ export function CalendarioContent({
   staffServices,
 }: CalendarioContentProps) {
   const router = useRouter();
+  const supabase = createClient();
   
   // State
   const [events, setEvents] = useState<CalendarEventData[]>(initialEvents);
@@ -90,6 +93,7 @@ export function CalendarioContent({
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -145,10 +149,12 @@ export function CalendarioContent({
     );
   });
 
-  // Handlers
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
   const handleEventClick = (event: CalendarEventData) => {
     setSelectedEvent(event);
-    console.log('Event clicked:', event);
   };
 
   const handleSlotClick = (date: Date, hour: number, minutes: number) => {
@@ -166,6 +172,43 @@ export function CalendarioContent({
   const handleStaffFilter = (staffId: string | null) => {
     setSelectedStaff(staffId);
   };
+
+  // ============================================================================
+  // STATUS UPDATE HANDLERS
+  // ============================================================================
+
+  const updateEventStatus = async (eventId: string, newStatus: 'completed' | 'no_show' | 'cancelled') => {
+    setIsUpdatingStatus(true);
+    try {
+      const { error } = await (supabase
+        .from('appointments') as any)
+        .update({ status: newStatus })
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      // Update local state
+      setEvents(prev =>
+        prev.map(e =>
+          e.id === eventId ? { ...e, status: newStatus } : e
+        )
+      );
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Errore nell\'aggiornamento dello stato');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleComplete = (eventId: string) => updateEventStatus(eventId, 'completed');
+  const handleNoShow = (eventId: string) => updateEventStatus(eventId, 'no_show');
+  const handleCancel = (eventId: string) => updateEventStatus(eventId, 'cancelled');
+
+  // ============================================================================
+  // APPOINTMENT CREATION
+  // ============================================================================
 
   const handleModalSubmit = async (data: AppointmentFormData) => {
     setIsSubmitting(true);
@@ -228,6 +271,10 @@ export function CalendarioContent({
     }
   };
 
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
   return (
     <>
       <div className="min-h-[calc(100vh-7rem)]">
@@ -237,15 +284,50 @@ export function CalendarioContent({
           description="Gestisci gli appuntamenti del tuo salone"
           actions={[
             {
+              id: 'new-appointment',
               label: 'Nuovo appuntamento',
               onClick: handleNewClick,
-              icon: <Plus className="w-4 h-4" />,
+              icon: Plus,
             },
           ]}
         />
 
+        {/* Staff filter bar */}
+        {staffList.length > 0 && (
+          <div className="mt-4 flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-gray-500 font-medium">Filtra per staff:</span>
+            <button
+              onClick={() => handleStaffFilter(null)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                selectedStaff === null
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Tutti
+            </button>
+            {staffList.map(s => (
+              <button
+                key={s.id}
+                onClick={() => handleStaffFilter(s.id)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
+                  selectedStaff === s.id
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <span
+                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: s.color || '#9333ea' }}
+                />
+                {s.full_name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Layout calendario + sidebar */}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Calendario principale */}
           <div className="lg:col-span-3">
             <Calendar
@@ -256,13 +338,6 @@ export function CalendarioContent({
               events={filteredEvents}
               onEventClick={handleEventClick}
               onSlotClick={handleSlotClick}
-              staffMembers={staffList.map(s => ({
-                id: s.id,
-                name: s.full_name,
-                color: s.color || '#9333ea',
-              }))}
-              selectedStaffId={selectedStaff}
-              onStaffFilter={handleStaffFilter}
               businessHours={businessHours}
               closures={closures}
             />
@@ -320,105 +395,15 @@ export function CalendarioContent({
         </div>
       </div>
 
-      {/* Event detail modal */}
-      {selectedEvent && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div 
-            className="fixed inset-0 bg-black/50"
-            onClick={() => setSelectedEvent(null)}
-          />
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-              <button
-                onClick={() => setSelectedEvent(null)}
-                className="absolute right-4 top-4 p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                {selectedEvent.title}
-              </h3>
-
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Cliente</span>
-                  <span className="font-medium">{selectedEvent.customerName || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Operatore</span>
-                  <span className="font-medium">{selectedEvent.staffName || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Data</span>
-                  <span className="font-medium">
-                    {new Date(selectedEvent.startTime).toLocaleDateString('it-IT', {
-                      weekday: 'long',
-                      day: 'numeric',
-                      month: 'long',
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Orario</span>
-                  <span className="font-medium">
-                    {new Date(selectedEvent.startTime).toLocaleTimeString('it-IT', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                    {' - '}
-                    {new Date(selectedEvent.endTime).toLocaleTimeString('it-IT', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-                {selectedEvent.notes && (
-                  <div>
-                    <span className="text-gray-500 block mb-1">Note</span>
-                    <p className="text-gray-700 bg-gray-50 p-2 rounded-lg">
-                      {selectedEvent.notes}
-                    </p>
-                  </div>
-                )}
-                <div className="flex justify-between items-center pt-2">
-                  <span className="text-gray-500">Stato</span>
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full
-                    ${selectedEvent.status === 'confirmed' ? 'bg-green-100 text-green-700' : ''}
-                    ${selectedEvent.status === 'pending' ? 'bg-amber-100 text-amber-700' : ''}
-                    ${selectedEvent.status === 'completed' ? 'bg-gray-100 text-gray-600' : ''}
-                    ${selectedEvent.status === 'cancelled' ? 'bg-red-100 text-red-700' : ''}
-                    ${selectedEvent.status === 'no_show' ? 'bg-purple-100 text-purple-700' : ''}
-                  `}>
-                    {selectedEvent.status === 'confirmed' && 'Confermato'}
-                    {selectedEvent.status === 'pending' && 'In attesa'}
-                    {selectedEvent.status === 'completed' && 'Completato'}
-                    {selectedEvent.status === 'cancelled' && 'Cancellato'}
-                    {selectedEvent.status === 'no_show' && 'No-show'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Chiudi
-                </button>
-                <button
-                  onClick={() => {
-                    console.log('Edit event:', selectedEvent.id);
-                  }}
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                >
-                  Modifica
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Event detail modal (from UI package) */}
+      <EventDetailModal
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        onComplete={handleComplete}
+        onNoShow={handleNoShow}
+        onCancel={handleCancel}
+        isLoading={isUpdatingStatus}
+      />
 
       {/* Modal Nuovo Appuntamento */}
       <AppointmentModal

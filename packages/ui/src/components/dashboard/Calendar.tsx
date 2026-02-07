@@ -369,7 +369,7 @@ function DayView({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex flex-shrink-0 border-b border-gray-200 mb-2">
+      <div className="flex flex-shrink-0 border-b border-gray-200">
         <div className="w-16 flex-shrink-0 bg-gray-100 border-r border-gray-200 h-12" />
         <div className="flex-1 h-12 bg-gray-100 flex flex-col items-center justify-center">
           <p className="text-xs font-medium text-gray-500 uppercase">{DAYS_IT[date.getDay()]}</p>
@@ -833,7 +833,7 @@ export function Calendar({
   };
 
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col h-full ${className}`}>
+    <div className={`bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-16rem)] ${className}`}>
       <CalendarHeader
         date={selectedDate}
         view={view}

@@ -6,7 +6,12 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { DashboardLayout, beautyTheme } from '@aegis/ui';
+import {
+  DashboardLayout,
+  beautyTheme,
+  ContentThemeProvider,
+  beautyContentTheme,
+} from '@aegis/ui';
 import type { SidebarMenuItem } from '@aegis/ui';
 import { createClient } from '@aegis/core';
 import { beautyMenuSections, getActiveMenuId } from '@/config/menu';
@@ -57,7 +62,7 @@ function AegisLogo() {
 export function DashboardLayoutClient({ data, children }: DashboardLayoutClientProps) {
   const pathname = usePathname();
   const router = useRouter();
-  
+
   // Se siamo in onboarding, non mostrare il layout dashboard
   if (pathname.startsWith('/onboarding')) {
     return <>{children}</>;
@@ -78,39 +83,27 @@ export function DashboardLayoutClient({ data, children }: DashboardLayoutClientP
     router.push('/login');
   };
 
-  // Handler per aiuto (già nel menu, ma anche nel footer sidebar)
-  const handleHelp = () => {
-    router.push('/dashboard/aiuto');
-  };
-
-  // Handler per profilo
-  const handleProfileClick = () => {
-    router.push('/dashboard/impostazioni');
-  };
-
-  // Handler per impostazioni (dal dropdown header)
-  const handleSettingsClick = () => {
-    router.push('/dashboard/impostazioni');
-  };
-
   return (
-    <DashboardLayout
-      theme={beautyTheme}
-      platformLogo={<AegisLogo />}
-      menuSections={beautyMenuSections}
-      activeItemId={activeItemId}
-      businessName={data.business.name}
-      businessLogo={data.business.logoUrl || undefined}
-      userName={data.user.name}
-      userEmail={data.user.email}
-      onMenuItemClick={handleMenuItemClick}
-      onLogout={handleLogout}
-      onHelp={handleHelp}
-      onProfileClick={handleProfileClick}
-      onSettingsClick={handleSettingsClick}
-      showHelp={false} // Aiuto è già nel menu
-    >
-      {children}
-    </DashboardLayout>
+    <ContentThemeProvider theme={beautyContentTheme}>
+      <DashboardLayout
+        theme={beautyTheme}
+        platformLogo={<AegisLogo />}
+        menuSections={beautyMenuSections}
+        activeItemId={activeItemId}
+        businessName={data.business.name}
+        businessLogo={data.business.logoUrl || undefined}
+        userName={data.user.name}
+        userEmail={data.user.email}
+        onMenuItemClick={handleMenuItemClick}
+        onLogout={handleLogout}
+        onProfileClick={() => router.push('/dashboard/impostazioni')}
+        onSettingsClick={() => router.push('/dashboard/impostazioni')}
+        onHelp={() => router.push('/dashboard/aiuto')}
+        showHelp
+        showLogout
+      >
+        {children}
+      </DashboardLayout>
+    </ContentThemeProvider>
   );
 }

@@ -39,13 +39,18 @@ export {
   EmptySearchResults,
 } from './components/dashboard/EmptyState';
 export { Calendar } from './components/dashboard/Calendar';
-export { CalendarEvent, CalendarEventListItem } from './components/dashboard/CalendarEvent';
+export { CalendarEvent, CalendarEventListItem, EventDetailModal } from './components/dashboard/CalendarEvent';
 export { AppointmentModal } from './components/dashboard/AppointmentModal';
 export { ServiceList } from './components/dashboard/Servicelist';
 export { ServiceModal } from './components/dashboard/ServiceModal';
 export { CategoryModal } from './components/dashboard/CategoryModal';
 export { StaffList } from './components/dashboard/StaffList';
 export { StaffModal, StaffServicesModal, StaffHoursModal } from './components/dashboard/StaffModal';
+export { CustomerList } from './components/dashboard/CustomerList';
+export { CustomerDetailModal } from './components/dashboard/CustomerDetailModal';
+export { HelpPage } from './components/dashboard/HelpPage';
+export { SettingsPage } from './components/dashboard/SettingsPage';
+export { StatsPage } from './components/dashboard/StatsPage';
 export { QRCodeDisplay, QRCodeModal } from './components/QRCodeDisplay';
 
 // ============================================================================
@@ -63,6 +68,27 @@ export {
   getTheme,
   getAllThemes,
 } from './components/dashboard/Themes';
+
+// ============================================================================
+// ISTRUZIONI: Aggiungi queste righe al file packages/ui/src/index.ts
+// nella sezione THEMES e DASHBOARD TYPES
+// ============================================================================
+
+// --- AGGIUNGI nella sezione THEMES, dopo gli export di Themes ---
+
+export {
+  ContentThemeProvider,
+  useContentTheme,
+  beautyContentTheme,
+  sportContentTheme,
+  healthContentTheme,
+  homeContentTheme,
+  lawContentTheme,
+  bookContentTheme,
+  contentThemes,
+} from './components/dashboard/ContentTheme';
+
+
 
 // ============================================================================
 // UI TYPES
@@ -129,6 +155,7 @@ export type {
   CalendarEventProps,
   CalendarEventData,
   CalendarEventListItemProps,
+  EventDetailModalProps,
   EventStatus,
 } from './components/dashboard/CalendarEvent';
 
@@ -174,6 +201,49 @@ export type {
 } from './components/dashboard/StaffModal';
 
 export type {
+  CustomerListProps,
+  CustomerListItem,
+  CustomerFilter,
+} from './components/dashboard/CustomerList';
+
+export type {
+  CustomerDetailModalProps,
+  CustomerDetail,
+  CustomerAppointment,
+  CustomerStats,
+} from './components/dashboard/CustomerDetailModal';
+
+export type {
+  HelpPageProps,
+  FAQItem,
+  GuideItem,
+  GuideStep,
+  SupportCategory,
+} from './components/dashboard/HelpPage';
+
+export type {
+  SettingsPageProps,
+  SettingsTab,
+  BusinessGeneralData,
+  BusinessHoursRow,
+  ClosureItem,
+  BookingSettings,
+  AccountData,
+} from './components/dashboard/SettingsPage';
+
+export type {
+  StatsPageProps,
+  PeriodFilter,
+  KPICard,
+  ChartDataPoint,
+  TopService,
+  PopularHour,
+  StaffPerformance,
+  InsightItem,
+  ROIStats,
+} from './components/dashboard/StatsPage';
+
+export type {
   QRCodeDisplayProps,
   QRCodeModalProps,
 } from './components/QRCodeDisplay';
@@ -183,3 +253,9 @@ export type {
   DashboardTheme,
   ThemeName,
 } from './components/dashboard/Themes';
+
+// --- AGGIUNGI nella sezione DASHBOARD TYPES ---
+
+export type {
+  ContentTheme,
+} from './components/dashboard/ContentTheme';
