@@ -73,12 +73,7 @@ export default async function OnboardingStepPage({ params }: PageProps) {
     redirect('/login');
   }
 
-  // Se onboarding completato, vai a dashboard
-  // if (business.onboarding_completed) {
-  //   redirect('/dashboard');
-  // }
-
-  // Ottieni profilo utente per lo Step 7 (nome, email, telefono)
+  // Ottieni profilo utente per lo Step 7
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, phone')
@@ -94,22 +89,20 @@ export default async function OnboardingStepPage({ params }: PageProps) {
   const openDaysPerWeek = businessHours?.filter(h => h.is_open).length || 6;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header con progress */}
-      <div className="bg-white border border-gray-200 rounded-2xl mx-4 mt-4">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <ProgressBar
-            currentStep={stepNumber}
-            totalSteps={8}
-            stepLabels={STEP_LABELS}
-            showStepNumber={true}
-            showPercentage={false}
-          />
-        </div>
+    <>
+      {/* Progress bar */}
+      <div className="bg-white/70 backdrop-blur-sm border border-purple-100/50 rounded-2xl p-4 shadow-sm">
+        <ProgressBar
+          currentStep={stepNumber}
+          totalSteps={8}
+          stepLabels={STEP_LABELS}
+          showStepNumber={true}
+          showPercentage={true}
+        />
       </div>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      {/* Step content */}
+      <div className="mt-6">
         {stepNumber === 1 && (
           <Step1BusinessType 
             businessId={business.id}
@@ -184,6 +177,6 @@ export default async function OnboardingStepPage({ params }: PageProps) {
           />
         )}
       </div>
-    </div>
+    </>
   );
 }

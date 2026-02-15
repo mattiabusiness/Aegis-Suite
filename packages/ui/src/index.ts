@@ -7,6 +7,11 @@
 // UI COMPONENTS
 // ============================================================================
 
+export { AnimatedSelect } from './components/ui/AnimatedList';
+export type { AnimatedSelectProps, AnimatedSelectOption } from './components/ui/AnimatedList';
+export { FloatingParticles } from './components/FloatingParticles';
+export { StepTransitionProvider, useStepTransition } from './components/StepTransition';
+
 export { Button } from './components/ui/button';
 export { Input } from './components/ui/input';
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './components/ui/card';
@@ -17,8 +22,7 @@ export { ProgressBar } from './components/ui/progress-bar';
 // AUTH COMPONENTS
 // ============================================================================
 
-export { LoginForm } from './components/auth/LoginForm';
-export { RegisterForm } from './components/auth/RegisterForm';
+export { AuthFlipCard } from './components/auth/AuthFlipCard';
 
 // ============================================================================
 // DASHBOARD COMPONENTS
@@ -104,8 +108,7 @@ export type { ProgressBarProps } from './components/ui/progress-bar';
 // AUTH TYPES
 // ============================================================================
 
-export type { LoginFormProps } from './components/auth/LoginForm';
-export type { RegisterFormProps, RegisterFormData } from './components/auth/RegisterForm';
+ export type { AuthFlipCardProps, AuthFlipRegisterData } from './components/auth/AuthFlipCard';
 
 // ============================================================================
 // DASHBOARD TYPES

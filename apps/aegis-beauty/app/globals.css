@@ -6,6 +6,18 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
+
+    /* Accent fallback — Beauty violet (used when ContentThemeProvider is not wrapping) */
+    --accent-50: #faf5ff;
+    --accent-100: #f3e8ff;
+    --accent-200: #e9d5ff;
+    --accent-300: #d8b4fe;
+    --accent-400: #c084fc;
+    --accent-500: #a855f7;
+    --accent-600: #9333ea;
+    --accent-700: #7e22ce;
+    --accent-800: #6b21a8;
+    --accent-900: #581c87;
   }
 
   * {
