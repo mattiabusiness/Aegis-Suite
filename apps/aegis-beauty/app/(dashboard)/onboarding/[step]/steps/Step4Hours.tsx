@@ -58,16 +58,35 @@ function getBusinessLabel(type: BusinessType | null): string {
 }
 
 function getDefaultHours(type: BusinessType | null): DayHours[] {
+  const isMixed = type === 'mixed';
   const isBC = type === 'beauty_center';
-  return [
-    { day: 'monday', label: 'Lun', isOpen: true, openTime1: '09:00', closeTime1: '13:00', openTime2: '15:00', closeTime2: isBC ? '20:00' : '19:00', hasBreak: true },
-    { day: 'tuesday', label: 'Mar', isOpen: true, openTime1: '09:00', closeTime1: '13:00', openTime2: '15:00', closeTime2: isBC ? '20:00' : '19:00', hasBreak: true },
-    { day: 'wednesday', label: 'Mer', isOpen: true, openTime1: '09:00', closeTime1: '13:00', openTime2: '15:00', closeTime2: isBC ? '20:00' : '19:00', hasBreak: true },
-    { day: 'thursday', label: 'Gio', isOpen: true, openTime1: '09:00', closeTime1: '13:00', openTime2: '15:00', closeTime2: isBC ? '20:00' : '19:00', hasBreak: true },
-    { day: 'friday', label: 'Ven', isOpen: true, openTime1: '09:00', closeTime1: '13:00', openTime2: '15:00', closeTime2: isBC ? '20:00' : '19:00', hasBreak: true },
-    { day: 'saturday', label: 'Sab', isOpen: true, openTime1: '09:00', closeTime1: '13:00', openTime2: '15:00', closeTime2: isBC ? '19:00' : '18:00', hasBreak: true },
-    { day: 'sunday', label: 'Dom', isOpen: false, openTime1: '09:00', closeTime1: '13:00', openTime2: '15:00', closeTime2: '18:00', hasBreak: false },
+  // Hair Salon: 9:00-13:00 | 14:30-19:00
+  // Beauty Center: 9:00-13:00 | 15:00-19:30
+  // Mixed: 9:00-19:00 continuato (no pausa)
+  const breakStart = '13:00';
+  const breakEnd = isBC ? '15:00' : '14:30';
+  const closeTime = isBC ? '19:30' : '19:00';
+  const satClose = isBC ? '19:00' : '18:00';
+
+  const daysConfig: { day: DayOfWeek; label: string; isOpen: boolean }[] = [
+    { day: 'monday', label: 'Lun', isOpen: true },
+    { day: 'tuesday', label: 'Mar', isOpen: true },
+    { day: 'wednesday', label: 'Mer', isOpen: true },
+    { day: 'thursday', label: 'Gio', isOpen: true },
+    { day: 'friday', label: 'Ven', isOpen: true },
+    { day: 'saturday', label: 'Sab', isOpen: true },
+    { day: 'sunday', label: 'Dom', isOpen: false },
   ];
+
+  return daysConfig.map(d => {
+    const isSat = d.day === 'saturday';
+    const endTime = isSat ? satClose : closeTime;
+    if (isMixed) {
+      // Continuato: no break, closeTime2 = orario chiusura
+      return { ...d, openTime1: '09:00', closeTime1: breakStart, openTime2: breakEnd, closeTime2: isSat ? '18:00' : '19:00', hasBreak: false };
+    }
+    return { ...d, openTime1: '09:00', closeTime1: breakStart, openTime2: breakEnd, closeTime2: endTime, hasBreak: d.isOpen };
+  });
 }
 
 function getEasterDate(year: number): Date {
@@ -163,7 +182,11 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
 
   const [hours, setHours] = useState<DayHours[]>(() => getDefaultHours(businessType));
   const [holidays, setHolidays] = useState<Holiday[]>(DEFAULT_HOLIDAYS);
-  const [globalBreak, setGlobalBreak] = useState({ enabled: true, start: '13:00', end: '15:00' });
+  const [globalBreak, setGlobalBreak] = useState(() => {
+    const isMixed = businessType === 'mixed';
+    const isBC = businessType === 'beauty_center';
+    return { enabled: !isMixed, start: '13:00', end: isBC ? '15:00' : '14:30' };
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [shaking, setShaking] = useState(false);
@@ -177,25 +200,36 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
   }, []);
   const triggerShake = useCallback(() => { setShaking(true); setTimeout(() => setShaking(false), 500); }, []);
 
-  // Load saved hours from DB, or keep defaults
+  // =========================================================================
+  // SINGLE CONSOLIDATED EFFECT: Load from DB or apply smart defaults
+  // No race conditions — everything happens in sequence inside one effect
+  // =========================================================================
   useEffect(() => {
-    setHours(getDefaultHours(businessType));
-  }, [businessType]);
+    let cancelled = false;
+    const defaults = getDefaultHours(businessType);
+    const isMixed = businessType === 'mixed';
+    const isBC = businessType === 'beauty_center';
+    const breakEnabled = !isMixed;
+    const breakStart = '13:00';
+    const breakEnd = isBC ? '15:00' : '14:30';
 
-  useEffect(() => {
-    async function loadSavedHours() {
+    async function loadAndApply() {
       const { data: savedHours } = await supabase
         .from('business_hours')
         .select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
         .eq('business_id', businessId);
 
+      if (cancelled) return;
+
+      let resolvedHours: DayHours[];
+
       if (savedHours && savedHours.length > 0) {
+        // DB has data → merge with defaults (defaults act as fallback)
         const dayMap = new Map(
           (savedHours as { day_of_week: string; is_open: boolean; open_time_1: string | null; close_time_1: string | null; open_time_2: string | null; close_time_2: string | null }[])
             .map(h => [h.day_of_week, h])
         );
-        const defaults = getDefaultHours(businessType);
-        setHours(defaults.map(d => {
+        resolvedHours = defaults.map(d => {
           const saved = dayMap.get(d.day) as { is_open: boolean; open_time_1: string | null; close_time_1: string | null; open_time_2: string | null; close_time_2: string | null } | undefined;
           if (!saved) return d;
           const hasBreak = !!(saved.open_time_2 && saved.close_time_1);
@@ -208,21 +242,45 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
             closeTime2: hasBreak ? (saved.close_time_2 || d.closeTime2) : (saved.close_time_1 || d.closeTime2),
             hasBreak,
           };
-        }));
+        });
+      } else {
+        // No DB data → use smart defaults directly (already have correct values)
+        resolvedHours = defaults;
       }
-      // If no saved hours, keep the defaults from useState initializer
+
+      // Apply globalBreak settings on top (same logic as the old Effect 2,
+      // but done HERE so there's no timing gap where values are missing)
+      if (breakEnabled) {
+        resolvedHours = resolvedHours.map(day => {
+          if (!day.isOpen) return day;
+          return { ...day, hasBreak: true, closeTime1: breakStart, openTime2: breakEnd };
+        });
+      }
+
+      if (!cancelled) {
+        setHours(resolvedHours);
+        setInitialLoaded(true);
+      }
     }
-    loadSavedHours().then(() => setInitialLoaded(true));
+
+    loadAndApply();
+    return () => { cancelled = true; };
   }, [businessId, businessType, supabase]);
 
+  // =========================================================================
+  // GLOBAL BREAK TOGGLE — only reacts to USER toggling (after initial load)
+  // =========================================================================
   useEffect(() => {
     if (!initialLoaded) return;
     setHours(prev => prev.map(day => {
       if (!day.isOpen) return day;
-      if (globalBreak.enabled) return { ...day, hasBreak: true, closeTime1: globalBreak.start, openTime2: globalBreak.end };
+      if (globalBreak.enabled) {
+        return { ...day, hasBreak: true, closeTime1: globalBreak.start, openTime2: globalBreak.end };
+      }
       return { ...day, hasBreak: false };
     }));
-  }, [globalBreak.enabled, initialLoaded]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalBreak.enabled, globalBreak.start, globalBreak.end]);
 
   const updateDay = (index: number, updates: Partial<DayHours>) => {
     setHours(prev => prev.map((d, i) => i === index ? { ...d, ...updates } : d));

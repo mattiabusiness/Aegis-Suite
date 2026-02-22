@@ -96,11 +96,12 @@ export function DashboardLayoutClient({ data, children }: DashboardLayoutClientP
         userEmail={data.user.email}
         onMenuItemClick={handleMenuItemClick}
         onLogout={handleLogout}
-        onProfileClick={() => router.push('/dashboard/impostazioni')}
-        onSettingsClick={() => router.push('/dashboard/impostazioni')}
+        onProfileClick={() => router.push('/dashboard/impostazioni?tab=account')}
+        onSettingsClick={() => router.push('/dashboard/impostazioni?tab=generale')}
         onHelp={() => router.push('/dashboard/aiuto')}
         showHelp
         showLogout
+        currentPath={pathname}
       >
         {children}
       </DashboardLayout>

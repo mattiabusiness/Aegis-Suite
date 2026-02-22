@@ -39,7 +39,7 @@ export default async function StaffPage() {
   // Fetch staff
   const { data: staff, error: staffError } = await supabase
     .from('staff')
-    .select('id, user_id, full_name, email, phone, color, is_active, role')
+    .select('id, user_id, full_name, email, phone, color, is_active, role, staff_services(service_id)')
     .eq('business_id', businessId)
     .order('full_name', { ascending: true }) as { 
       data: Array<{
@@ -51,6 +51,7 @@ export default async function StaffPage() {
         color: string | null;
         is_active: boolean | null;
         role: 'owner' | 'employee' | null;
+        staff_services?: { service_id: string }[];
       }> | null;
       error: unknown;
     };

@@ -168,7 +168,7 @@ export function Step7Staff({ businessId, businessType, userFullName, userId, use
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">Il tuo team</h2>
-              <p className="text-gray-500 text-sm mt-0.5">Aggiungi i {staffLabel.plural} del tuo team</p>
+              <p className="text-gray-500 text-sm mt-0.5">Aggiungi i collaboratori del tuo team</p>
             </div>
           </div>
         </div>

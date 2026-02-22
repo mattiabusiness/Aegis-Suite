@@ -365,7 +365,7 @@ export function Step8ROI({ businessId, businessType, businessSlug, businessName,
             {/* Phone time */}
             <div style={{ animation: 's8FadeUp 0.3s ease-out both' }}>
               <label className="block text-sm font-semibold text-gray-900 mb-1">Tempo per prenotazioni telefoniche</label>
-              <p className="text-xs text-gray-500 mb-3">Ogni giorno di apertura</p>
+              <p className="text-xs text-gray-500 mb-3">Tra chiamate in entrata e richiesta di informazioni...</p>
               <div className="flex items-center gap-4">
                 <AnimatedSlider value={phoneMinutesPerDay} onChange={setPhoneMinutesPerDay} min={5} max={120} step={5} label="min" />
                 <div className="w-20 text-center px-3 py-2 rounded-xl" style={{ background: 'rgba(168,85,247,0.06)', border: '1.5px solid rgba(168,85,247,0.12)' }}>
@@ -378,7 +378,7 @@ export function Step8ROI({ businessId, businessType, businessSlug, businessName,
             {/* No-shows */}
             <div style={{ animation: 's8FadeUp 0.3s ease-out 0.1s both' }}>
               <label className="block text-sm font-semibold text-gray-900 mb-1">No-show mensili</label>
-              <p className="text-xs text-gray-500 mb-3">Clienti che non si presentano</p>
+              <p className="text-xs text-gray-500 mb-3">Clienti che non si presentano - soldi persi ogni mese</p>
               <div className="flex items-center gap-4">
                 <AnimatedSlider value={noShowsPerMonth} onChange={setNoShowsPerMonth} min={0} max={20} step={1} label="no-show" />
                 <div className="w-20 text-center px-3 py-2 rounded-xl" style={{ background: 'rgba(168,85,247,0.06)', border: '1.5px solid rgba(168,85,247,0.12)' }}>

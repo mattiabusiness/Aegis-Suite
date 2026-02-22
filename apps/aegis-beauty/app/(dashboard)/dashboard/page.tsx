@@ -59,7 +59,7 @@ export default async function DashboardOverviewPage() {
   // Ottieni dati business (incluso ROI data)
   const { data: business } = await supabase
     .from('businesses')
-    .select('name, roi_data, onboarding_completed')
+    .select('name, slug, business_type, roi_data, onboarding_completed')
     .eq('id', businessId)
     .single();
 
@@ -120,6 +120,14 @@ export default async function DashboardOverviewPage() {
     .eq('business_id', businessId)
     .eq('is_active', true);
 
+  // Conta staff incompleti (senza email)
+  const { count: incompleteStaff } = await supabase
+    .from('staff')
+    .select('*', { count: 'exact', head: true })
+    .eq('business_id', businessId)
+    .eq('is_active', true)
+    .is('email', null);
+
   // Prepara dati per il client
   const stats = {
     appointmentsToday: appointmentsToday || 0,
@@ -127,15 +135,49 @@ export default async function DashboardOverviewPage() {
     totalCustomers: totalCustomers || 0,
     totalServices: totalServices || 0,
     totalStaff: totalStaff || 0,
+    incompleteStaff: incompleteStaff || 0,
   };
 
-  const roiData = (business as any)?.roi_data as ROIData | null;
+  // Fetch appuntamenti di oggi con dettagli
+  const { data: todayAppointments } = await supabase
+    .from('appointments')
+    .select(`
+      id, start_time, end_time, status,
+      customer:customers(full_name),
+      staff:staff(full_name, color),
+      appointment_services(service_name)
+    `)
+    .eq('business_id', businessId)
+    .gte('start_time', today.toISOString())
+    .lt('start_time', tomorrow.toISOString())
+    .neq('status', 'cancelled')
+    .order('start_time', { ascending: true }) as { data: Array<{
+      id: string;
+      start_time: string;
+      end_time: string;
+      status: string;
+      customer: { full_name: string } | null;
+      staff: { full_name: string; color: string | null } | null;
+      appointment_services: Array<{ service_name: string }>;
+    }> | null };
 
   return (
     <OverviewContent 
       stats={stats} 
-      roiData={roiData}
+      roiData={null}
       businessName={(business as any)?.name || 'Il tuo salone'}
+      businessSlug={(business as any)?.slug || ''}
+      businessType={(business as any)?.business_type || 'mixed'}
+      todayAppointments={(todayAppointments || []).map(apt => ({
+        id: apt.id,
+        time: new Date(apt.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+        endTime: new Date(apt.end_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+        customerName: apt.customer?.full_name || 'Cliente',
+        staffName: apt.staff?.full_name || '',
+        staffColor: apt.staff?.color || '#9333ea',
+        serviceName: apt.appointment_services?.[0]?.service_name || 'Appuntamento',
+        status: apt.status,
+      }))}
     />
   );
 }

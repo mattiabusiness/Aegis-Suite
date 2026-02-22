@@ -8,7 +8,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  PageHeader,
   ServiceList,
   ServiceModal,
   CategoryModal,
@@ -351,18 +350,29 @@ export function ServiziContent({
     <>
       <div className="min-h-[calc(100vh-7rem)]">
         {/* Header */}
-        <PageHeader
-          title="Servizi"
-          description="Gestisci i servizi offerti dal tuo salone"
-          actions={[
-            {
-              id: 'new-category',
-              label: 'Nuova categoria',
-              onClick: handleAddCategory,
-              variant: 'outline' as const,
-            },
-          ]}
-        />
+        <div className="mb-6" style={{ animation: 'sl-fade-in 0.4s ease-out both' }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Servizi</h1>
+              <p className="text-gray-500 mt-1">Gestisci i servizi offerti dal tuo salone</p>
+            </div>
+            <button
+              onClick={handleAddCategory}
+              className="px-4 py-2.5 rounded-xl text-sm font-medium"
+              style={{
+                color: '#9333ea',
+                background: 'rgba(168,85,247,0.06)',
+                border: '1px solid rgba(168,85,247,0.12)',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.1)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)'; }}
+            >
+              + Nuova categoria
+            </button>
+          </div>
+          <style>{`@keyframes sl-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+        </div>
 
         {/* Content */}
         <div className="mt-6 pb-8">

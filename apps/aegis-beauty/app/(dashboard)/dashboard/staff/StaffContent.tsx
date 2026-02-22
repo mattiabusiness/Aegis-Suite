@@ -7,7 +7,6 @@
 
 import { useState } from 'react';
 import {
-  PageHeader,
   StaffList,
   StaffModal,
   StaffServicesModal,
@@ -158,7 +157,7 @@ export function StaffContent({
       role: s.role || 'employee',
       color: s.color || undefined,
       isActive: s.is_active ?? true,
-      servicesCount: s.staff_services?.length || 0,
+      servicesCount: s.staff_services?.length,
       isIncomplete,
     };
   });
@@ -459,10 +458,11 @@ export function StaffContent({
   return (
     <>
       <div className="min-h-[calc(100vh-7rem)]">
-        <PageHeader
-          title="Staff"
-          description="Gestisci i membri del tuo team"
-        />
+        <div className="mb-6" style={{ animation: 'stl-fade-in 0.4s ease-out both' }}>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Staff</h1>
+          <p className="text-gray-500 mt-1">Gestisci i membri del tuo team</p>
+          <style>{`@keyframes stl-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+        </div>
 
         <div className="mt-6 pb-6">
           <StaffList

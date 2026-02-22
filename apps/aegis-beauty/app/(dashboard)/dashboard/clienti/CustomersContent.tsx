@@ -8,7 +8,6 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  PageHeader,
   CustomerList,
   CustomerDetailModal,
   AppointmentModal,
@@ -563,10 +562,11 @@ export function ClientiContent({
   return (
     <>
       <div className="min-h-[calc(100vh-7rem)]">
-        <PageHeader
-          title="Clienti"
-          description="Gestisci la tua rubrica clienti"
-        />
+        <div className="mb-6" style={{ animation: 'cl-fade-in 0.4s ease-out both' }}>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Clienti</h1>
+          <p className="text-gray-500 mt-1">Gestisci i tuoi clienti e il loro storico</p>
+          <style>{`@keyframes cl-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+        </div>
 
         <div className="mt-6 pb-8">
           <CustomerList
