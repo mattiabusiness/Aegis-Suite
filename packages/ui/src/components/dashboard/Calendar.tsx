@@ -1,13 +1,18 @@
 // ============================================================================
-// AEGIS SUITE - CALENDAR COMPONENT (Timeline Continua)
+// AEGIS SUITE - CALENDAR COMPONENT (v2 — Modern Glass Design)
 // File: packages/ui/src/components/dashboard/Calendar.tsx
+//
+// Redesign: glass header, gradient view tabs, current time indicator,
+// glass break overlay, hover glow on slots, modern month view, smooth
+// transitions. Matches onboarding + dashboard design language.
 // ============================================================================
 
 'use client';
 
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { CalendarEvent, type CalendarEventData } from './CalendarEvent';
+import { type CalendarEventData } from './CalendarEvent';
 
 // ============================================================================
 // TYPES
@@ -47,18 +52,14 @@ export interface CalendarProps {
 // CONSTANTS
 // ============================================================================
 
-const HOUR_HEIGHT = 60; // 1 ora = 60px
+const HOUR_HEIGHT = 60;
 const DAYS_IT = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 const DAYS_SHORT_IT = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
 const DAYS_DB = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const MONTHS_IT = [
   'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
-  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre',
 ];
-
-// ============================================================================
-// ITALIAN HOLIDAYS (solo nome informativo)
-// ============================================================================
 
 const ITALIAN_HOLIDAYS: { date: string; name: string }[] = [
   { date: '01-01', name: 'Capodanno' },
@@ -70,58 +71,15 @@ const ITALIAN_HOLIDAYS: { date: string; name: string }[] = [
   { date: '11-01', name: 'Ognissanti' },
   { date: '12-08', name: 'Immacolata' },
   { date: '12-25', name: 'Natale' },
-  { date: '12-26', name: 'S.Stefano' },
+  { date: '12-26', name: 'S. Stefano' },
 ];
 
-function getEasterDate(year: number): Date {
-  const a = year % 19;
-  const b = Math.floor(year / 100);
-  const c = year % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
-  const l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
-  const day = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(year, month, day);
-}
-
-function getHolidayName(date: Date): string | null {
-  const year = date.getFullYear();
-  const monthDay = `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-  
-  const fixedHoliday = ITALIAN_HOLIDAYS.find(h => h.date === monthDay);
-  if (fixedHoliday) return fixedHoliday.name;
-  
-  const easter = getEasterDate(year);
-  if (date.getDate() === easter.getDate() && date.getMonth() === easter.getMonth()) {
-    return 'Pasqua';
-  }
-  
-  const easterMonday = new Date(easter);
-  easterMonday.setDate(easter.getDate() + 1);
-  if (date.getDate() === easterMonday.getDate() && date.getMonth() === easterMonday.getMonth()) {
-    return 'Pasquetta';
-  }
-  
-  return null;
-}
-
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================================================
 
-function isSameDay(date1: Date, date2: Date): boolean {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
 function isToday(date: Date): boolean {
@@ -133,7 +91,6 @@ function getWeekDays(date: Date): Date[] {
   const day = start.getDay();
   const diff = start.getDate() - day + (day === 0 ? -6 : 1);
   start.setDate(diff);
-  
   const days: Date[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);
@@ -146,28 +103,15 @@ function getWeekDays(date: Date): Date[] {
 function getMonthDays(date: Date): Date[] {
   const year = date.getFullYear();
   const month = date.getMonth();
-  
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  
   const days: Date[] = [];
-  
   const startDay = firstDay.getDay();
   const prevDays = startDay === 0 ? 6 : startDay - 1;
-  for (let i = prevDays - 1; i >= 0; i--) {
-    const d = new Date(year, month, -i);
-    days.push(d);
-  }
-  
-  for (let i = 1; i <= lastDay.getDate(); i++) {
-    days.push(new Date(year, month, i));
-  }
-  
+  for (let i = prevDays - 1; i >= 0; i--) days.push(new Date(year, month, -i));
+  for (let i = 1; i <= lastDay.getDate(); i++) days.push(new Date(year, month, i));
   const remaining = 42 - days.length;
-  for (let i = 1; i <= remaining; i++) {
-    days.push(new Date(year, month + 1, i));
-  }
-  
+  for (let i = 1; i <= remaining; i++) days.push(new Date(year, month + 1, i));
   return days;
 }
 
@@ -182,134 +126,414 @@ function timeToMinutes(time: string | null): number {
   return hour * 60 + minutes;
 }
 
-function getBusinessHoursForDay(businessHours: BusinessHoursData[] | undefined, date: Date): BusinessHoursData | null {
-  if (!businessHours) return null;
-  const dayName = DAYS_DB[date.getDay()];
-  return businessHours.find(bh => bh.day_of_week === dayName) || null;
+function getBusinessHoursForDay(bh: BusinessHoursData[] | undefined, date: Date): BusinessHoursData | null {
+  if (!bh) return null;
+  return bh.find(b => b.day_of_week === DAYS_DB[date.getDay()]) || null;
 }
 
 function isClosedForDate(closures: ClosureData[] | undefined, date: Date): ClosureData | null {
   if (!closures || closures.length === 0) return null;
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  const dateStr = `${year}-${month}-${day}`;
-  return closures.find(c => c.date === dateStr) || null;
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const d = date.getDate().toString().padStart(2, '0');
+  return closures.find(c => c.date === `${y}-${m}-${d}`) || null;
 }
 
 function getEventsForDate(events: CalendarEventData[], date: Date): CalendarEventData[] {
-  return events.filter(event => isSameDay(new Date(event.startTime), date));
+  return events.filter(e => isSameDay(new Date(e.startTime), date));
+}
+
+function getHolidayName(date: Date): string | null {
+  const md = `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+  return ITALIAN_HOLIDAYS.find(h => h.date === md)?.name || null;
+}
+
+function getDisplayHours(bh: BusinessHoursData[] | undefined): number[] {
+  if (!bh || bh.length === 0) return Array.from({ length: 12 }, (_, i) => i + 8);
+  let earliest = 24, latest = 0;
+  bh.forEach(b => {
+    if (b.is_open && b.open_time_1) {
+      const open = parseTime(b.open_time_1);
+      const close = parseTime(b.close_time_2 || b.close_time_1);
+      if (open.hour < earliest) earliest = open.hour;
+      if (close.hour > latest) latest = close.hour;
+      if (close.minutes > 0) latest = close.hour + 1;
+    }
+  });
+  if (earliest >= latest) return Array.from({ length: 12 }, (_, i) => i + 8);
+  const hours: number[] = [];
+  for (let h = earliest; h <= latest; h++) hours.push(h);
+  return hours;
 }
 
 function formatHeaderTitle(date: Date, view: CalendarView): string {
   const month = MONTHS_IT[date.getMonth()];
   const year = date.getFullYear();
-  
-  if (view === 'day') {
-    return `${date.getDate()} ${month} ${year}`;
-  }
+  if (view === 'day') return `${date.getDate()} ${month} ${year}`;
   if (view === 'week') {
-    const weekDays = getWeekDays(date);
-    const startMonth = MONTHS_IT[weekDays[0].getMonth()];
-    const endMonth = MONTHS_IT[weekDays[6].getMonth()];
-    if (startMonth === endMonth) {
-      return `${weekDays[0].getDate()} - ${weekDays[6].getDate()} ${startMonth} ${year}`;
-    }
-    return `${weekDays[0].getDate()} ${startMonth} - ${weekDays[6].getDate()} ${endMonth}`;
+    const w = getWeekDays(date);
+    const sm = MONTHS_IT[w[0].getMonth()];
+    const em = MONTHS_IT[w[6].getMonth()];
+    return sm === em
+      ? `${w[0].getDate()} - ${w[6].getDate()} ${sm} ${year}`
+      : `${w[0].getDate()} ${sm} - ${w[6].getDate()} ${em}`;
   }
   return `${month} ${year}`;
 }
 
-// Calcola le ore da mostrare basate sugli orari business
-function getDisplayHours(businessHours: BusinessHoursData[] | undefined): number[] {
-  if (!businessHours || businessHours.length === 0) {
-    return Array.from({ length: 12 }, (_, i) => i + 8); // 8-19
-  }
+// ============================================================================
+// EVENT LAYOUT — Side-by-side overlapping events
+// ============================================================================
 
-  let earliestOpen = 24;
-  let latestClose = 0;
+interface LayoutedEvent {
+  event: CalendarEventData;
+  column: number;
+  totalColumns: number;
+}
 
-  businessHours.forEach(bh => {
-    if (bh.is_open && bh.open_time_1) {
-      const open = parseTime(bh.open_time_1);
-      const close = parseTime(bh.close_time_2 || bh.close_time_1);
-      
-      if (open.hour < earliestOpen) earliestOpen = open.hour;
-      if (close.hour > latestClose) latestClose = close.hour;
-      if (close.minutes > 0) latestClose = close.hour + 1;
-    }
+function layoutOverlappingEvents(events: CalendarEventData[]): LayoutedEvent[] {
+  // Filter out cancelled events
+  const visible = events.filter(e => e.status !== 'cancelled');
+  if (visible.length === 0) return [];
+
+  // Sort by start time, then by duration (longer first)
+  const sorted = [...visible].sort((a, b) => {
+    const diff = new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+    if (diff !== 0) return diff;
+    const durA = new Date(a.endTime).getTime() - new Date(a.startTime).getTime();
+    const durB = new Date(b.endTime).getTime() - new Date(b.startTime).getTime();
+    return durB - durA;
   });
 
-  if (earliestOpen === 24 || earliestOpen >= latestClose) {
-    return Array.from({ length: 12 }, (_, i) => i + 8);
-  }
+  // Step 1: Group into clusters of overlapping events
+  const clusters: CalendarEventData[][] = [];
+  let currentCluster: CalendarEventData[] = [];
+  let clusterEnd = 0;
 
-  const hours: number[] = [];
-  for (let h = earliestOpen; h <= latestClose; h++) {
-    hours.push(h);
-  }
-  return hours;
+  sorted.forEach(event => {
+    const startMs = new Date(event.startTime).getTime();
+    const endMs = new Date(event.endTime).getTime();
+
+    if (currentCluster.length === 0 || startMs < clusterEnd) {
+      // Overlaps with current cluster — add to it
+      currentCluster.push(event);
+      clusterEnd = Math.max(clusterEnd, endMs);
+    } else {
+      // No overlap — start new cluster
+      clusters.push(currentCluster);
+      currentCluster = [event];
+      clusterEnd = endMs;
+    }
+  });
+  if (currentCluster.length > 0) clusters.push(currentCluster);
+
+  // Step 2: Within each cluster, assign columns independently
+  const result: LayoutedEvent[] = [];
+
+  clusters.forEach(cluster => {
+    const columns: { end: number; event: CalendarEventData }[][] = [];
+
+    cluster.forEach(event => {
+      const startMs = new Date(event.startTime).getTime();
+      const endMs = new Date(event.endTime).getTime();
+
+      // Find first column where this event fits
+      let placed = false;
+      for (let col = 0; col < columns.length; col++) {
+        const lastInCol = columns[col][columns[col].length - 1];
+        if (lastInCol.end <= startMs) {
+          columns[col].push({ end: endMs, event });
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        columns.push([{ end: endMs, event }]);
+      }
+    });
+
+    // Each event in this cluster shares only with cluster siblings
+    const totalColumns = columns.length;
+    columns.forEach((col, colIdx) => {
+      col.forEach(item => {
+        result.push({ event: item.event, column: colIdx, totalColumns });
+      });
+    });
+  });
+
+  return result;
 }
 
 // ============================================================================
-// CALENDAR HEADER
+// STATUS GRADIENT COLORS
+// ============================================================================
+
+function getStatusGradient(status: string): { bg: string; text: string; border: string; tooltipBg: string } {
+  switch (status) {
+    case 'confirmed':
+    case 'pending':
+      return {
+        bg: 'linear-gradient(135deg, rgba(139,92,246,0.35), rgba(168,85,247,0.22))',
+        text: '#6d28d9',
+        border: 'rgba(139,92,246,0.5)',
+        tooltipBg: 'linear-gradient(135deg, #7c3aed, #9333ea)',
+      };
+    case 'completed':
+      return {
+        bg: 'linear-gradient(135deg, rgba(16,185,129,0.35), rgba(52,211,153,0.22))',
+        text: '#047857',
+        border: 'rgba(16,185,129,0.5)',
+        tooltipBg: 'linear-gradient(135deg, #059669, #10b981)',
+      };
+    case 'no_show':
+      return {
+        bg: 'linear-gradient(135deg, rgba(156,163,175,0.35), rgba(209,213,219,0.25))',
+        text: '#4b5563',
+        border: 'rgba(156,163,175,0.5)',
+        tooltipBg: 'linear-gradient(135deg, #6b7280, #9ca3af)',
+      };
+    default:
+      return {
+        bg: 'linear-gradient(135deg, rgba(156,163,175,0.25), rgba(209,213,219,0.18))',
+        text: '#6b7280',
+        border: 'rgba(156,163,175,0.35)',
+        tooltipBg: 'linear-gradient(135deg, #6b7280, #9ca3af)',
+      };
+  }
+}
+
+function getStatusLabel(status: string): string {
+  switch (status) {
+    case 'confirmed': return 'Confermato';
+    case 'pending': return 'In attesa';
+    case 'completed': return 'Completato';
+    case 'no_show': return 'No-show';
+    default: return status;
+  }
+}
+
+function formatTimeShort(d: Date): string {
+  return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ============================================================================
+// EVENT BLOCK — Inline rendered event with tooltip
+// ============================================================================
+
+function EventBlock({ event, style: posStyle, onClick, showTime = true }: {
+  event: CalendarEventData;
+  style: React.CSSProperties;
+  onClick?: (event: CalendarEventData) => void;
+  showTime?: boolean;
+}) {
+  const [hovered, setHovered] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [tipPos, setTipPos] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const colors = getStatusGradient(event.status);
+
+  const updateTipPos = () => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    setTipPos({ x: r.left + r.width / 2, y: r.top });
+  };
+
+  return (
+    <div
+      ref={ref}
+      className="absolute z-30 overflow-visible rounded-lg cursor-pointer"
+      style={{
+        ...posStyle,
+        transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+      }}
+      onClick={(e) => { e.stopPropagation(); onClick?.(event); }}
+      onMouseEnter={(e) => {
+        updateTipPos();
+        setHovered(true);
+        e.currentTarget.style.boxShadow = `0 4px 16px ${colors.border}`;
+        e.currentTarget.style.transform = 'scale(1.03)';
+        e.currentTarget.style.zIndex = '50';
+      }}
+      onMouseLeave={(e) => {
+        setHovered(false);
+        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.zIndex = '30';
+      }}
+    >
+      {/* Event body — glass */}
+      <div className="h-full rounded-lg overflow-hidden px-1.5 py-0.5" style={{
+        background: colors.bg,
+        borderLeft: `3px solid ${colors.border}`,
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+      }}>
+        <p className="text-[10px] font-semibold truncate leading-tight" style={{ color: colors.text }}>{event.title}</p>
+        {showTime && (
+          <p className="text-[9px] truncate leading-tight" style={{ color: colors.text, opacity: 0.7 }}>
+            {formatTimeShort(new Date(event.startTime))}
+          </p>
+        )}
+        {event.customerName && (
+          <p className="text-[9px] truncate leading-tight" style={{ color: colors.text, opacity: 0.6 }}>
+            {event.customerName}
+          </p>
+        )}
+      </div>
+
+      {/* Portal tooltip — always above, escapes any overflow */}
+      {hovered && typeof document !== 'undefined' && ReactDOM.createPortal(
+        <div style={{ position: 'fixed', left: tipPos.x, top: tipPos.y - 6, transform: 'translate(-50%, -100%)', zIndex: 9999, pointerEvents: 'none', animation: 'cal-tooltip 0.1s ease-out' }}>
+          <div className="relative rounded-lg px-2.5 py-1.5 text-white text-[10px] whitespace-nowrap shadow-lg" style={{ background: colors.tooltipBg }}>
+            <p className="font-bold text-[11px]">{event.title}</p>
+            <p className="opacity-90">{formatTimeShort(new Date(event.startTime))} - {formatTimeShort(new Date(event.endTime))}</p>
+            {event.staffName && <p className="opacity-80">{event.staffName}</p>}
+            <p className="mt-0.5 text-[9px] font-semibold opacity-90">{getStatusLabel(event.status)}</p>
+            <div style={{ width: 6, height: 6, background: colors.tooltipBg.includes('#059669') ? '#059669' : colors.tooltipBg.includes('#6b7280') ? '#6b7280' : '#7c3aed', position: 'absolute', bottom: -3, left: '50%', marginLeft: -3, transform: 'rotate(45deg)' }} />
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
+function CurrentTimeIndicator({ startHour, endHour }: { startHour: number; endHour: number }) {
+  const [now, setNow] = React.useState(new Date());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const mins = now.getHours() * 60 + now.getMinutes();
+  const top = mins - startHour * 60;
+  const maxTop = (endHour - startHour) * HOUR_HEIGHT;
+
+  // Hide if before start or after end of displayed hours
+  if (top < 0 || top > maxTop) return null;
+
+  return (
+    <div className="absolute left-0 right-0 z-40 pointer-events-none" style={{ top }}>
+      <div className="relative flex items-center">
+        {/* Pulsing dot */}
+        <div
+          className="absolute -left-1.5 w-3 h-3 rounded-full"
+          style={{
+            background: '#9333ea',
+            boxShadow: '0 0 8px rgba(147,51,234,0.5)',
+            animation: 'cal-pulse 2s ease-in-out infinite',
+          }}
+        />
+        {/* Line */}
+        <div className="w-full h-px" style={{ background: 'linear-gradient(90deg, #9333ea 0%, rgba(147,51,234,0.3) 50%, transparent 100%)' }} />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// CALENDAR HEADER — Glass design
 // ============================================================================
 
 function CalendarHeader({
-  date,
-  view,
-  onPrev,
-  onNext,
-  onToday,
-  onViewChange,
+  date, view, onPrev, onNext, onToday, onViewChange,
 }: {
-  date: Date;
-  view: CalendarView;
-  onPrev: () => void;
-  onNext: () => void;
-  onToday: () => void;
+  date: Date; view: CalendarView;
+  onPrev: () => void; onNext: () => void; onToday: () => void;
   onViewChange: (view: CalendarView) => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 flex-shrink-0 bg-white">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1">
-          <button 
-            onClick={onPrev} 
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+    <div
+      className="flex items-center justify-between px-5 py-3.5 flex-shrink-0"
+      style={{
+        background: 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(168,85,247,0.08)',
+      }}
+    >
+      <div className="flex items-center gap-3">
+        {/* Nav arrows */}
+        <div className="flex items-center gap-0.5">
+          <button onClick={onPrev}
+            className="p-2 rounded-xl transition-all duration-150"
+            style={{ color: '#6b7280' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.color = '#7c3aed'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <button 
-            onClick={onNext} 
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          <button onClick={onNext}
+            className="p-2 rounded-xl transition-all duration-150"
+            style={{ color: '#6b7280' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.color = '#7c3aed'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
           >
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
-        <h2 className="text-lg font-semibold text-gray-900">{formatHeaderTitle(date, view)}</h2>
-        <button 
-          onClick={onToday} 
-          className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+
+        {/* Title */}
+        <h2 className="text-lg font-bold text-gray-900 tracking-tight">{formatHeaderTitle(date, view)}</h2>
+
+        {/* Today button */}
+        <button onClick={onToday}
+          className="relative px-3.5 py-1.5 rounded-xl text-sm font-semibold overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(147,51,234,0.08), rgba(168,85,247,0.04))',
+            color: '#7c3aed',
+            border: '1px solid rgba(168,85,247,0.15)',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(147,51,234,0.12), rgba(168,85,247,0.08))';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.15)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(147,51,234,0.08), rgba(168,85,247,0.04))';
+            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
         >
           Oggi
         </button>
       </div>
 
-      <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-        {(['day', 'week', 'month'] as CalendarView[]).map((v) => (
-          <button
-            key={v}
-            onClick={() => onViewChange(v)}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              view === v 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            {v === 'day' ? 'Giorno' : v === 'week' ? 'Settimana' : 'Mese'}
-          </button>
-        ))}
+      {/* View tabs — gradient selection */}
+      <div
+        className="flex items-center gap-1 p-1 rounded-xl"
+        style={{
+          background: 'rgba(0,0,0,0.03)',
+          border: '1px solid rgba(0,0,0,0.04)',
+        }}
+      >
+        {(['day', 'week', 'month'] as CalendarView[]).map((v) => {
+          const isActive = view === v;
+          const label = v === 'day' ? 'Giorno' : v === 'week' ? 'Settimana' : 'Mese';
+          return (
+            <button
+              key={v}
+              onClick={() => onViewChange(v)}
+              className="relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
+              style={{
+                background: isActive ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'transparent',
+                color: isActive ? '#fff' : '#6b7280',
+                boxShadow: isActive ? '0 2px 8px rgba(147,51,234,0.25)' : 'none',
+              }}
+              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = '#7c3aed'; }}
+              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = '#6b7280'; }}
+            >
+              {isActive && (
+                <div className="absolute inset-0 rounded-lg pointer-events-none" style={{
+                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                  animation: 'cal-shimmer 2.5s ease-in-out infinite',
+                }} />
+              )}
+              <span className="relative z-10">{label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -320,17 +544,10 @@ function CalendarHeader({
 // ============================================================================
 
 function DayView({
-  date,
-  events,
-  businessHours,
-  closures,
-  onEventClick,
-  onSlotClick,
+  date, events, businessHours, closures, onEventClick, onSlotClick,
 }: {
-  date: Date;
-  events: CalendarEventData[];
-  businessHours?: BusinessHoursData[];
-  closures?: ClosureData[];
+  date: Date; events: CalendarEventData[];
+  businessHours?: BusinessHoursData[]; closures?: ClosureData[];
   onEventClick?: (event: CalendarEventData) => void;
   onSlotClick?: (date: Date, hour: number, minutes: number) => void;
 }) {
@@ -340,21 +557,16 @@ function DayView({
   const hours = getDisplayHours(businessHours);
   const startHour = hours[0];
   const dayEvents = getEventsForDate(events, date);
-  
-  // Giorno chiuso?
   const isDayClosed = closure !== null || (dayBH !== null && !dayBH.is_open);
-  
-  // Pausa pranzo
-  let breakStartPx = 0;
-  let breakHeightPx = 0;
+
+  let breakStartPx = 0, breakHeightPx = 0;
   if (dayBH?.is_open && dayBH.close_time_1 && dayBH.open_time_2) {
-    const breakStartMin = timeToMinutes(dayBH.close_time_1);
-    const breakEndMin = timeToMinutes(dayBH.open_time_2);
-    breakStartPx = (breakStartMin - startHour * 60);
-    breakHeightPx = breakEndMin - breakStartMin;
+    breakStartPx = timeToMinutes(dayBH.close_time_1) - startHour * 60;
+    breakHeightPx = timeToMinutes(dayBH.open_time_2) - timeToMinutes(dayBH.close_time_1);
   }
 
   const totalHeight = hours.length * HOUR_HEIGHT;
+  const todayDate = isToday(date);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isDayClosed) return;
@@ -368,96 +580,93 @@ function DayView({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-shrink-0 border-b border-gray-200">
-        <div className="w-16 flex-shrink-0 bg-gray-100 border-r border-gray-200 h-12" />
-        <div className="flex-1 h-12 bg-gray-100 flex flex-col items-center justify-center">
-          <p className="text-xs font-medium text-gray-500 uppercase">{DAYS_IT[date.getDay()]}</p>
-          <p className={`text-sm font-semibold ${isToday(date) ? 'text-purple-600' : 'text-gray-900'}`}>
-            {date.getDate()}
-          </p>
-          {holiday && <p className="text-[10px] text-orange-600">{holiday}</p>}
+      {/* Day header */}
+      <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="w-16 flex-shrink-0" style={{ background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
+          <div className="h-14" />
+        </div>
+        <div className="flex-1 h-14 flex flex-col items-center justify-center" style={{ background: 'rgba(0,0,0,0.015)' }}>
+          <p className="text-xs font-medium text-gray-400 uppercase">{DAYS_IT[date.getDay()]}</p>
+          {todayDate ? (
+            <span className="w-7 h-7 flex items-center justify-center rounded-full text-white text-sm font-bold"
+              style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)', boxShadow: '0 2px 8px rgba(147,51,234,0.3)' }}
+            >
+              {date.getDate()}
+            </span>
+          ) : (
+            <p className="text-sm font-semibold text-gray-900">{date.getDate()}</p>
+          )}
+          {holiday && <p className="text-[10px] text-amber-600">{holiday}</p>}
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 overflow-y-auto">
+      <div className="flex flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }}>
         {/* Time column */}
-        <div className="w-16 flex-shrink-0 bg-gray-100 border-r border-gray-200" style={{ minHeight: totalHeight }}>
+        <div className="w-16 flex-shrink-0" style={{ minHeight: totalHeight, background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
           {hours.map((hour, idx) => (
             <div key={hour} className="relative" style={{ height: HOUR_HEIGHT }}>
-              {idx === 0 ? (
-                <span className="absolute right-2 top-0 text-xs text-gray-500 font-medium">
-                  {`${hour.toString().padStart(2, '0')}:00`}
-                </span>
-              ) : (
-                <span className="absolute right-2 text-xs text-gray-500 font-medium" style={{ top: 0, transform: 'translateY(-50%)' }}>
-                  {`${hour.toString().padStart(2, '0')}:00`}
-                </span>
-              )}
+              <span className="absolute right-2 text-[11px] font-medium text-gray-400"
+                style={{ top: idx === 0 ? 2 : 0, transform: idx === 0 ? 'none' : 'translateY(-50%)' }}
+              >
+                {`${hour.toString().padStart(2, '0')}:00`}
+              </span>
             </div>
           ))}
         </div>
 
         {/* Day content */}
-        <div 
-          className="flex-1 relative bg-white"
-          style={{ height: totalHeight }}
-          onClick={handleClick}
-        >
-          {/* Chiuso overlay */}
+        <div className="flex-1 relative" style={{ height: totalHeight }} onClick={handleClick}>
           {isDayClosed && (
-            <div className="absolute inset-0 bg-red-100 flex items-center justify-center z-20">
-              <span className="text-red-600 font-bold text-lg">
-                {closure ? 'CHIUSO PER FESTIVITÀ' : 'CHIUSO'}
-              </span>
+            <div className="absolute inset-0 flex items-center justify-center z-20"
+              style={{ background: 'rgba(239,68,68,0.06)', backdropFilter: 'blur(2px)' }}
+            >
+              <span className="text-red-500 font-bold text-lg">{closure ? 'CHIUSO PER FESTIVITÀ' : 'CHIUSO'}</span>
             </div>
           )}
 
-          {/* Hour lines */}
           {!isDayClosed && hours.map((_, idx) => (
             <React.Fragment key={idx}>
-              <div 
-                className="absolute left-0 right-0 border-t border-gray-200"
-                style={{ top: idx * HOUR_HEIGHT }}
-              />
-              <div 
-                className="absolute left-0 right-0 border-t border-gray-100 border-dashed"
-                style={{ top: idx * HOUR_HEIGHT + 30 }}
-              />
+              <div className="absolute left-0 right-0" style={{ top: idx * HOUR_HEIGHT, height: 1, background: 'rgba(0,0,0,0.05)' }} />
+              <div className="absolute left-0 right-0" style={{ top: idx * HOUR_HEIGHT + 30, height: 1, background: 'rgba(0,0,0,0.03)', borderTop: '1px dashed rgba(0,0,0,0.04)' }} />
             </React.Fragment>
           ))}
 
-          {/* Pausa pranzo */}
+          {/* Break overlay — glass */}
           {!isDayClosed && breakHeightPx > 0 && (
-            <div 
-              className="absolute left-0 right-0 bg-gray-500 flex items-center justify-center z-10"
-              style={{ top: breakStartPx, height: breakHeightPx }}
+            <div className="absolute left-0 right-0 flex items-center justify-center z-10"
+              style={{
+                top: breakStartPx, height: breakHeightPx,
+                background: 'repeating-linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.06) 4px, rgba(217,119,6,0.03) 4px, rgba(217,119,6,0.03) 8px)',
+                borderTop: '1px solid rgba(217,119,6,0.12)',
+                borderBottom: '1px solid rgba(217,119,6,0.12)',
+                backdropFilter: 'blur(4px)',
+              }}
             >
-              <span className="text-white font-medium text-sm">PAUSA PRANZO</span>
+              <span className="text-xs font-semibold" style={{ color: 'rgba(217,119,6,0.5)' }}>PAUSA</span>
             </div>
           )}
 
-          {/* Events */}
-          {!isDayClosed && dayEvents.map((event) => {
-            const eventStart = new Date(event.startTime);
-            const eventEnd = new Date(event.endTime);
-            const startMin = eventStart.getHours() * 60 + eventStart.getMinutes();
-            const endMin = eventEnd.getHours() * 60 + eventEnd.getMinutes();
-            const top = startMin - startHour * 60;
-            const height = Math.max(endMin - startMin, 20);
+          {/* Current time indicator */}
+          {todayDate && <CurrentTimeIndicator startHour={startHour} endHour={hours[hours.length - 1] + 1} />}
 
-            return (
-              <div
-                key={event.id}
-                className="absolute left-1 right-1 z-30 overflow-hidden rounded"
-                style={{ top, height }}
-                onClick={(e) => { e.stopPropagation(); onEventClick?.(event); }}
-              >
-                <CalendarEvent event={event} variant="compact" style={{ height: '100%' }} />
-              </div>
-            );
-          })}
+          {/* Events — side-by-side layout */}
+          {!isDayClosed && (() => {
+            const layouted = layoutOverlappingEvents(dayEvents);
+            return layouted.map(({ event, column, totalColumns }) => {
+              const startMin = new Date(event.startTime).getHours() * 60 + new Date(event.startTime).getMinutes();
+              const endMin = new Date(event.endTime).getHours() * 60 + new Date(event.endTime).getMinutes();
+              const top = startMin - startHour * 60;
+              const height = Math.max(endMin - startMin, 20);
+              const widthPct = 100 / totalColumns;
+              const leftPct = column * widthPct;
+              return (
+                <EventBlock key={event.id} event={event} onClick={onEventClick}
+                  style={{ top, height, left: `calc(${leftPct}% + 2px)`, width: `calc(${widthPct}% - 4px)` }}
+                />
+              );
+            });
+          })()}
         </div>
       </div>
     </div>
@@ -469,18 +678,10 @@ function DayView({
 // ============================================================================
 
 function WeekView({
-  date,
-  events,
-  businessHours,
-  closures,
-  onEventClick,
-  onSlotClick,
-  onDayClick,
+  date, events, businessHours, closures, onEventClick, onSlotClick, onDayClick,
 }: {
-  date: Date;
-  events: CalendarEventData[];
-  businessHours?: BusinessHoursData[];
-  closures?: ClosureData[];
+  date: Date; events: CalendarEventData[];
+  businessHours?: BusinessHoursData[]; closures?: ClosureData[];
   onEventClick?: (event: CalendarEventData) => void;
   onSlotClick?: (date: Date, hour: number, minutes: number) => void;
   onDayClick?: (date: Date) => void;
@@ -492,98 +693,85 @@ function WeekView({
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const timeColumnRef = React.useRef<HTMLDivElement>(null);
 
-  // Sincronizza scroll tra time column e content
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (timeColumnRef.current) {
-      timeColumnRef.current.scrollTop = e.currentTarget.scrollTop;
-    }
+    if (timeColumnRef.current) timeColumnRef.current.scrollTop = e.currentTarget.scrollTop;
   };
 
   return (
     <div className="flex h-full overflow-hidden">
-      {/* Left: Time column (fixed width, synced scroll) */}
-      <div className="w-16 flex-shrink-0 flex flex-col bg-gray-100 border-r border-gray-200">
-        {/* Empty header space + scrollbar padding */}
-        <div className="h-14 border-b border-gray-200 flex-shrink-0" />
-        {/* Time labels - hidden scrollbar, synced with content */}
-        <div 
-          ref={timeColumnRef}
-          className="flex-1 overflow-y-hidden"
-        >
+      {/* Time column */}
+      <div className="w-16 flex-shrink-0 flex flex-col" style={{ background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="h-14 flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }} />
+        <div ref={timeColumnRef} className="flex-1 overflow-y-hidden">
           <div style={{ height: totalHeight }}>
             {hours.map((hour, idx) => (
               <div key={hour} className="relative" style={{ height: HOUR_HEIGHT }}>
-                {idx === 0 ? (
-                  <span className="absolute right-2 top-0 text-xs text-gray-500 font-medium">
-                    {`${hour.toString().padStart(2, '0')}:00`}
-                  </span>
-                ) : (
-                  <span className="absolute right-2 text-xs text-gray-500 font-medium" style={{ top: 0, transform: 'translateY(-50%)' }}>
-                    {`${hour.toString().padStart(2, '0')}:00`}
-                  </span>
-                )}
+                <span className="absolute right-2 text-[11px] font-medium text-gray-400"
+                  style={{ top: idx === 0 ? 2 : 0, transform: idx === 0 ? 'none' : 'translateY(-50%)' }}
+                >
+                  {`${hour.toString().padStart(2, '0')}:00`}
+                </span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right: Days area */}
+      {/* Days area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Days header - reserve scrollbar space with padding */}
-        <div className="flex flex-shrink-0 border-b border-gray-200 pr-[17px]">
+        {/* Days header — matched to content scrollbar gutter */}
+        <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', overflowY: 'auto', scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'transparent transparent' }}>
           <div className="flex flex-1">
-            {weekDays.map((day, idx) => {
+            {weekDays.map((day) => {
               const holiday = getHolidayName(day);
               const closure = isClosedForDate(closures, day);
               const dayBH = getBusinessHoursForDay(businessHours, day);
               const isClosed = closure !== null || (dayBH !== null && !dayBH.is_open);
-              
+              const todayDate = isToday(day);
+
               return (
-                <div
-                  key={day.toISOString()}
-                  className={`flex-1 h-14 flex flex-col items-center justify-center cursor-pointer border-r border-gray-200 last:border-r-0 transition-colors ${
-                    isClosed ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
+                <div key={day.toISOString()}
+                  className="flex-1 h-14 flex flex-col items-center justify-center cursor-pointer transition-colors duration-150"
+                  style={{
+                    background: isClosed ? 'rgba(239,68,68,0.04)' : 'rgba(0,0,0,0.015)',
+                    borderRight: '1px solid rgba(0,0,0,0.06)',
+                  }}
                   onClick={() => onDayClick?.(day)}
+                  onMouseEnter={(e) => { if (!isClosed) e.currentTarget.style.background = 'rgba(168,85,247,0.04)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = isClosed ? 'rgba(239,68,68,0.04)' : 'rgba(0,0,0,0.015)'; }}
                 >
-                  <p className="text-xs font-medium text-gray-500 uppercase">{DAYS_SHORT_IT[day.getDay()]}</p>
-                  <p className={`text-sm font-semibold ${isToday(day) ? 'text-purple-600' : 'text-gray-900'}`}>
-                    {day.getDate()}
-                  </p>
-                  {holiday && <p className="text-[9px] text-orange-600 leading-tight">{holiday}</p>}
-                  {isClosed && (
-                    <p className="text-[8px] text-red-600 font-bold leading-tight">
-                      {closure ? 'CHIUSO FESTIVITÀ' : 'CHIUSO'}
-                    </p>
+                  <p className="text-[10px] font-medium text-gray-400 uppercase">{DAYS_SHORT_IT[day.getDay()]}</p>
+                  {todayDate ? (
+                    <span className="w-6 h-6 flex items-center justify-center rounded-full text-white text-xs font-bold"
+                      style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)', boxShadow: '0 2px 6px rgba(147,51,234,0.3)' }}
+                    >
+                      {day.getDate()}
+                    </span>
+                  ) : (
+                    <p className="text-sm font-semibold text-gray-900">{day.getDate()}</p>
                   )}
+                  {holiday && <p className="text-[9px] text-amber-600 leading-tight">{holiday}</p>}
+                  {isClosed && <p className="text-[8px] text-red-500 font-bold leading-tight">{closure ? 'FESTIVITÀ' : 'CHIUSO'}</p>}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Days content - vertical scroll with same gutter */}
-        <div 
-          className="flex-1 overflow-y-scroll" 
-          style={{ scrollbarGutter: 'stable' }}
-          onScroll={handleScroll}
-        >
+        {/* Content */}
+        <div className="flex-1 overflow-y-scroll" style={{ scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }} onScroll={handleScroll}>
           <div className="flex" style={{ height: totalHeight }}>
-            {weekDays.map((day, dayIdx) => {
+            {weekDays.map((day) => {
               const dayBH = getBusinessHoursForDay(businessHours, day);
               const closure = isClosedForDate(closures, day);
               const isClosed = closure !== null || (dayBH !== null && !dayBH.is_open);
               const dayEvents = getEventsForDate(events, day);
-              
-              // Pausa pranzo
-              let breakStartPx = 0;
-              let breakHeightPx = 0;
+              const todayDate = isToday(day);
+
+              let breakStartPx = 0, breakHeightPx = 0;
               if (dayBH?.is_open && dayBH.close_time_1 && dayBH.open_time_2) {
-                const breakStartMin = timeToMinutes(dayBH.close_time_1);
-                const breakEndMin = timeToMinutes(dayBH.open_time_2);
-                breakStartPx = breakStartMin - startHour * 60;
-                breakHeightPx = breakEndMin - breakStartMin;
+                breakStartPx = timeToMinutes(dayBH.close_time_1) - startHour * 60;
+                breakHeightPx = timeToMinutes(dayBH.open_time_2) - timeToMinutes(dayBH.close_time_1);
               }
 
               const handleDayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -597,62 +785,55 @@ function WeekView({
               };
 
               return (
-                <div 
-                  key={day.toISOString()}
-                  className="flex-1 relative border-r border-gray-200 last:border-r-0 bg-white"
+                <div key={day.toISOString()}
+                  className="flex-1 relative"
+                  style={{ borderRight: '1px solid rgba(0,0,0,0.04)' }}
                   onClick={handleDayClick}
                 >
-                  {/* Chiuso */}
                   {isClosed && (
-                    <div className="absolute inset-0 bg-red-100 flex items-center justify-center z-20">
-                      <span className="text-red-600 font-bold text-xs transform -rotate-90 whitespace-nowrap">
-                        {closure ? 'CHIUSO PER FESTIVITÀ' : 'CHIUSO'}
+                    <div className="absolute inset-0 flex items-center justify-center z-20" style={{ background: 'rgba(239,68,68,0.04)' }}>
+                      <span className="text-red-400 font-bold text-[10px] transform -rotate-90 whitespace-nowrap">
+                        {closure ? 'FESTIVITÀ' : 'CHIUSO'}
                       </span>
                     </div>
                   )}
 
-                  {/* Hour lines */}
                   {!isClosed && hours.map((_, idx) => (
                     <React.Fragment key={idx}>
-                      <div 
-                        className="absolute left-0 right-0 border-t border-gray-200"
-                        style={{ top: idx * HOUR_HEIGHT }}
-                      />
-                      <div 
-                        className="absolute left-0 right-0 border-t border-gray-100 border-dashed"
-                        style={{ top: idx * HOUR_HEIGHT + 30 }}
-                      />
+                      <div className="absolute left-0 right-0" style={{ top: idx * HOUR_HEIGHT, height: 1, background: 'rgba(0,0,0,0.05)' }} />
+                      <div className="absolute left-0 right-0" style={{ top: idx * HOUR_HEIGHT + 30, height: 1, background: 'rgba(0,0,0,0.025)' }} />
                     </React.Fragment>
                   ))}
 
-                  {/* Pausa pranzo */}
                   {!isClosed && breakHeightPx > 0 && (
-                    <div 
-                      className="absolute left-0 right-0 bg-gray-500 z-10"
-                      style={{ top: breakStartPx, height: breakHeightPx }}
+                    <div className="absolute left-0 right-0 z-10"
+                      style={{
+                        top: breakStartPx, height: breakHeightPx,
+                        background: 'repeating-linear-gradient(135deg, rgba(217,119,6,0.06), rgba(217,119,6,0.06) 4px, rgba(217,119,6,0.03) 4px, rgba(217,119,6,0.03) 8px)',
+                        borderTop: '1px solid rgba(217,119,6,0.12)',
+                        borderBottom: '1px solid rgba(217,119,6,0.12)',
+                      }}
                     />
                   )}
 
-                  {/* Events */}
-                  {!isClosed && dayEvents.map((event) => {
-                    const eventStart = new Date(event.startTime);
-                    const eventEnd = new Date(event.endTime);
-                    const startMin = eventStart.getHours() * 60 + eventStart.getMinutes();
-                    const endMin = eventEnd.getHours() * 60 + eventEnd.getMinutes();
-                    const top = startMin - startHour * 60;
-                    const height = Math.max(endMin - startMin, 15);
+                  {todayDate && <CurrentTimeIndicator startHour={startHour} endHour={hours[hours.length - 1] + 1} />}
 
-                    return (
-                      <div
-                        key={event.id}
-                        className="absolute left-0.5 right-0.5 z-30 overflow-hidden rounded"
-                        style={{ top, height }}
-                        onClick={(e) => { e.stopPropagation(); onEventClick?.(event); }}
-                      >
-                        <CalendarEvent event={event} variant="compact" showTime={false} style={{ height: '100%' }} />
-                      </div>
-                    );
-                  })}
+                  {!isClosed && (() => {
+                    const layouted = layoutOverlappingEvents(dayEvents);
+                    return layouted.map(({ event, column, totalColumns }) => {
+                      const startMin = new Date(event.startTime).getHours() * 60 + new Date(event.startTime).getMinutes();
+                      const endMin = new Date(event.endTime).getHours() * 60 + new Date(event.endTime).getMinutes();
+                      const top = startMin - startHour * 60;
+                      const height = Math.max(endMin - startMin, 15);
+                      const widthPct = 100 / totalColumns;
+                      const leftPct = column * widthPct;
+                      return (
+                        <EventBlock key={event.id} event={event} onClick={onEventClick} showTime={false}
+                          style={{ top, height, left: `calc(${leftPct}% + 1px)`, width: `calc(${widthPct}% - 2px)` }}
+                        />
+                      );
+                    });
+                  })()}
                 </div>
               );
             })}
@@ -667,18 +848,59 @@ function WeekView({
 // MONTH VIEW
 // ============================================================================
 
+// ============================================================================
+// MONTH EVENT PILL — Small event with mini tooltip (no time)
+// ============================================================================
+
+function MonthEventPill({ event, onClick }: { event: CalendarEventData; onClick?: (e: CalendarEventData) => void }) {
+  const [hovered, setHovered] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [tipPos, setTipPos] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const sc = getStatusGradient(event.status);
+  const arrowColor = sc.tooltipBg.includes('#059669') ? '#059669' : sc.tooltipBg.includes('#6b7280') ? '#6b7280' : '#7c3aed';
+
+  const updateTipPos = () => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    setTipPos({ x: r.left + r.width / 2, y: r.top });
+  };
+
+  return (
+    <div ref={ref} className="relative"
+      onMouseEnter={() => { updateTipPos(); setHovered(true); }}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        className="text-[10px] px-1.5 py-0.5 rounded-md truncate cursor-pointer transition-all duration-150"
+        style={{ background: sc.bg, color: sc.text, fontWeight: 600, borderLeft: `2px solid ${sc.border}`, backdropFilter: 'blur(4px)' }}
+        onClick={() => onClick?.(event)}
+        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 2px 8px ${sc.border}`; e.currentTarget.style.transform = 'scale(1.02)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'scale(1)'; }}
+      >
+        {formatTimeShort(new Date(event.startTime))} {event.title}
+      </div>
+      {/* Portal tooltip — always above */}
+      {hovered && typeof document !== 'undefined' && ReactDOM.createPortal(
+        <div style={{ position: 'fixed', left: tipPos.x, top: tipPos.y - 4, transform: 'translate(-50%, -100%)', zIndex: 9999, pointerEvents: 'none', animation: 'cal-tooltip 0.1s ease-out' }}>
+          <div className="relative rounded-lg px-2 py-1 text-white text-[9px] whitespace-nowrap shadow-md" style={{ background: sc.tooltipBg }}>
+            <p className="font-bold text-[10px]">{event.title}</p>
+            {event.customerName && <p className="opacity-85">{event.customerName}</p>}
+            {event.staffName && <p className="opacity-80">{event.staffName}</p>}
+            <p className="text-[8px] font-semibold opacity-90 mt-0.5">{getStatusLabel(event.status)}</p>
+            <div style={{ width: 5, height: 5, background: arrowColor, position: 'absolute', bottom: -2.5, left: '50%', marginLeft: -2.5, transform: 'rotate(45deg)' }} />
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
 function MonthView({
-  date,
-  events,
-  businessHours,
-  closures,
-  onEventClick,
-  onDayClick,
+  date, events, businessHours, closures, onEventClick, onDayClick,
 }: {
-  date: Date;
-  events: CalendarEventData[];
-  businessHours?: BusinessHoursData[];
-  closures?: ClosureData[];
+  date: Date; events: CalendarEventData[];
+  businessHours?: BusinessHoursData[]; closures?: ClosureData[];
   onEventClick?: (event: CalendarEventData) => void;
   onDayClick?: (date: Date) => void;
 }) {
@@ -687,27 +909,29 @@ function MonthView({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header - con padding per scrollbar */}
-      <div className="flex flex-shrink-0 bg-gray-100 border-b border-gray-200 pr-[17px]">
+      {/* Day names header */}
+      <div className="flex flex-shrink-0 pr-[17px]" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
         {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((day, idx) => (
-          <div 
-            key={day} 
-            className={`flex-1 h-10 flex items-center justify-center text-xs font-medium text-gray-600 uppercase ${
-              idx < 6 ? 'border-r border-gray-200' : ''
-            }`}
+          <div key={day}
+            className="flex-1 h-10 flex items-center justify-center"
+            style={{
+              fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.04em',
+              background: 'rgba(0,0,0,0.015)',
+              borderRight: idx < 6 ? '1px solid rgba(0,0,0,0.04)' : 'none',
+            }}
           >
             {day}
           </div>
         ))}
       </div>
 
-      {/* Grid - con scrollbar-gutter stable */}
-      <div className="flex-1 overflow-y-scroll" style={{ scrollbarGutter: 'stable' }}>
+      {/* Days grid */}
+      <div className="flex-1 overflow-y-scroll" style={{ scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }}>
         <div className="grid grid-cols-7">
           {monthDays.map((day, idx) => {
             const dayEvents = getEventsForDate(events, day);
             const isCurrentMonth = day.getMonth() === currentMonth;
-            const isTodayDate = isToday(day);
+            const todayDate = isToday(day);
             const holiday = getHolidayName(day);
             const closure = isClosedForDate(closures, day);
             const dayBH = getBusinessHoursForDay(businessHours, day);
@@ -715,58 +939,57 @@ function MonthView({
             const isLastInRow = (idx + 1) % 7 === 0;
             const maxEvents = 2;
 
-            let bgClass = 'bg-white';
-            if (!isCurrentMonth) bgClass = 'bg-gray-50';
-            else if (isTodayDate) bgClass = 'bg-purple-50';
-            else if (isClosed) bgClass = 'bg-red-100';
-
             return (
-              <div
-                key={idx}
-                className={`min-h-[100px] p-1.5 border-b border-gray-200 ${
-                  isLastInRow ? '' : 'border-r'
-                } ${bgClass} hover:bg-opacity-80 cursor-pointer transition-colors overflow-hidden`}
+              <div key={idx}
+                className="min-h-[100px] p-1.5 cursor-pointer transition-all duration-150 overflow-hidden"
+                style={{
+                  background: !isCurrentMonth ? 'rgba(0,0,0,0.01)' : todayDate ? 'rgba(147,51,234,0.03)' : isClosed ? 'rgba(239,68,68,0.03)' : '#fff',
+                  borderBottom: '1px solid rgba(0,0,0,0.04)',
+                  borderRight: isLastInRow ? 'none' : '1px solid rgba(0,0,0,0.04)',
+                }}
                 onClick={() => onDayClick?.(day)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = todayDate ? 'rgba(147,51,234,0.06)' : 'rgba(168,85,247,0.03)';
+                  e.currentTarget.style.transform = 'scale(1.01)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = !isCurrentMonth ? 'rgba(0,0,0,0.01)' : todayDate ? 'rgba(147,51,234,0.03)' : isClosed ? 'rgba(239,68,68,0.03)' : '#fff';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 <div className="flex items-start justify-between">
-                  {isTodayDate ? (
-                    <span className="w-6 h-6 flex items-center justify-center rounded-full bg-purple-600 text-white text-xs font-medium">
+                  {todayDate ? (
+                    <span className="w-6 h-6 flex items-center justify-center rounded-full text-white text-xs font-bold"
+                      style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)', boxShadow: '0 2px 6px rgba(147,51,234,0.3)' }}
+                    >
                       {day.getDate()}
                     </span>
                   ) : (
-                    <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-gray-400' : 'text-gray-900'}`}>
+                    <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-gray-300' : 'text-gray-900'}`}>
                       {day.getDate()}
                     </span>
                   )}
-                  {isClosed && (
-                    <span className="text-[8px] text-red-600 font-bold">CHIUSO</span>
-                  )}
+                  {isClosed && <span className="text-[8px] text-red-400 font-bold">CHIUSO</span>}
                 </div>
-                
-                {holiday && <p className="text-[9px] text-orange-600 truncate mt-0.5">{holiday}</p>}
-                {closure && <p className="text-[9px] text-red-600 font-bold truncate">FESTIVITÀ</p>}
-                
+
+                {holiday && <p className="text-[9px] text-amber-600 truncate mt-0.5">{holiday}</p>}
+                {closure && <p className="text-[9px] text-red-500 font-bold truncate">FESTIVITÀ</p>}
+
                 {!isClosed && (
                   <div className="mt-1 space-y-0.5" onClick={(e) => e.stopPropagation()}>
-                    {dayEvents.slice(0, maxEvents).map((event) => (
-                      <div
-                        key={event.id}
-                        className="text-[10px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded truncate cursor-pointer hover:bg-purple-200"
-                        onClick={() => onEventClick?.(event)}
-                      >
-                        {new Date(event.startTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })} {event.title}
-                      </div>
+                    {dayEvents.filter(ev => ev.status !== 'cancelled').slice(0, maxEvents).map((event) => (
+                      <MonthEventPill key={event.id} event={event} onClick={onEventClick} />
                     ))}
-                    {dayEvents.length > maxEvents && (
-                      <p className="text-[10px] text-purple-600 font-medium cursor-pointer hover:underline">
-                        +{dayEvents.length - maxEvents} altri
+                    {dayEvents.filter(ev => ev.status !== 'cancelled').length > maxEvents && (
+                      <p className="text-[10px] font-semibold cursor-pointer" style={{ color: '#9333ea' }}>
+                        +{dayEvents.filter(ev => ev.status !== 'cancelled').length - maxEvents} altri
                       </p>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -778,16 +1001,9 @@ function MonthView({
 // ============================================================================
 
 export function Calendar({
-  events,
-  businessHours,
-  closures,
-  view: controlledView,
-  selectedDate: controlledDate,
-  onViewChange,
-  onDateChange,
-  onEventClick,
-  onSlotClick,
-  onDayClick,
+  events, businessHours, closures,
+  view: controlledView, selectedDate: controlledDate,
+  onViewChange, onDateChange, onEventClick, onSlotClick, onDayClick,
   className = '',
 }: CalendarProps) {
   const [internalView, setInternalView] = React.useState<CalendarView>('week');
@@ -813,67 +1029,55 @@ export function Calendar({
   };
 
   const handlePrev = () => {
-    const newDate = new Date(selectedDate);
-    if (view === 'day') newDate.setDate(newDate.getDate() - 1);
-    else if (view === 'week') newDate.setDate(newDate.getDate() - 7);
-    else newDate.setMonth(newDate.getMonth() - 1);
-    handleDateChange(newDate);
+    const d = new Date(selectedDate);
+    if (view === 'day') d.setDate(d.getDate() - 1);
+    else if (view === 'week') d.setDate(d.getDate() - 7);
+    else d.setMonth(d.getMonth() - 1);
+    handleDateChange(d);
   };
 
   const handleNext = () => {
-    const newDate = new Date(selectedDate);
-    if (view === 'day') newDate.setDate(newDate.getDate() + 1);
-    else if (view === 'week') newDate.setDate(newDate.getDate() + 7);
-    else newDate.setMonth(newDate.getMonth() + 1);
-    handleDateChange(newDate);
-  };
-
-  const handleToday = () => {
-    handleDateChange(new Date());
+    const d = new Date(selectedDate);
+    if (view === 'day') d.setDate(d.getDate() + 1);
+    else if (view === 'week') d.setDate(d.getDate() + 7);
+    else d.setMonth(d.getMonth() + 1);
+    handleDateChange(d);
   };
 
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-16rem)] ${className}`}>
+    <div
+      className={`flex flex-col h-full ${className}`}
+      style={{
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(8px)',
+        borderRadius: 16,
+        border: '1.5px solid rgba(168,85,247,0.15)',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.04), 0 0 24px rgba(147,51,234,0.08), 0 0 0 1px rgba(168,85,247,0.06)',
+        overflow: 'hidden',
+      }}
+    >
       <CalendarHeader
-        date={selectedDate}
-        view={view}
-        onPrev={handlePrev}
-        onNext={handleNext}
-        onToday={handleToday}
+        date={selectedDate} view={view}
+        onPrev={handlePrev} onNext={handleNext}
+        onToday={() => { handleDateChange(new Date()); handleViewChange('day'); }}
         onViewChange={handleViewChange}
       />
 
       <div className="flex-1 overflow-hidden">
         {view === 'day' ? (
-          <DayView
-            date={selectedDate}
-            events={events}
-            businessHours={businessHours}
-            closures={closures}
-            onEventClick={onEventClick}
-            onSlotClick={onSlotClick}
-          />
+          <DayView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onSlotClick={onSlotClick} />
         ) : view === 'week' ? (
-          <WeekView
-            date={selectedDate}
-            events={events}
-            businessHours={businessHours}
-            closures={closures}
-            onEventClick={onEventClick}
-            onSlotClick={onSlotClick}
-            onDayClick={handleDayClick}
-          />
+          <WeekView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onSlotClick={onSlotClick} onDayClick={handleDayClick} />
         ) : (
-          <MonthView
-            date={selectedDate}
-            events={events}
-            businessHours={businessHours}
-            closures={closures}
-            onEventClick={onEventClick}
-            onDayClick={handleDayClick}
-          />
+          <MonthView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onDayClick={handleDayClick} />
         )}
       </div>
+
+      <style>{`
+        @keyframes cal-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.3); } }
+        @keyframes cal-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes cal-tooltip { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
     </div>
   );
 }

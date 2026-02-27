@@ -52,9 +52,12 @@ export { StaffList } from './components/dashboard/StaffList';
 export { StaffModal, StaffServicesModal, StaffHoursModal } from './components/dashboard/StaffModal';
 export { CustomerList } from './components/dashboard/CustomerList';
 export { CustomerDetailModal } from './components/dashboard/CustomerDetailModal';
+export { SlotPicker } from './components/dashboard/SlotPicker';
+export { computeEventColumns } from './components/dashboard/CalendarColumns';
 export { HelpPage } from './components/dashboard/HelpPage';
 export { SettingsPage } from './components/dashboard/SettingsPage';
 export { StatsPage } from './components/dashboard/StatsPage';
+export { OverviewPage } from './components/dashboard/OverviewPage';
 export { QRCodeDisplay, QRCodeModal } from './components/QRCodeDisplay';
 
 // ============================================================================
@@ -217,6 +220,11 @@ export type {
 } from './components/dashboard/CustomerDetailModal';
 
 export type {
+  SlotPickerProps,
+  SlotInfo,
+} from './components/dashboard/SlotPicker';
+
+export type {
   HelpPageProps,
   FAQItem,
   GuideItem,
@@ -245,6 +253,13 @@ export type {
   InsightItem,
   ROIStats,
 } from './components/dashboard/StatsPage';
+export type {
+  OverviewPageProps,
+  OverviewStat,
+  OverviewQuickAction,
+  OverviewSection,
+  OverviewSummaryItem,
+} from './components/dashboard/OverviewPage';
 
 export type {
   QRCodeDisplayProps,

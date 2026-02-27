@@ -1,27 +1,16 @@
 // ============================================================================
-// AEGIS SUITE - CUSTOMER LIST COMPONENT
+// AEGIS SUITE - CUSTOMER LIST COMPONENT (Perfected v2)
 // File: packages/ui/src/components/dashboard/CustomerList.tsx
-// Reusable customer management component for all verticals
+// Same design pattern as StaffList/ServiceList.
 // ============================================================================
 
 'use client';
 
 import * as React from 'react';
 import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Edit2,
-  Mail,
-  Phone,
-  Calendar,
-  TrendingUp,
-  Download,
-  UserPlus,
-  Filter,
+  Search, ChevronLeft, ChevronRight, Eye, Edit2, Mail, Phone,
+  Calendar, TrendingUp, Download, UserPlus,
 } from 'lucide-react';
-import { Button } from '../ui/button';
 
 // ============================================================================
 // TYPES
@@ -42,185 +31,171 @@ export interface CustomerListItem {
 }
 
 export interface CustomerListProps {
-  /** List of customers */
   customers: CustomerListItem[];
-  /** Total customer count (for pagination, may differ from customers.length) */
   totalCount: number;
-  /** Current page (1-indexed) */
   currentPage: number;
-  /** Items per page */
   pageSize: number;
-  /** Current active filter */
   activeFilter: CustomerFilter;
-  /** Current search query */
   searchQuery: string;
-  /** Currency symbol */
   currency?: string;
-  /** Callback when filter changes */
   onFilterChange: (filter: CustomerFilter) => void;
-  /** Callback when search changes */
   onSearchChange: (query: string) => void;
-  /** Callback when page changes */
   onPageChange: (page: number) => void;
-  /** Callback when view is clicked */
   onViewCustomer: (customer: CustomerListItem) => void;
-  /** Callback when edit is clicked */
   onEditCustomer?: (customer: CustomerListItem) => void;
-  /** Callback when add customer is clicked */
   onAddCustomer?: () => void;
-  /** Callback when export is clicked */
   onExport?: () => void;
-  /** Loading state */
   loading?: boolean;
-  /** Empty state component */
   emptyState?: React.ReactNode;
-  /** Custom class name */
   className?: string;
-  /** Filter counts */
-  filterCounts?: {
-    all: number;
-    active: number;
-    new: number;
-    inactive: number;
-  };
+  filterCounts?: Record<CustomerFilter, number>;
 }
-
-// ============================================================================
-// FILTER CONFIG
-// ============================================================================
-
-const FILTER_CONFIG: { key: CustomerFilter; label: string }[] = [
-  { key: 'all', label: 'Tutti' },
-  { key: 'active', label: 'Attivi' },
-  { key: 'new', label: 'Nuovi' },
-  { key: 'inactive', label: 'Inattivi' },
-];
 
 // ============================================================================
 // HELPERS
 // ============================================================================
 
-function formatDate(dateStr: string | undefined): string {
-  if (!dateStr) return '—';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('it-IT', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
 }
 
 function formatCurrency(amount: number, currency: string): string {
-  return `${currency}${amount.toFixed(2)}`;
+  return `${currency}${amount.toFixed(2).replace('.00', '')}`;
 }
 
 function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
-function getAvatarColor(name: string): string {
-  const colors = [
-    'bg-accent-500', 'bg-blue-500', 'bg-emerald-500', 'bg-amber-500',
-    'bg-rose-500', 'bg-indigo-500', 'bg-teal-500', 'bg-orange-500',
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-}
+// ============================================================================
+// FILTER TABS
+// ============================================================================
+
+const FILTERS: { key: CustomerFilter; label: string }[] = [
+  { key: 'all', label: 'Tutti' },
+  { key: 'active', label: 'Attivi' },
+  { key: 'inactive', label: 'Inattivi' },
+  { key: 'new', label: 'Nuovi' },
+];
 
 // ============================================================================
 // CUSTOMER ROW
 // ============================================================================
 
-interface CustomerRowProps {
+function CustomerRow({
+  customer, currency, onView, onEdit, delay,
+}: {
   customer: CustomerListItem;
   currency: string;
   onView: () => void;
   onEdit?: () => void;
-}
-
-function CustomerRow({ customer, currency, onView, onEdit }: CustomerRowProps) {
+  delay: number;
+}) {
   return (
-    <tr
-      className="group hover:bg-accent-50/50 transition-colors cursor-pointer"
+    <div
+      className="group flex items-center gap-4 p-4 rounded-xl cursor-pointer"
       onClick={onView}
+      style={{
+        background: '#fff',
+        border: '1px solid rgba(0,0,0,0.04)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.01)',
+        animation: `cl-card-in 0.35s ease-out ${delay}s both`,
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)';
+        e.currentTarget.style.boxShadow = '0 6px 24px rgba(147,51,234,0.08), 0 0 0 1px rgba(168,85,247,0.06)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(0,0,0,0.04)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.01)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
     >
-      {/* Name + Avatar */}
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${getAvatarColor(customer.fullName)}`}>
-            {getInitials(customer.fullName)}
-          </div>
-          <p className="text-sm font-medium text-gray-900 truncate min-w-0">
-            {customer.fullName}
-          </p>
-        </div>
-      </td>
+      {/* Avatar */}
+      <div
+        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+        style={{
+          background: `hsl(${customer.fullName.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360}, 65%, 55%)`,
+          boxShadow: `0 2px 8px hsla(${customer.fullName.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360}, 65%, 55%, 0.25)`,
+        }}
+      >
+        {getInitials(customer.fullName)}
+      </div>
 
-      {/* Email */}
-      <td className="px-4 py-3 hidden md:table-cell">
-        <span className="text-sm text-gray-600 truncate block max-w-[200px]">
-          {customer.email || '—'}
-        </span>
-      </td>
-
-      {/* Phone */}
-      <td className="px-4 py-3 hidden md:table-cell">
-        <span className="text-sm text-gray-600">
-          {customer.phone || '—'}
-        </span>
-      </td>
-
-      {/* Last visit */}
-      <td className="px-4 py-3 hidden lg:table-cell">
-        <span className="text-sm text-gray-600">
-          {formatDate(customer.lastVisitAt)}
-        </span>
-      </td>
-
-      {/* Total visits */}
-      <td className="px-4 py-3 hidden sm:table-cell">
-        <span className="text-sm font-medium text-gray-900">
-          {customer.totalVisits}
-        </span>
-      </td>
-
-      {/* Total spent */}
-      <td className="px-4 py-3 hidden sm:table-cell">
-        <span className="text-sm font-semibold text-accent-600">
-          {formatCurrency(customer.totalSpent, currency)}
-        </span>
-      </td>
-
-      {/* Actions */}
-      <td className="px-4 py-3">
-        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={(e) => { e.stopPropagation(); onView(); }}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-accent-600 hover:bg-accent-50 transition-colors"
-            title="Visualizza"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          {onEdit && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-accent-600 hover:bg-accent-50 transition-colors"
-              title="Modifica"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-gray-900 truncate">{customer.fullName}</p>
+        <div className="flex items-center gap-3 mt-0.5 text-sm text-gray-500">
+          {customer.email && (
+            <span className="flex items-center gap-1.5 truncate"><Mail className="w-3.5 h-3.5" />{customer.email}</span>
+          )}
+          {customer.phone && (
+            <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{customer.phone}</span>
           )}
         </div>
-      </td>
-    </tr>
+      </div>
+
+      {/* Stats */}
+      <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
+        <div className="text-center">
+          <p className="text-xs text-gray-400">Visite</p>
+          <p className="text-sm font-bold text-gray-900">{customer.totalVisits}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-gray-400">Speso</p>
+          <p
+            className="text-sm font-bold"
+            style={{ color: '#7c3aed' }}
+          >
+            {formatCurrency(customer.totalSpent, currency)}
+          </p>
+        </div>
+        {customer.lastVisitAt && (
+          <div className="text-center">
+            <p className="text-xs text-gray-400">Ultima visita</p>
+            <p className="text-sm font-medium text-gray-600">{formatDate(customer.lastVisitAt)}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100" style={{ transition: 'opacity 0.15s ease' }}>
+        <button
+          onClick={(e) => { e.stopPropagation(); onView(); }}
+          className="p-2 rounded-lg"
+          style={{ color: 'rgba(0,0,0,0.3)', transition: 'all 0.15s ease' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#9333ea'; e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(0,0,0,0.3)'; e.currentTarget.style.background = 'transparent'; }}
+          title="Visualizza"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+        {onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="p-2 rounded-lg"
+            style={{ color: 'rgba(0,0,0,0.3)', transition: 'all 0.15s ease' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#9333ea';
+              e.currentTarget.style.background = 'rgba(168,85,247,0.06)';
+              const icon = e.currentTarget.querySelector('svg');
+              if (icon) (icon as unknown as HTMLElement).style.transform = 'rotate(-12deg) scale(1.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'rgba(0,0,0,0.3)';
+              e.currentTarget.style.background = 'transparent';
+              const icon = e.currentTarget.querySelector('svg');
+              if (icon) (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)';
+            }}
+            title="Modifica"
+          >
+            <Edit2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -229,23 +204,9 @@ function CustomerRow({ customer, currency, onView, onEdit }: CustomerRowProps) {
 // ============================================================================
 
 export function CustomerList({
-  customers,
-  totalCount,
-  currentPage,
-  pageSize,
-  activeFilter,
-  searchQuery,
-  currency = '€',
-  onFilterChange,
-  onSearchChange,
-  onPageChange,
-  onViewCustomer,
-  onEditCustomer,
-  onAddCustomer,
-  onExport,
-  loading = false,
-  emptyState,
-  className = '',
+  customers, totalCount, currentPage, pageSize, activeFilter, searchQuery,
+  currency = '€', onFilterChange, onSearchChange, onPageChange, onViewCustomer,
+  onEditCustomer, onAddCustomer, onExport, loading = false, emptyState, className = '',
   filterCounts,
 }: CustomerListProps) {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -255,174 +216,247 @@ export function CustomerList({
   if (loading) {
     return (
       <div className={`flex items-center justify-center py-16 ${className}`}>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600" />
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-purple-600 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className={className}>
-      {/* Toolbar */}
-      <div className="flex flex-col gap-4 mb-6">
-        {/* Top row: Search + Actions */}
+      {/* ═══ Toolbar ═══ */}
+      <div
+        className="mb-6 p-4 rounded-2xl"
+        style={{
+          background: '#fff',
+          border: '1px solid rgba(0,0,0,0.04)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.02)',
+          animation: 'cl-card-in 0.35s ease-out both',
+        }}
+      >
+        {/* Top row: search + actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          {/* Search */}
           <div className="relative flex-1 max-w-md w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Cerca per nome, email o telefono..."
+              placeholder="Cerca clienti..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent bg-white"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none"
+              style={{
+                background: 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(0,0,0,0.06)',
+                transition: 'all 0.15s ease',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.06)';
+                e.currentTarget.style.background = '#fff';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
+              }}
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Filter tabs */}
+            {FILTERS.map(f => {
+              const isActive = activeFilter === f.key;
+              return (
+                <button
+                  key={f.key}
+                  onClick={() => onFilterChange(f.key)}
+                  className="px-3.5 py-2 rounded-xl text-sm font-medium"
+                  style={{
+                    background: isActive ? 'rgba(168,85,247,0.08)' : 'rgba(0,0,0,0.03)',
+                    color: isActive ? '#7c3aed' : '#6b7280',
+                    border: isActive ? '1px solid rgba(168,85,247,0.15)' : '1px solid rgba(0,0,0,0.04)',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+            <div className="w-px h-6 mx-1" style={{ background: 'rgba(0,0,0,0.06)' }} />
             {onExport && (
               <button
-                onClick={onExport}
-                className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const y = e.clientY - rect.top;
+                  const container = e.currentTarget.querySelector('[data-ripple-exp]');
+                  if (container) {
+                    const span = document.createElement('span');
+                    Object.assign(span.style, {
+                      position: 'absolute', left: `${x - 50}px`, top: `${y - 50}px`,
+                      width: '100px', height: '100px', borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.35)',
+                      animation: 'cl-ripple 0.6s ease-out forwards', pointerEvents: 'none',
+                    });
+                    container.appendChild(span);
+                    setTimeout(() => span.remove(), 600);
+                  }
+                  onExport();
+                }}
+                className="relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+                  boxShadow: '0 2px 8px rgba(147,51,234,0.25)',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.25)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Esporta</span>
+                <div className="absolute inset-0 pointer-events-none" style={{
+                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                  animation: 'cl-shimmer 2.5s ease-in-out infinite',
+                }} />
+                <div data-ripple-exp="" className="absolute inset-0 pointer-events-none" />
+                <Download className="w-3.5 h-3.5 relative z-10" />
+                <span className="relative z-10">Esporta</span>
               </button>
             )}
             {onAddCustomer && (
-              <Button onClick={onAddCustomer} className="flex items-center gap-2">
-                <UserPlus className="w-4 h-4" />
-                <span className="hidden sm:inline">Nuovo cliente</span>
-              </Button>
+              <button
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const y = e.clientY - rect.top;
+                  const container = e.currentTarget.querySelector('[data-ripple]');
+                  if (container) {
+                    const span = document.createElement('span');
+                    Object.assign(span.style, {
+                      position: 'absolute', left: `${x - 50}px`, top: `${y - 50}px`,
+                      width: '100px', height: '100px', borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.35)',
+                      animation: 'cl-ripple 0.6s ease-out forwards', pointerEvents: 'none',
+                    });
+                    container.appendChild(span);
+                    setTimeout(() => span.remove(), 600);
+                  }
+                  onAddCustomer();
+                }}
+                className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+                  boxShadow: '0 2px 8px rgba(147,51,234,0.25)',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.25)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div className="absolute inset-0 pointer-events-none" style={{
+                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                  animation: 'cl-shimmer 2.5s ease-in-out infinite',
+                }} />
+                <div data-ripple="" className="absolute inset-0 pointer-events-none" />
+                <UserPlus className="w-4 h-4 relative z-10" />
+                <span className="relative z-10">Aggiungi cliente</span>
+              </button>
             )}
           </div>
         </div>
-
-        {/* Filter tabs */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-          {FILTER_CONFIG.map(({ key, label }) => {
-            const count = filterCounts?.[key];
-            return (
-              <button
-                key={key}
-                onClick={() => onFilterChange(key)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  activeFilter === key
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {label}
-                {count !== undefined && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    activeFilter === key
-                      ? 'bg-accent-100 text-accent-700'
-                      : 'bg-gray-200 text-gray-500'
-                  }`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
-      {/* Table */}
-      {customers.length === 0 && !loading ? (
-        emptyState || (
-          <div className="text-center py-16">
-            <p className="text-gray-500">Nessun cliente trovato</p>
-          </div>
-        )
+      {/* ═══ Customer list ═══ */}
+      {customers.length === 0 && emptyState ? (
+        emptyState
+      ) : customers.length === 0 ? (
+        <div className="text-center py-12">
+          <Search className="w-10 h-10 mx-auto mb-3" style={{ color: 'rgba(0,0,0,0.1)' }} />
+          <p className="text-sm font-medium text-gray-500">Nessun cliente trovato</p>
+          <p className="text-xs text-gray-400 mt-1">Prova con una ricerca diversa</p>
+        </div>
       ) : (
         <>
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50/50">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Cliente
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                      Email
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                      Telefono
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                      Ultima visita
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                      Visite
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                      Speso
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">
-                      Azioni
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {customers.map(customer => (
-                    <CustomerRow
-                      key={customer.id}
-                      customer={customer}
-                      currency={currency}
-                      onView={() => onViewCustomer(customer)}
-                      onEdit={onEditCustomer ? () => onEditCustomer(customer) : undefined}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="space-y-2">
+            {customers.map((customer, i) => (
+              <CustomerRow
+                key={customer.id}
+                customer={customer}
+                currency={currency}
+                delay={0.05 + i * 0.03}
+                onView={() => onViewCustomer(customer)}
+                onEdit={onEditCustomer ? () => onEditCustomer(customer) : undefined}
+              />
+            ))}
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 px-1">
-              <p className="text-sm text-gray-500">
-                {startItem}–{endItem} di {totalCount} clienti
+            <div
+              className="flex items-center justify-between mt-6 px-2"
+              style={{ animation: 'cl-card-in 0.35s ease-out 0.3s both' }}
+            >
+              <p className="text-xs text-gray-400">
+                {startItem}–{endItem} di {totalCount}
               </p>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => onPageChange(currentPage - 1)}
                   disabled={currentPage <= 1}
-                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-2 rounded-lg disabled:opacity-30"
+                  style={{ color: '#6b7280', transition: 'all 0.15s ease' }}
+                  onMouseEnter={(e) => { if (currentPage > 1) e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
+
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  let pageNum: number;
+                  let page: number;
                   if (totalPages <= 5) {
-                    pageNum = i + 1;
+                    page = i + 1;
                   } else if (currentPage <= 3) {
-                    pageNum = i + 1;
+                    page = i + 1;
                   } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
+                    page = totalPages - 4 + i;
                   } else {
-                    pageNum = currentPage - 2 + i;
+                    page = currentPage - 2 + i;
                   }
+                  const isCurrent = page === currentPage;
                   return (
                     <button
-                      key={pageNum}
-                      onClick={() => onPageChange(pageNum)}
-                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
-                        currentPage === pageNum
-                          ? 'bg-accent-600 text-white'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                      key={page}
+                      onClick={() => onPageChange(page)}
+                      className="w-8 h-8 rounded-lg text-sm font-medium"
+                      style={{
+                        background: isCurrent ? 'rgba(168,85,247,0.1)' : 'transparent',
+                        color: isCurrent ? '#7c3aed' : '#9ca3af',
+                        border: isCurrent ? '1px solid rgba(168,85,247,0.2)' : '1px solid transparent',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => { if (!isCurrent) e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; }}
+                      onMouseLeave={(e) => { if (!isCurrent) e.currentTarget.style.background = isCurrent ? 'rgba(168,85,247,0.1)' : 'transparent'; }}
                     >
-                      {pageNum}
+                      {page}
                     </button>
                   );
                 })}
+
                 <button
                   onClick={() => onPageChange(currentPage + 1)}
                   disabled={currentPage >= totalPages}
-                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-2 rounded-lg disabled:opacity-30"
+                  style={{ color: '#6b7280', transition: 'all 0.15s ease' }}
+                  onMouseEnter={(e) => { if (currentPage < totalPages) e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -431,6 +465,22 @@ export function CustomerList({
           )}
         </>
       )}
+
+      {/* Keyframes */}
+      <style>{`
+        @keyframes cl-card-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cl-shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes cl-ripple {
+          0% { transform: scale(0); opacity: 1; }
+          100% { transform: scale(4); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }

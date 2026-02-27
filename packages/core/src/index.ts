@@ -54,3 +54,27 @@ export type {
   RegisterBusinessData,
   RegisterBusinessResult,
 } from './lib/business';
+
+// Availability Engine
+export {
+  getAvailableSlots,
+  checkSlotAvailability,
+  isDateClosed,
+  getOccupiedWorkstations,
+  getDayOccupancy,
+  computeEventColumns,
+  timeToMinutes,
+  minutesToTime,
+} from './lib/availability';
+
+// Availability Types
+export type {
+  AvailabilityConfig,
+  DayHours as AvailabilityDayHours,
+  StaffDayHours,
+  ExistingAppointment,
+  ClosureInfo,
+  StaffTimeOff,
+  AvailableSlot,
+  SlotCheckResult,
+} from './lib/availability';

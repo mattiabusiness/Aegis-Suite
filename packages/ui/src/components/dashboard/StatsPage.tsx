@@ -1,5 +1,5 @@
 // ============================================================================
-// AEGIS SUITE - STATS PAGE COMPONENT
+// AEGIS SUITE - STATS PAGE COMPONENT (v2 — Glass Holographic Design)
 // File: packages/ui/src/components/dashboard/StatsPage.tsx
 // ============================================================================
 
@@ -17,17 +17,19 @@ import {
   Lightbulb,
   Clock,
   Info,
+  Shield,
+  PhoneOff,
+  PiggyBank,
+  Timer,
   type LucideIcon,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Cell,
+  Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from 'recharts';
-import { Button } from '../ui/button';
-import { useContentTheme } from './ContentTheme';
 
 // ============================================================================
-// TYPES
+// TYPES (unchanged — keep compatibility)
 // ============================================================================
 
 export type PeriodFilter = 'today' | 'week' | 'month' | '3months' | 'year' | 'custom';
@@ -120,8 +122,20 @@ function formatCurrency(amount: number, currency = '€'): string {
   return `${currency} ${amount.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
+// Glass card style shared by all sections
+const GLASS_CARD: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.92)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  borderRadius: 16,
+  border: '1.5px solid rgba(168,85,247,0.1)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.03), 0 0 0 1px rgba(168,85,247,0.04)',
+};
+
+const DONUT_COLORS = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#ede9fe'];
+
 // ============================================================================
-// KPI CARD
+// KPI CARD — glass with violet accent line
 // ============================================================================
 
 function KPICardComponent({ card, comparisonLabel }: { card: KPICard; comparisonLabel: string }) {
@@ -130,16 +144,41 @@ function KPICardComponent({ card, comparisonLabel }: { card: KPICard; comparison
   const [showTooltip, setShowTooltip] = React.useState(false);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+    <div
+      className="relative p-4 overflow-hidden transition-all duration-200 group"
+      style={{
+        ...GLASS_CARD,
+        cursor: 'default',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 8px 32px rgba(147,51,234,0.1), 0 0 0 1px rgba(168,85,247,0.12)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = GLASS_CARD.boxShadow as string;
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      {/* Top accent gradient line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(147,51,234,0.4), transparent)' }} />
+
       <div className="flex items-start justify-between">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.color}`}>
-          <Icon className="w-5 h-5" />
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg, rgba(147,51,234,0.08), rgba(168,85,247,0.04))',
+            border: '1px solid rgba(168,85,247,0.1)',
+          }}
+        >
+          <Icon className="w-5 h-5" style={{ color: '#8b5cf6' }} />
         </div>
         {card.change !== undefined && (
           <div className="flex items-center gap-1.5">
             <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-              isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
-            }`}>
+              isPositive ? 'text-emerald-600' : 'text-red-500'
+            }`} style={{
+              background: isPositive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+            }}>
               {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
               {Math.abs(card.change).toFixed(1)}%
             </div>
@@ -151,7 +190,7 @@ function KPICardComponent({ card, comparisonLabel }: { card: KPICard; comparison
               <Info className="w-3.5 h-3.5 text-gray-300 hover:text-gray-500 cursor-help transition-colors" />
               {showTooltip && (
                 <div className="absolute right-0 top-full mt-1.5 z-50 whitespace-nowrap">
-                  <div className="bg-accent-600 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-lg">
+                  <div className="text-white text-xs px-2.5 py-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)', boxShadow: '0 4px 12px rgba(147,51,234,0.3)' }}>
                     {comparisonLabel}
                   </div>
                 </div>
@@ -167,7 +206,7 @@ function KPICardComponent({ card, comparisonLabel }: { card: KPICard; comparison
 }
 
 // ============================================================================
-// CHART TOOLTIP
+// GLASS CHART TOOLTIP
 // ============================================================================
 
 function ChartTooltip({ active, payload, label, currency = '€', isCurrency = true }: {
@@ -175,46 +214,65 @@ function ChartTooltip({ active, payload, label, currency = '€', isCurrency = t
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm shadow-lg">
+    <div className="px-3 py-2 rounded-xl text-sm" style={{
+      background: 'linear-gradient(135deg, rgba(30,20,60,0.92), rgba(50,30,80,0.88))',
+      backdropFilter: 'blur(12px)',
+      border: '1px solid rgba(168,85,247,0.2)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.2), 0 0 12px rgba(147,51,234,0.15)',
+    }}>
       <p className="text-gray-400 text-xs">{label}</p>
-      <p className="font-bold">{isCurrency ? formatCurrency(payload[0].value, currency) : payload[0].value}</p>
+      <p className="font-bold text-white">{isCurrency ? formatCurrency(payload[0].value, currency) : payload[0].value}</p>
     </div>
   );
 }
 
 // ============================================================================
-// REVENUE CHART
+// REVENUE CHART — holographic glow
 // ============================================================================
 
-function RevenueChart({ data, currency, chartColors }: { data: ChartDataPoint[]; currency: string; chartColors: string[] }) {
-  const primary = chartColors[0];
-
+function RevenueChart({ data, currency }: { data: ChartDataPoint[]; currency: string }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
+    <div className="p-5" style={GLASS_CARD}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-base font-semibold text-gray-900">Entrate</h3>
-          <p className="text-sm text-gray-500">Andamento nel periodo</p>
+          <p className="text-xs text-gray-400">Andamento nel periodo</p>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-accent-50 rounded-lg">
-          <div className="w-2 h-2 rounded-full bg-accent-500" />
-          <span className="text-xs font-medium text-accent-700">Entrate</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: 'rgba(147,51,234,0.06)', border: '1px solid rgba(147,51,234,0.1)' }}>
+          <div className="w-2 h-2 rounded-full" style={{ background: '#8b5cf6', boxShadow: '0 0 6px rgba(139,92,246,0.5)' }} />
+          <span className="text-xs font-medium" style={{ color: '#7c3aed' }}>Entrate</span>
         </div>
       </div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
             <defs>
-              <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={primary} stopOpacity={0.15} />
-                <stop offset="95%" stopColor={primary} stopOpacity={0} />
+              <linearGradient id="revenueGlow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                <stop offset="50%" stopColor="#a78bfa" stopOpacity={0.1} />
+                <stop offset="100%" stopColor="#c4b5fd" stopOpacity={0} />
               </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
             <Tooltip content={<ChartTooltip currency={currency} />} />
-            <Area type="monotone" dataKey="value" stroke={primary} strokeWidth={2.5} fill="url(#revenueGradient)" dot={false} activeDot={{ r: 5, fill: primary, stroke: '#fff', strokeWidth: 2 }} />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="#8b5cf6"
+              strokeWidth={2.5}
+              fill="url(#revenueGlow)"
+              dot={false}
+              activeDot={{ r: 6, fill: '#8b5cf6', stroke: '#fff', strokeWidth: 2, filter: 'url(#glow)' }}
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -223,37 +281,36 @@ function RevenueChart({ data, currency, chartColors }: { data: ChartDataPoint[];
 }
 
 // ============================================================================
-// APPOINTMENTS CHART
+// APPOINTMENTS CHART — gradient bars
 // ============================================================================
 
-function AppointmentsChart({ data, chartColors }: { data: ChartDataPoint[]; chartColors: string[] }) {
-  const barColor1 = '#6366f1';
-  const barColor2 = '#818cf8';
-
+function AppointmentsChart({ data }: { data: ChartDataPoint[] }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
+    <div className="p-5" style={GLASS_CARD}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-base font-semibold text-gray-900">Appuntamenti</h3>
-          <p className="text-sm text-gray-500">Distribuzione nel periodo</p>
+          <p className="text-xs text-gray-400">Distribuzione nel periodo</p>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 rounded-lg">
-          <div className="w-2 h-2 rounded-full bg-indigo-500" />
-          <span className="text-xs font-medium text-indigo-700">Prenotazioni</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.1)' }}>
+          <div className="w-2 h-2 rounded-full" style={{ background: '#6366f1', boxShadow: '0 0 6px rgba(99,102,241,0.5)' }} />
+          <span className="text-xs font-medium text-indigo-600">Prenotazioni</span>
         </div>
       </div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <defs>
+              <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.9} />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.6} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip content={<ChartTooltip isCurrency={false} />} />
-            <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={40}>
-              {data.map((_, idx) => (
-                <Cell key={idx} fill={idx % 2 === 0 ? barColor1 : barColor2} />
-              ))}
-            </Bar>
+            <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={36} fill="url(#barGrad)" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -262,102 +319,164 @@ function AppointmentsChart({ data, chartColors }: { data: ChartDataPoint[]; char
 }
 
 // ============================================================================
-// TOP SERVICES
+// TOP SERVICES — donut + list
 // ============================================================================
 
-function TopServicesSection({ services, currency, chartColors }: { services: TopService[]; currency: string; chartColors: string[] }) {
-  const maxCount = Math.max(...services.map(s => s.count), 1);
+function TopServicesSection({ services, currency }: { services: TopService[]; currency: string }) {
+  const pieData = services.slice(0, 5).map((s, i) => ({
+    name: s.name,
+    value: s.revenue,
+    fill: DONUT_COLORS[i],
+  }));
+  const totalRevenue = services.reduce((s, v) => s + v.revenue, 0);
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
+    <div className="p-5" style={GLASS_CARD}>
       <h3 className="text-base font-semibold text-gray-900 mb-4">Top 5 Servizi</h3>
-      <div className="space-y-3">
-        {services.map((s, idx) => (
-          <div key={s.name} className="flex items-center gap-3">
-            <span className="text-xs font-bold text-gray-400 w-5">{idx + 1}</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-gray-900 truncate">{s.name}</span>
-                <span className="text-sm font-semibold text-accent-600 ml-2 flex-shrink-0">{formatCurrency(s.revenue, currency)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${(s.count / maxCount) * 100}%`, backgroundColor: chartColors[idx] || chartColors[0] }} />
-                </div>
-                <span className="text-xs text-gray-500 w-16 text-right">{s.count} volte</span>
-              </div>
+      {services.length > 0 ? (
+        <div className="flex gap-5">
+          {/* Donut */}
+          <div className="relative flex-shrink-0" style={{ width: 140, height: 140 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={42}
+                  outerRadius={64}
+                  dataKey="value"
+                  strokeWidth={2}
+                  stroke="rgba(255,255,255,0.8)"
+                >
+                  {pieData.map((entry, idx) => (
+                    <Cell key={idx} fill={entry.fill} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            {/* Center label */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-xs text-gray-400">Totale</span>
+              <span className="text-sm font-bold text-gray-900">{formatCurrency(totalRevenue, currency)}</span>
             </div>
           </div>
-        ))}
-        {services.length === 0 && <p className="text-sm text-gray-400 text-center py-4">Nessun dato disponibile</p>}
-      </div>
+          {/* List */}
+          <div className="flex-1 space-y-2.5 min-w-0">
+            {services.slice(0, 5).map((s, idx) => (
+              <div key={s.name} className="flex items-center gap-2.5">
+                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: DONUT_COLORS[idx], boxShadow: `0 0 6px ${DONUT_COLORS[idx]}40` }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700 truncate">{s.name}</span>
+                    <span className="text-sm font-semibold ml-2 flex-shrink-0" style={{ color: '#6d28d9' }}>{formatCurrency(s.revenue, currency)}</span>
+                  </div>
+                  <span className="text-[11px] text-gray-400">{s.count} prenotazioni</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-400 text-center py-8">Nessun dato disponibile</p>
+      )}
     </div>
   );
 }
 
 // ============================================================================
-// POPULAR HOURS
+// POPULAR HOURS — gradient bars with glow
 // ============================================================================
 
-function PopularHoursSection({ hours, chartColors }: { hours: PopularHour[]; chartColors: string[] }) {
+function PopularHoursSection({ hours }: { hours: PopularHour[] }) {
   const maxCount = Math.max(...hours.map(h => h.count), 1);
-  const colorHigh = chartColors[0];
-  const colorMid = chartColors[2] || chartColors[0];
-  const colorLow = chartColors[4] || chartColors[2] || chartColors[0];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
-      <h3 className="text-base font-semibold text-gray-900 mb-1">Orari più richiesti</h3>
-      <p className="text-sm text-gray-500 mb-4">Fasce orarie più popolari</p>
-      <div className="h-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={hours} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
-            <Tooltip content={<ChartTooltip isCurrency={false} />} />
-            <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={24}>
-              {hours.map((h, idx) => (
-                <Cell key={idx} fill={h.count >= maxCount * 0.8 ? colorHigh : h.count >= maxCount * 0.5 ? colorMid : colorLow} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="p-5" style={GLASS_CARD}>
+      <h3 className="text-base font-semibold text-gray-900 mb-4">Ore Popolari</h3>
+      {hours.length > 0 ? (
+        <div className="space-y-2">
+          {hours.map(h => {
+            const pct = (h.count / maxCount) * 100;
+            const isHot = pct > 75;
+            return (
+              <div key={h.hour} className="flex items-center gap-3">
+                <span className="text-xs font-mono text-gray-400 w-10 flex-shrink-0">{h.hour}</span>
+                <div className="flex-1 h-5 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.03)' }}>
+                  <div
+                    className="h-full rounded-full relative overflow-hidden transition-all duration-500"
+                    style={{
+                      width: `${pct}%`,
+                      background: isHot
+                        ? 'linear-gradient(90deg, #8b5cf6, #a855f7, #c084fc)'
+                        : 'linear-gradient(90deg, #a78bfa, #c4b5fd)',
+                      boxShadow: isHot ? '0 0 12px rgba(139,92,246,0.3)' : 'none',
+                    }}
+                  >
+                    {/* Shimmer on hot bars */}
+                    {isHot && (
+                      <div className="absolute inset-0" style={{
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                        animation: 'stats-shimmer 2s ease-in-out infinite',
+                      }} />
+                    )}
+                  </div>
+                </div>
+                <span className={`text-xs font-semibold w-6 text-right ${isHot ? 'text-violet-600' : 'text-gray-500'}`}>{h.count}</span>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-400 text-center py-8">Nessun dato disponibile</p>
+      )}
     </div>
   );
 }
 
 // ============================================================================
-// STAFF PERFORMANCE
+// STAFF PERFORMANCE — glass table with inline bars
 // ============================================================================
 
 function StaffPerformanceSection({ staff, currency }: { staff: StaffPerformance[]; currency: string }) {
+  const maxRevenue = Math.max(...staff.map(s => s.revenue), 1);
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
+    <div className="p-5" style={GLASS_CARD}>
       <h3 className="text-base font-semibold text-gray-900 mb-4">Performance Staff</h3>
       {staff.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left py-2 text-xs font-semibold text-gray-500 uppercase">Staff</th>
-                <th className="text-right py-2 text-xs font-semibold text-gray-500 uppercase">Appuntamenti</th>
-                <th className="text-right py-2 text-xs font-semibold text-gray-500 uppercase">Entrate</th>
-                <th className="text-right py-2 text-xs font-semibold text-gray-500 uppercase">Media</th>
+              <tr className="text-[11px] uppercase tracking-wider text-gray-400">
+                <th className="text-left pb-3 font-semibold">Operatore</th>
+                <th className="text-center pb-3 font-semibold">App.</th>
+                <th className="text-right pb-3 font-semibold">Entrate</th>
+                <th className="text-right pb-3 font-semibold">Media</th>
+                <th className="pb-3 w-32" />
               </tr>
             </thead>
             <tbody>
-              {staff.map(s => (
-                <tr key={s.name} className="border-b border-gray-50 hover:bg-gray-50/50">
-                  <td className="py-3">
+              {staff.map((s, idx) => (
+                <tr key={s.name} className="border-t" style={{ borderColor: 'rgba(0,0,0,0.04)' }}>
+                  <td className="py-2.5">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
-                      <span className="font-medium text-gray-900">{s.name}</span>
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color, boxShadow: `0 0 6px ${s.color}40` }} />
+                      <span className="text-sm font-medium text-gray-800">{s.name}</span>
+                      {idx === 0 && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(147,51,234,0.08)', color: '#7c3aed' }}>TOP</span>}
                     </div>
                   </td>
-                  <td className="py-3 text-right text-gray-700">{s.appointments}</td>
-                  <td className="py-3 text-right font-semibold text-accent-600">{formatCurrency(s.revenue, currency)}</td>
-                  <td className="py-3 text-right text-gray-500">
-                    {s.appointments > 0 ? formatCurrency(Math.round(s.revenue / s.appointments), currency) : '—'}
+                  <td className="text-center text-sm text-gray-600 py-2.5">{s.appointments}</td>
+                  <td className="text-right text-sm font-semibold py-2.5" style={{ color: '#6d28d9' }}>{formatCurrency(s.revenue, currency)}</td>
+                  <td className="text-right text-sm text-gray-500 py-2.5">{s.appointments > 0 ? formatCurrency(Math.round(s.revenue / s.appointments), currency) : '—'}</td>
+                  <td className="py-2.5 pl-3">
+                    <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.03)' }}>
+                      <div className="h-full rounded-full" style={{
+                        width: `${(s.revenue / maxRevenue) * 100}%`,
+                        background: `linear-gradient(90deg, ${s.color}cc, ${s.color}80)`,
+                        boxShadow: idx === 0 ? `0 0 8px ${s.color}40` : 'none',
+                      }} />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -372,55 +491,88 @@ function StaffPerformanceSection({ staff, currency }: { staff: StaffPerformance[
 }
 
 // ============================================================================
-// AEGIS AI INSIGHTS BOX — viola glow pulsante
+// AEGIS AI INSIGHTS — premium animated border + glass
 // ============================================================================
 
 function AegisAIInsights({ insights }: { insights: InsightItem[] }) {
   const isEmpty = insights.length === 0 || (insights.length === 1 && insights[0].type === 'neutral' && insights[0].text.includes('dati sufficienti'));
 
   return (
-    <div className="relative rounded-xl overflow-hidden">
-      {/* Glow border effect */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-accent-500 via-violet-500 to-accent-500 animate-pulse opacity-60" />
-      <div className="absolute inset-[2px] rounded-[10px] bg-white" />
+    <div className="relative rounded-2xl overflow-hidden">
+      {/* Animated gradient border */}
+      <div className="absolute inset-0 rounded-2xl" style={{
+        background: 'linear-gradient(135deg, #8b5cf6, #a855f7, #c084fc, #7c3aed)',
+        animation: 'stats-pulse-border 3s ease-in-out infinite',
+        opacity: 0.7,
+      }} />
+      {/* Inner glass */}
+      <div className="absolute inset-[2px] rounded-[14px]" style={{
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(12px)',
+      }} />
 
       {/* Content */}
       <div className="relative p-5">
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-600 to-violet-500 flex items-center justify-center shadow-lg shadow-accent-200">
-            <Sparkles className="w-4 h-4 text-white" />
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+            background: 'linear-gradient(135deg, #7c3aed, #9333ea)',
+            boxShadow: '0 4px 16px rgba(147,51,234,0.35)',
+          }}>
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-gray-900">Aegis AI</h3>
-            <p className="text-xs text-gray-500">Analisi intelligente dei tuoi dati</p>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-gray-900">Aegis AI</h3>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold tracking-wide uppercase" style={{
+                background: 'linear-gradient(135deg, rgba(147,51,234,0.1), rgba(168,85,247,0.06))',
+                color: '#7c3aed',
+                border: '1px solid rgba(147,51,234,0.15)',
+              }}>BETA</span>
+            </div>
+            <p className="text-xs text-gray-400">Insights predittivi basati sui tuoi dati</p>
           </div>
         </div>
 
         {isEmpty ? (
-          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-gray-100">
-            <Clock className="w-4 h-4 text-accent-400 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-gray-600 leading-relaxed">
+          <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{
+            background: 'linear-gradient(135deg, rgba(147,51,234,0.04), rgba(168,85,247,0.02))',
+            border: '1px solid rgba(147,51,234,0.08)',
+          }}>
+            <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#a78bfa' }} />
+            <p className="text-sm text-gray-500 leading-relaxed">
               Quando ci saranno dati sufficienti, Aegis AI genererà insights predittivi sulla tua attività.
             </p>
           </div>
         ) : (
           <div className="space-y-2">
-            {insights.map((insight, idx) => (
-              <div key={idx} className={`flex items-start gap-2.5 p-2.5 rounded-lg ${
-                insight.type === 'positive' ? 'bg-emerald-50/80' :
-                insight.type === 'warning' ? 'bg-amber-50/80' :
-                'bg-accent-50/50'
-              }`}>
-                {insight.type === 'positive' ? (
-                  <TrendingUp className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                ) : insight.type === 'warning' ? (
-                  <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                ) : (
-                  <Lightbulb className="w-4 h-4 text-accent-500 mt-0.5 flex-shrink-0" />
-                )}
-                <p className="text-sm text-gray-700 leading-relaxed">{insight.text}</p>
-              </div>
-            ))}
+            {insights.map((insight, idx) => {
+              const bgColor = insight.type === 'positive'
+                ? 'rgba(16,185,129,0.06)'
+                : insight.type === 'warning'
+                  ? 'rgba(245,158,11,0.06)'
+                  : 'rgba(147,51,234,0.04)';
+              const borderColor = insight.type === 'positive'
+                ? 'rgba(16,185,129,0.1)'
+                : insight.type === 'warning'
+                  ? 'rgba(245,158,11,0.1)'
+                  : 'rgba(147,51,234,0.08)';
+              return (
+                <div key={idx} className="flex items-start gap-2.5 p-2.5 rounded-xl transition-all duration-200"
+                  style={{ background: bgColor, border: `1px solid ${borderColor}` }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateX(4px)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateX(0)'; }}
+                >
+                  {insight.type === 'positive' ? (
+                    <TrendingUp className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  ) : insight.type === 'warning' ? (
+                    <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <Lightbulb className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#8b5cf6' }} />
+                  )}
+                  <p className="text-sm text-gray-700 leading-relaxed">{insight.text}</p>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -429,47 +581,85 @@ function AegisAIInsights({ insights }: { insights: InsightItem[] }) {
 }
 
 // ============================================================================
-// ROI SECTION
+// ROI SECTION — premium dark gradient card
 // ============================================================================
 
 function ROISection({ roi, currency }: { roi: ROIStats; currency: string }) {
+  const roiItems = [
+    { icon: Timer, label: 'Ore risparmiate / mese', value: `${roi.hoursSavedMonthly}h`, pct: Math.min(roi.hoursSavedMonthly / 40 * 100, 100) },
+    { icon: Shield, label: 'No-show evitati / mese', value: `${roi.noShowsAvoided}`, pct: Math.min(roi.noShowsAvoided / 20 * 100, 100) },
+    ...(roi.dailyPhoneTime !== undefined ? [{ icon: PhoneOff, label: 'Min. telefono risparmiati / giorno', value: `${roi.dailyPhoneTime} min`, pct: Math.min(roi.dailyPhoneTime / 60 * 100, 100) }] : []),
+  ];
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
-      <h3 className="text-base font-semibold text-gray-900 mb-1">ROI — Risparmio stimato</h3>
-      <p className="text-sm text-gray-500 mb-4">Basato sui dati inseriti durante la configurazione</p>
+    <div className="relative rounded-2xl overflow-hidden">
+      {/* Premium dark gradient background */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(135deg, #1e1040, #2d1660, #1a0e35)',
+      }} />
+      {/* Subtle glow orbs */}
+      <div className="absolute top-0 right-0 w-32 h-32 rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%)' }} />
+      <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.1), transparent 70%)' }} />
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-accent-50 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-accent-700">{formatCurrency(roi.monthlySavings, currency)}</p>
-          <p className="text-xs text-accent-600 mt-1">Risparmio mensile</p>
+      <div className="relative p-5">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(168,85,247,0.15))',
+            border: '1px solid rgba(168,85,247,0.3)',
+          }}>
+            <PiggyBank className="w-5 h-5 text-purple-300" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">ROI — Il tuo risparmio</h3>
+            <p className="text-xs text-purple-300/60">Basato sulla configurazione iniziale</p>
+          </div>
         </div>
-        <div className="bg-gradient-to-br from-accent-600 to-violet-600 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-white">{formatCurrency(roi.annualSavings, currency)}</p>
-          <p className="text-xs text-accent-200 mt-1">Risparmio annuale</p>
-        </div>
-      </div>
 
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between py-2 border-b border-gray-100">
-          <span className="text-sm text-gray-600">Ore risparmiate al mese</span>
-          <span className="text-sm font-semibold text-gray-900">{roi.hoursSavedMonthly}h</span>
-        </div>
-        <div className="flex items-center justify-between py-2 border-b border-gray-100">
-          <span className="text-sm text-gray-600">No-show evitati al mese</span>
-          <span className="text-sm font-semibold text-gray-900">{roi.noShowsAvoided}</span>
-        </div>
-        {roi.dailyPhoneTime !== undefined && (
-          <div className="flex items-center justify-between py-2 border-b border-gray-100">
-            <span className="text-sm text-gray-600">Tempo telefono/giorno (prima)</span>
-            <span className="text-sm font-semibold text-gray-900">{roi.dailyPhoneTime} min</span>
+        {/* Big numbers */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="text-center py-4 rounded-xl" style={{
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(168,85,247,0.08))',
+            border: '1px solid rgba(168,85,247,0.2)',
+          }}>
+            <p className="text-2xl font-bold text-white">{formatCurrency(roi.monthlySavings, currency)}</p>
+            <p className="text-xs text-purple-300/70 mt-1">Risparmio mensile</p>
           </div>
-        )}
-        {roi.monthlyNoShows !== undefined && (
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-gray-600">No-show/mese (prima)</span>
-            <span className="text-sm font-semibold text-gray-900">{roi.monthlyNoShows}</span>
+          <div className="text-center py-4 rounded-xl" style={{
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(168,85,247,0.15))',
+            border: '1px solid rgba(168,85,247,0.3)',
+            boxShadow: '0 0 20px rgba(139,92,246,0.15)',
+          }}>
+            <p className="text-2xl font-bold text-white" style={{ textShadow: '0 0 12px rgba(168,85,247,0.5)' }}>
+              {formatCurrency(roi.annualSavings, currency)}
+            </p>
+            <p className="text-xs text-purple-300/70 mt-1">Risparmio annuale</p>
           </div>
-        )}
+        </div>
+
+        {/* Progress items */}
+        <div className="space-y-3">
+          {roiItems.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div key={idx}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-3.5 h-3.5 text-purple-400/60" />
+                    <span className="text-xs text-purple-200/70">{item.label}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-white">{item.value}</span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <div className="h-full rounded-full transition-all duration-700" style={{
+                    width: `${item.pct}%`,
+                    background: 'linear-gradient(90deg, #8b5cf6, #a855f7)',
+                    boxShadow: '0 0 8px rgba(139,92,246,0.4)',
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -485,8 +675,6 @@ export function StatsPage({
   activePeriod, onPeriodChange, onExport, loading = false, className = '',
 }: StatsPageProps) {
   const [activeTab, setActiveTab] = React.useState<'overview' | 'analysis'>('overview');
-  const theme = useContentTheme();
-  const chartColors = theme.chart;
 
   const tabs = [
     { id: 'overview' as const, label: 'Panoramica', icon: LineChart },
@@ -498,17 +686,25 @@ export function StatsPage({
       {/* Top bar: tabs + period filter + export */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-4">
-          {/* Tab switcher */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          {/* Tab switcher — glass */}
+          <div className="flex items-center gap-1 p-1 rounded-xl" style={{
+            background: 'rgba(0,0,0,0.03)',
+            border: '1px solid rgba(168,85,247,0.08)',
+          }}>
             {tabs.map(tab => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+                  style={{
+                    background: isActive ? 'rgba(255,255,255,0.95)' : 'transparent',
+                    color: isActive ? '#6d28d9' : '#6b7280',
+                    boxShadow: isActive ? '0 2px 8px rgba(147,51,234,0.12)' : 'none',
+                    border: isActive ? '1px solid rgba(168,85,247,0.12)' : '1px solid transparent',
+                  }}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
@@ -518,32 +714,56 @@ export function StatsPage({
           </div>
 
           {/* Period filter */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
-            {PERIOD_OPTIONS.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => onPeriodChange(opt.id)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activePeriod === opt.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-1 p-1 rounded-xl" style={{
+            background: 'rgba(0,0,0,0.03)',
+            border: '1px solid rgba(168,85,247,0.08)',
+          }}>
+            {PERIOD_OPTIONS.map(opt => {
+              const isActive = activePeriod === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => onPeriodChange(opt.id)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
+                  style={{
+                    background: isActive ? 'rgba(255,255,255,0.95)' : 'transparent',
+                    color: isActive ? '#6d28d9' : '#9ca3af',
+                    boxShadow: isActive ? '0 2px 8px rgba(147,51,234,0.12)' : 'none',
+                    border: isActive ? '1px solid rgba(168,85,247,0.12)' : '1px solid transparent',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {onExport && (
-          <Button variant="outline" onClick={onExport} className="flex items-center gap-2 text-sm">
+          <button
+            onClick={onExport}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200"
+            style={{
+              ...GLASS_CARD,
+              color: '#6b7280',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(147,51,234,0.2)'; e.currentTarget.style.color = '#7c3aed'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.1)'; e.currentTarget.style.color = '#6b7280'; }}
+          >
             <Download className="w-4 h-4" />
             Esporta Report
-          </Button>
+          </button>
         )}
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-3 border-accent-200 border-t-accent-600 rounded-full animate-spin" />
+          <div className="w-8 h-8 rounded-full border-[2.5px]" style={{
+            borderColor: 'rgba(168,85,247,0.15)',
+            borderTopColor: '#8b5cf6',
+            animation: 'spin 0.8s linear infinite',
+          }} />
         </div>
       ) : (
         <>
@@ -557,8 +777,8 @@ export function StatsPage({
 
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <RevenueChart data={revenueChart} currency={currency} chartColors={chartColors} />
-                <AppointmentsChart data={appointmentsChart} chartColors={chartColors} />
+                <RevenueChart data={revenueChart} currency={currency} />
+                <AppointmentsChart data={appointmentsChart} />
               </div>
             </div>
           )}
@@ -568,8 +788,8 @@ export function StatsPage({
             <div className="space-y-6">
               {/* Top Services + Popular Hours */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <TopServicesSection services={topServices} currency={currency} chartColors={chartColors} />
-                <PopularHoursSection hours={popularHours} chartColors={chartColors} />
+                <TopServicesSection services={topServices} currency={currency} />
+                <PopularHoursSection hours={popularHours} />
               </div>
 
               {/* Staff Performance */}
@@ -584,6 +804,12 @@ export function StatsPage({
           )}
         </>
       )}
+
+      {/* Animations */}
+      <style>{`
+        @keyframes stats-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+        @keyframes stats-pulse-border { 0%,100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+      `}</style>
     </div>
   );
 }

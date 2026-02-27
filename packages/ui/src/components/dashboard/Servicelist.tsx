@@ -1,28 +1,22 @@
 // ============================================================================
-// AEGIS SUITE - SERVICE LIST COMPONENT
+// AEGIS SUITE - SERVICE LIST COMPONENT (Perfected v2)
 // File: packages/ui/src/components/dashboard/ServiceList.tsx
-// Reusable service management component for all verticals
+// Glass cards, hover glow, stagger entrance, consistent dashboard design.
 // ============================================================================
 
 'use client';
 
 import * as React from 'react';
-import { 
-  Search, 
-  Plus, 
-  MoreVertical, 
-  Edit2, 
-  Trash2, 
-  Clock, 
+import {
+  Search,
+  Plus,
+  MoreVertical,
+  Edit2,
+  Trash2,
+  Clock,
   ChevronDown,
   ChevronRight,
-  GripVertical,
-  ToggleLeft,
-  ToggleRight,
 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Card } from '../ui/card';
 
 // ============================================================================
 // TYPES
@@ -32,7 +26,7 @@ export interface ServiceItem {
   id: string;
   name: string;
   description?: string;
-  duration: number; // minutes
+  duration: number;
   price: number;
   isActive: boolean;
   categoryId?: string;
@@ -49,40 +43,25 @@ export interface ServiceCategory {
 }
 
 export interface ServiceListProps {
-  /** List of services */
   services: ServiceItem[];
-  /** List of categories */
   categories: ServiceCategory[];
-  /** Currency symbol */
   currency?: string;
-  /** Callback when add service is clicked */
   onAddService?: () => void;
-  /** Callback when add service to specific category is clicked */
   onAddServiceToCategory?: (categoryId: string) => void;
-  /** Callback when edit service is clicked */
   onEditService?: (service: ServiceItem) => void;
-  /** Callback when delete service is clicked */
   onDeleteService?: (service: ServiceItem) => void;
-  /** Callback when service active state is toggled */
   onToggleActive?: (service: ServiceItem, active: boolean) => void;
-  /** Callback when add category is clicked */
   onAddCategory?: () => void;
-  /** Callback when edit category is clicked */
   onEditCategory?: (category: ServiceCategory) => void;
-  /** Callback when delete category is clicked */
   onDeleteCategory?: (category: ServiceCategory) => void;
-  /** Show category management */
   showCategoryManagement?: boolean;
-  /** Loading state */
   loading?: boolean;
-  /** Empty state component */
   emptyState?: React.ReactNode;
-  /** Custom class name */
   className?: string;
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================================================
 
 function formatDuration(minutes: number): string {
@@ -98,127 +77,183 @@ function formatPrice(price: number, currency: string): string {
 }
 
 // ============================================================================
-// SUB-COMPONENTS
+// SERVICE CARD
 // ============================================================================
 
-interface ServiceCardProps {
+function ServiceCard({
+  service, currency, onEdit, onDelete, onToggleActive, delay,
+}: {
   service: ServiceItem;
   currency: string;
   onEdit?: () => void;
   onDelete?: () => void;
   onToggleActive?: (active: boolean) => void;
-}
-
-function ServiceCard({ service, currency, onEdit, onDelete, onToggleActive }: ServiceCardProps) {
+  delay: number;
+}) {
   const [showMenu, setShowMenu] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
-  // Close menu when clicking outside
   React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   return (
-    <div 
-      className={`
-        group relative flex items-center justify-between p-4 
-        bg-white border border-gray-200 rounded-xl
-        hover:border-purple-200 hover:shadow-sm transition-all
-        ${!service.isActive ? 'opacity-60' : ''}
-      `}
+    <div
+      className="group relative flex items-center justify-between p-4 rounded-xl cursor-default"
+      style={{
+        background: service.isActive ? '#fff' : 'rgba(0,0,0,0.015)',
+        border: '1px solid rgba(0,0,0,0.04)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.01)',
+        opacity: service.isActive ? 1 : 0.6,
+        animation: `sl-card-in 0.35s ease-out ${delay}s both`,
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)';
+        e.currentTarget.style.boxShadow = '0 6px 24px rgba(147,51,234,0.08), 0 0 0 1px rgba(168,85,247,0.06)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(0,0,0,0.04)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.01)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
     >
-      {/* Drag handle - for future drag & drop */}
-      <div className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-40 cursor-grab">
-        <GripVertical className="w-4 h-4 text-gray-400" />
-      </div>
+      {/* Left: Info */}
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        {/* Toggle */}
+        <div
+          className="w-9 h-5 rounded-full flex items-center px-0.5 flex-shrink-0 cursor-pointer"
+          style={{
+            background: service.isActive ? '#10b981' : '#d1d5db',
+            transition: 'background 0.2s ease',
+          }}
+          onClick={() => onToggleActive?.(!service.isActive)}
+        >
+          <div
+            className="w-4 h-4 rounded-full bg-white"
+            style={{
+              boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+              transform: service.isActive ? 'translateX(16px)' : 'translateX(0)',
+              transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          />
+        </div>
 
-      {/* Service info */}
-      <div className="flex-1 ml-4">
-        <div className="flex items-center gap-2">
-          <h4 className="font-medium text-gray-900">{service.name}</h4>
-          {!service.isActive && (
-            <span className="px-2 py-0.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-full">
-              Disattivo
-            </span>
+        {/* Name + description */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{service.name}</p>
+          {service.description && (
+            <p className="text-xs text-gray-400 truncate mt-0.5">{service.description}</p>
           )}
         </div>
-        {service.description && (
-          <p className="text-sm text-gray-500 mt-0.5 line-clamp-1">{service.description}</p>
-        )}
-        <div className="flex items-center gap-4 mt-2">
-          <span className="flex items-center gap-1 text-sm text-gray-500">
-            <Clock className="w-4 h-4" />
-            {formatDuration(service.duration)}
-          </span>
+      </div>
+
+      {/* Right: Meta + Actions */}
+      <div className="flex items-center gap-4 flex-shrink-0">
+        {/* Duration */}
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400">
+          <Clock className="w-3.5 h-3.5" />
+          {formatDuration(service.duration)}
         </div>
-      </div>
 
-      {/* Price */}
-      <div className="text-right mr-4">
-        <span className="text-lg font-semibold text-gray-900">
-          {formatPrice(service.price, currency)}
-        </span>
-      </div>
-
-      {/* Actions menu */}
-      <div className="relative" ref={menuRef}>
-        <button
-          onClick={() => setShowMenu(!showMenu)}
-          className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        {/* Price */}
+        <div
+          className="text-sm font-bold px-2.5 py-1 rounded-lg"
+          style={{
+            background: 'rgba(168,85,247,0.06)',
+            color: '#7c3aed',
+          }}
         >
-          <MoreVertical className="w-5 h-5" />
-        </button>
+          {formatPrice(service.price, currency)}
+        </div>
 
-        {showMenu && (
-          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
-            <button
-              onClick={() => { onToggleActive?.(!service.isActive); setShowMenu(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+        {/* Context menu */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100"
+            style={{
+              color: 'rgba(0,0,0,0.3)',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = 'rgba(0,0,0,0.5)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.3)'; }}
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {showMenu && (
+            <div
+              className="absolute right-0 bottom-full mb-1 w-40 py-1 z-[100] rounded-xl overflow-hidden"
+              style={{
+                background: 'rgba(255,255,255,0.98)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(168,85,247,0.1)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(168,85,247,0.05)',
+              }}
             >
-              {service.isActive ? (
-                <>
-                  <ToggleLeft className="w-4 h-4" />
-                  Disattiva
-                </>
-              ) : (
-                <>
-                  <ToggleRight className="w-4 h-4" />
-                  Attiva
-                </>
-              )}
-            </button>
-            {service.isActive && (
-              <>
-                <button
-                  onClick={() => { onEdit?.(); setShowMenu(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Modifica
-                </button>
-                <button
-                  onClick={() => { onDelete?.(); setShowMenu(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Elimina
-                </button>
-              </>
-            )}
-          </div>
-        )}
+              <button
+                onClick={() => { onEdit?.(); setShowMenu(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700"
+                style={{ transition: 'all 0.15s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(168,85,247,0.06)';
+                  e.currentTarget.style.paddingLeft = '20px';
+                  const icon = e.currentTarget.querySelector('svg');
+                  if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(-12deg) scale(1.15)'; (icon as unknown as HTMLElement).style.color = '#9333ea'; }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.paddingLeft = '16px';
+                  const icon = e.currentTarget.querySelector('svg');
+                  if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; (icon as unknown as HTMLElement).style.color = ''; }
+                }}
+              >
+                <Edit2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
+                Modifica
+              </button>
+              <button
+                onClick={() => { onDelete?.(); setShowMenu(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600"
+                style={{ transition: 'all 0.15s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(239,68,68,0.06)';
+                  e.currentTarget.style.paddingLeft = '20px';
+                  const icon = e.currentTarget.querySelector('svg');
+                  if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(12deg) scale(1.15)'; (icon as unknown as HTMLElement).style.color = '#dc2626'; }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.paddingLeft = '16px';
+                  const icon = e.currentTarget.querySelector('svg');
+                  if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; (icon as unknown as HTMLElement).style.color = ''; }
+                }}
+              >
+                <Trash2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
+                Elimina
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-interface CategorySectionProps {
+// ============================================================================
+// CATEGORY SECTION
+// ============================================================================
+
+function CategorySection({
+  category, services, currency, defaultExpanded = true,
+  onEditService, onDeleteService, onToggleActive,
+  onEditCategory, onDeleteCategory, onAddService, showCategoryManagement, sectionDelay,
+}: {
   category: ServiceCategory;
   services: ServiceItem[];
   currency: string;
@@ -230,82 +265,116 @@ interface CategorySectionProps {
   onDeleteCategory?: () => void;
   onAddService?: () => void;
   showCategoryManagement?: boolean;
-}
-
-function CategorySection({
-  category,
-  services,
-  currency,
-  defaultExpanded = true,
-  onEditService,
-  onDeleteService,
-  onToggleActive,
-  onEditCategory,
-  onDeleteCategory,
-  onAddService,
-  showCategoryManagement,
-}: CategorySectionProps) {
+  sectionDelay: number;
+}) {
   const [expanded, setExpanded] = React.useState(defaultExpanded);
-  const [showCategoryMenu, setShowCategoryMenu] = React.useState(false);
+  const [showMenu, setShowMenu] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
-  // Close menu when clicking outside
   React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowCategoryMenu(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   const activeCount = services.filter(s => s.isActive).length;
 
   return (
-    <div className="mb-6">
+    <div
+      className="mb-6"
+      style={{ animation: `sl-card-in 0.35s ease-out ${sectionDelay}s both` }}
+    >
       {/* Category header */}
-      <div className="flex items-center justify-between mb-3">
+      <div
+        className="flex items-center justify-between mb-3 p-3 rounded-xl"
+        style={{
+          background: 'rgba(168,85,247,0.06)',
+          border: '1px solid rgba(168,85,247,0.12)',
+          transition: 'all 0.15s ease',
+        }}
+      >
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-left group"
+          className="flex items-center gap-2.5 text-left flex-1 min-w-0"
         >
-          <div className="p-1 rounded-lg bg-purple-100 text-purple-600 group-hover:bg-purple-200 transition-colors">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(168,85,247,0.08)' }}
+          >
             {expanded ? (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-3.5 h-3.5" style={{ color: '#9333ea' }} />
             ) : (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" style={{ color: '#9333ea' }} />
             )}
           </div>
-          <h3 className="font-semibold text-gray-900">{category.name}</h3>
-          <span className="text-sm text-gray-500">
-            ({activeCount}/{services.length})
+          <h3 className="text-sm font-semibold text-gray-900 truncate">{category.name}</h3>
+          <span className="text-xs text-gray-400 flex-shrink-0">
+            {activeCount}/{services.length}
           </span>
         </button>
 
         {showCategoryManagement && (
           <div className="relative" ref={menuRef}>
             <button
-              onClick={() => setShowCategoryMenu(!showCategoryMenu)}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-1.5 rounded-lg"
+              style={{ color: 'rgba(0,0,0,0.25)', transition: 'all 0.15s ease' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = 'rgba(0,0,0,0.5)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.25)'; }}
             >
               <MoreVertical className="w-4 h-4" />
             </button>
 
-            {showCategoryMenu && (
-              <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
+            {showMenu && (
+              <div
+                className="absolute right-0 top-full mt-1 w-40 py-1 z-50 rounded-xl overflow-hidden"
+                style={{
+                  background: 'rgba(255,255,255,0.98)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(168,85,247,0.1)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(168,85,247,0.05)',
+                }}
+              >
                 <button
-                  onClick={() => { onEditCategory?.(); setShowCategoryMenu(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  onClick={() => { onEditCategory?.(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700"
+                  style={{ transition: 'all 0.15s ease' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(168,85,247,0.06)';
+                    e.currentTarget.style.paddingLeft = '20px';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(-12deg) scale(1.15)'; (icon as unknown as HTMLElement).style.color = '#9333ea'; }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.paddingLeft = '16px';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; (icon as unknown as HTMLElement).style.color = ''; }
+                  }}
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
                   Modifica
                 </button>
                 <button
-                  onClick={() => { onDeleteCategory?.(); setShowCategoryMenu(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  onClick={() => { onDeleteCategory?.(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600"
+                  style={{ transition: 'all 0.15s ease' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239,68,68,0.06)';
+                    e.currentTarget.style.paddingLeft = '20px';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(12deg) scale(1.15)'; (icon as unknown as HTMLElement).style.color = '#dc2626'; }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.paddingLeft = '16px';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; (icon as unknown as HTMLElement).style.color = ''; }
+                  }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
                   Elimina
                 </button>
               </div>
@@ -314,18 +383,23 @@ function CategorySection({
         )}
       </div>
 
-      {/* Services list */}
+      {/* Services */}
       {expanded && (
         <div className="space-y-2 pl-2">
           {services.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-gray-500 mb-3">
-                Nessun servizio in questa categoria
-              </p>
+            <div className="text-center py-8">
+              <p className="text-sm text-gray-400">Nessun servizio in questa categoria</p>
               {onAddService && (
                 <button
                   onClick={onAddService}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl"
+                  style={{
+                    color: '#9333ea',
+                    background: 'rgba(168,85,247,0.06)',
+                    transition: 'background 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.1)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; }}
                 >
                   <Plus className="w-4 h-4" />
                   Aggiungi servizio
@@ -333,11 +407,12 @@ function CategorySection({
               )}
             </div>
           ) : (
-            services.map(service => (
+            services.map((service, i) => (
               <ServiceCard
                 key={service.id}
                 service={service}
                 currency={currency}
+                delay={sectionDelay + 0.03 * (i + 1)}
                 onEdit={() => onEditService?.(service)}
                 onDelete={() => onDeleteService?.(service)}
                 onToggleActive={(active) => onToggleActive?.(service, active)}
@@ -374,59 +449,40 @@ export function ServiceList({
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showActiveOnly, setShowActiveOnly] = React.useState(false);
 
-  // Filter services
   const filteredServices = React.useMemo(() => {
     let result = services;
-
-    // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(s => 
+      result = result.filter(s =>
         s.name.toLowerCase().includes(query) ||
         s.description?.toLowerCase().includes(query) ||
         s.categoryName?.toLowerCase().includes(query)
       );
     }
-
-    // Filter by active status
-    if (showActiveOnly) {
-      result = result.filter(s => s.isActive);
-    }
-
+    if (showActiveOnly) result = result.filter(s => s.isActive);
     return result;
   }, [services, searchQuery, showActiveOnly]);
 
-  // Group services by category
   const servicesByCategory = React.useMemo(() => {
     const grouped = new Map<string, ServiceItem[]>();
-    
-    // Initialize with all categories
-    categories.forEach(cat => {
-      grouped.set(cat.id, []);
-    });
-    
-    // Add "uncategorized" for services without category
+    categories.forEach(cat => grouped.set(cat.id, []));
     grouped.set('uncategorized', []);
-
-    // Group services
     filteredServices.forEach(service => {
       const catId = service.categoryId || 'uncategorized';
       const list = grouped.get(catId) || [];
       list.push(service);
       grouped.set(catId, list);
     });
-
     return grouped;
   }, [filteredServices, categories]);
 
-  // Stats
   const totalServices = services.length;
   const activeServices = services.filter(s => s.isActive).length;
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center py-12 ${className}`}>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div className={`flex items-center justify-center py-16 ${className}`}>
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-purple-600 rounded-full animate-spin" />
       </div>
     );
   }
@@ -437,57 +493,114 @@ export function ServiceList({
 
   return (
     <div className={className}>
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      {/* ═══ Toolbar ═══ */}
+      <div
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 p-4 rounded-2xl"
+        style={{
+          background: '#fff',
+          border: '1px solid rgba(0,0,0,0.04)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.02)',
+          animation: 'sl-card-in 0.35s ease-out both',
+        }}
+      >
         {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div className="relative flex-1 max-w-md w-full">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Cerca servizi..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none"
+            style={{
+              background: 'rgba(0,0,0,0.02)',
+              border: '1px solid rgba(0,0,0,0.06)',
+              transition: 'all 0.15s ease',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.06)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
           />
         </div>
 
-        {/* Filters & Actions */}
-        <div className="flex items-center gap-3">
-          {/* Active filter toggle */}
+        {/* Right side */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Toggle filter */}
           <button
             onClick={() => setShowActiveOnly(!showActiveOnly)}
-            className={`
-              px-3 py-2 rounded-lg text-sm font-medium transition-colors
-              ${showActiveOnly 
-                ? 'bg-purple-100 text-purple-700' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }
-            `}
+            className="px-3.5 py-2 rounded-xl text-sm font-medium"
+            style={{
+              background: showActiveOnly ? 'rgba(168,85,247,0.08)' : 'rgba(0,0,0,0.03)',
+              color: showActiveOnly ? '#7c3aed' : '#6b7280',
+              border: showActiveOnly ? '1px solid rgba(168,85,247,0.15)' : '1px solid rgba(0,0,0,0.04)',
+              transition: 'all 0.15s ease',
+            }}
           >
             {showActiveOnly ? 'Solo attivi' : 'Tutti'}
           </button>
 
-          {/* Stats badge */}
-          <span className="text-sm text-gray-500">
+          {/* Stats */}
+          <span className="text-xs text-gray-400">
             {activeServices}/{totalServices} attivi
           </span>
 
           {/* Add button */}
           {onAddService && (
-            <Button onClick={onAddService} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Aggiungi servizio
-            </Button>
+            <button
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const container = e.currentTarget.querySelector('[data-ripple]');
+                if (container) {
+                  const span = document.createElement('span');
+                  Object.assign(span.style, {
+                    position: 'absolute', left: `${x - 50}px`, top: `${y - 50}px`,
+                    width: '100px', height: '100px', borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.35)',
+                    animation: 'sl-ripple 0.6s ease-out forwards', pointerEvents: 'none',
+                  });
+                  container.appendChild(span);
+                  setTimeout(() => span.remove(), 600);
+                }
+                onAddService();
+              }}
+              className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+                boxShadow: '0 2px 8px rgba(147,51,234,0.25)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.25)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                animation: 'sl-shimmer 2.5s ease-in-out infinite',
+              }} />
+              <div data-ripple="" className="absolute inset-0 pointer-events-none" />
+              <Plus className="w-4 h-4 relative z-10" />
+              <span className="relative z-10">Aggiungi servizio</span>
+            </button>
           )}
         </div>
       </div>
 
-      {/* Service list by category */}
+      {/* ═══ Categories & Services ═══ */}
       <div>
-        {categories.map(category => {
+        {categories.map((category, ci) => {
           const categoryServices = servicesByCategory.get(category.id) || [];
-          
-          // Skip empty categories when searching
           if (searchQuery && categoryServices.length === 0) return null;
 
           return (
@@ -496,6 +609,7 @@ export function ServiceList({
               category={category}
               services={categoryServices}
               currency={currency}
+              sectionDelay={0.05 + ci * 0.08}
               onEditService={onEditService}
               onDeleteService={onDeleteService}
               onToggleActive={onToggleActive}
@@ -507,32 +621,51 @@ export function ServiceList({
           );
         })}
 
-        {/* Uncategorized services */}
-        {(servicesByCategory.get('uncategorized')?.length || 0) > 0 && (
-          <CategorySection
-            category={{ id: 'uncategorized', name: 'Senza categoria' }}
-            services={servicesByCategory.get('uncategorized') || []}
-            currency={currency}
-            onEditService={onEditService}
-            onDeleteService={onDeleteService}
-            onToggleActive={onToggleActive}
-            showCategoryManagement={false}
-          />
-        )}
+        {/* Uncategorized */}
+        {(() => {
+          const uncategorized = servicesByCategory.get('uncategorized') || [];
+          if (uncategorized.length === 0) return null;
 
-        {/* No results */}
-        {filteredServices.length === 0 && searchQuery && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Nessun servizio trovato per "{searchQuery}"</p>
-            <button
-              onClick={() => setSearchQuery('')}
-              className="mt-2 text-purple-600 hover:text-purple-700 text-sm font-medium"
-            >
-              Cancella ricerca
-            </button>
-          </div>
-        )}
+          return (
+            <CategorySection
+              key="uncategorized"
+              category={{ id: 'uncategorized', name: 'Senza categoria' }}
+              services={uncategorized}
+              currency={currency}
+              sectionDelay={0.05 + categories.length * 0.08}
+              onEditService={onEditService}
+              onDeleteService={onDeleteService}
+              onToggleActive={onToggleActive}
+              showCategoryManagement={false}
+            />
+          );
+        })()}
       </div>
+
+      {/* Search empty state */}
+      {searchQuery && filteredServices.length === 0 && (
+        <div className="text-center py-12">
+          <Search className="w-10 h-10 mx-auto mb-3" style={{ color: 'rgba(0,0,0,0.1)' }} />
+          <p className="text-sm font-medium text-gray-500">Nessun servizio trovato</p>
+          <p className="text-xs text-gray-400 mt-1">Prova con una ricerca diversa</p>
+        </div>
+      )}
+
+      {/* Keyframes */}
+      <style>{`
+        @keyframes sl-shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes sl-ripple {
+          0% { transform: scale(0); opacity: 1; }
+          100% { transform: scale(4); opacity: 0; }
+        }
+        @keyframes sl-card-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

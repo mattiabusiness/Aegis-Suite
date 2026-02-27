@@ -1,5 +1,5 @@
 // ============================================================================
-// AEGIS BEAUTY - CALENDARIO PAGE
+// AEGIS BEAUTY - CALENDARIO PAGE (v2 — Complete Data Fetch)
 // File: apps/aegis-beauty/app/(dashboard)/dashboard/calendario/page.tsx
 // ============================================================================
 
@@ -14,11 +14,8 @@ export default async function CalendarioPage() {
   const supabase = createServerSupabaseClient(cookieStore);
   const user = await getCurrentUser(supabase);
 
-  if (!user) {
-    redirect('/login');
-  }
+  if (!user) redirect('/login');
 
-  // Get user's business
   const { data: businessMember } = await supabase
     .from('business_members')
     .select('business_id')
@@ -26,116 +23,181 @@ export default async function CalendarioPage() {
     .eq('is_active', true)
     .single() as { data: { business_id: string } | null };
 
-  if (!businessMember) {
-    redirect('/login');
-  }
+  if (!businessMember) redirect('/login');
 
   const businessId = businessMember.business_id;
 
-  // Fetch appointments for this week
-  const startOfWeek = new Date();
-  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  // ========================================================================
+  // FETCH ALL DATA IN PARALLEL
+  // ========================================================================
+
+  // Date range for initial load (current week)
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
   startOfWeek.setHours(0, 0, 0, 0);
-
   const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(endOfWeek.getDate() + 7);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
 
-  const { data: appointments } = await supabase
-    .from('appointments')
-    .select(`
-      id, start_time, end_time, status, notes,
-      customer:customers(full_name),
-      staff:staff(full_name, color),
-      appointment_services(service_name)
-    `)
-    .eq('business_id', businessId)
-    .gte('start_time', startOfWeek.toISOString())
-    .lte('start_time', endOfWeek.toISOString())
-    .order('start_time', { ascending: true }) as { data: any[] | null };
+  const [
+    appointmentsResult,
+    staffResult,
+    businessHoursResult,
+    closuresResult,
+    customersResult,
+    servicesResult,
+    staffServicesResult,
+  ] = await Promise.all([
+    // Appointments for this week
+    supabase
+      .from('appointments')
+      .select(`
+        id, start_time, end_time, status, staff_notes, staff_id,
+        customer:customers(full_name),
+        staff:staff(full_name, color),
+        appointment_services(service_name)
+      `)
+      .eq('business_id', businessId)
+      .gte('start_time', startOfWeek.toISOString())
+      .lte('start_time', endOfWeek.toISOString())
+      .order('start_time', { ascending: true }),
 
-  // Fetch staff
-  const { data: staff } = await supabase
-    .from('staff')
-    .select('id, full_name, color')
-    .eq('business_id', businessId)
-    .eq('is_active', true)
-    .order('full_name') as { data: { id: string; full_name: string; color: string | null }[] | null };
+    // Staff
+    supabase
+      .from('staff')
+      .select('id, full_name, color')
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .order('full_name'),
 
-  // Fetch business hours
-  const { data: businessHours } = await supabase
-    .from('business_hours')
-    .select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
-    .eq('business_id', businessId) as { data: BusinessHoursData[] | null };
+    // Business hours
+    supabase
+      .from('business_hours')
+      .select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
+      .eq('business_id', businessId),
 
-  // Fetch closures
-  const { data: closures } = await supabase
-    .from('business_closures')
-    .select('date, reason')
-    .eq('business_id', businessId)
-    .gte('date', startOfWeek.toISOString().split('T')[0]) as { data: ClosureData[] | null };
+    // Closures
+    supabase
+      .from('business_closures')
+      .select('start_date, end_date, title, is_recurring_yearly')
+      .eq('business_id', businessId),
 
-  // Fetch customers for modal
-  const { data: customers } = await supabase
-    .from('customers')
-    .select('id, full_name, phone, email')
-    .eq('business_id', businessId)
-    .order('full_name') as { data: { id: string; full_name: string; phone: string | null; email: string | null }[] | null };
+    // Customers (for appointment modal)
+    supabase
+      .from('customers')
+      .select('id, full_name, email, phone')
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .order('full_name')
+      .limit(500),
 
-  // Fetch services for modal
-  const { data: services } = await supabase
-    .from('services')
-    .select('id, name, duration_minutes, price, category:service_categories(id, name)')
-    .eq('business_id', businessId)
-    .eq('is_active', true)
-    .order('name') as { data: { id: string; name: string; duration_minutes: number; price: number; category: { id: string; name: string } | null }[] | null };
+    // Services (for appointment modal)
+    supabase
+      .from('services')
+      .select('id, name, duration_minutes, price, category_id, service_categories(name)')
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .order('display_order'),
 
-  // Fetch staff_services for compatibility checking
-  const { data: staffServices } = await supabase
-    .from('staff_services')
-    .select('staff_id, service_id')
-    .in('staff_id', (staff || []).map(s => s.id)) as { data: { staff_id: string; service_id: string }[] | null };
+    // Staff-Services mapping
+    supabase
+      .from('staff_services')
+      .select('staff_id, service_id')
+      .in('staff_id',
+        (await supabase
+          .from('staff')
+          .select('id')
+          .eq('business_id', businessId)
+          .eq('is_active', true)
+        ).data?.map(s => (s as { id: string }).id) || []
+      ),
+  ]);
 
-  // Transform appointments to calendar events
-  const events: CalendarEventData[] = (appointments || []).map((apt) => ({
-    id: apt.id,
-    title: apt.appointment_services?.[0]?.service_name || 'Appuntamento',
-    startTime: new Date(apt.start_time),
-    endTime: new Date(apt.end_time),
-    customerName: apt.customer?.full_name,
-    staffName: apt.staff?.full_name,
-    staffColor: apt.staff?.color,
-    status: apt.status as 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show',
-    notes: apt.notes,
+  // ========================================================================
+  // TRANSFORM DATA
+  // ========================================================================
+
+  // Events
+  const events: CalendarEventData[] = (appointmentsResult.data || []).map((a: Record<string, unknown>) => {
+    const customer = a.customer as { full_name: string } | null;
+    const staff = a.staff as { full_name: string; color: string | null } | null;
+    const services = a.appointment_services as Array<{ service_name: string }> | null;
+
+    return {
+      id: a.id as string,
+      title: services?.[0]?.service_name || 'Appuntamento',
+      startTime: new Date(a.start_time as string),
+      endTime: new Date(a.end_time as string),
+      customerName: customer?.full_name,
+      staffName: staff?.full_name,
+      staffColor: staff?.color || undefined,
+      staffId: a.staff_id as string,
+      status: (a.status as CalendarEventData['status']) || 'confirmed',
+      notes: a.staff_notes as string | undefined,
+    };
+  });
+
+  // Staff
+  const staff = (staffResult.data || []) as Array<{ id: string; full_name: string; color: string | null }>;
+
+  // Business hours
+  const businessHours = (businessHoursResult.data || []) as BusinessHoursData[];
+
+  // Closures — flatten date ranges into individual dates for the calendar
+  const rawClosures = (closuresResult.data || []) as Array<{
+    start_date: string; end_date: string; title: string; is_recurring_yearly: boolean;
+  }>;
+  const closures: ClosureData[] = rawClosures.flatMap(c => {
+    const dates: ClosureData[] = [];
+    const start = new Date(c.start_date);
+    const end = new Date(c.end_date);
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+      dates.push({ date: dateStr, reason: c.title });
+    }
+    return dates;
+  });
+
+  // Customers for modal
+  const customers = (customersResult.data || []).map((c: Record<string, unknown>) => ({
+    id: c.id as string,
+    name: c.full_name as string,
+    email: (c.email as string) || undefined,
+    phone: (c.phone as string) || undefined,
   }));
 
-  // Transform customers
-  const customersForModal = (customers || []).map(c => ({
-    id: c.id,
-    name: c.full_name,
-    phone: c.phone || undefined,
-    email: c.email || undefined,
-  }));
+  // Services for modal
+  const services = (servicesResult.data || []).map((s: Record<string, unknown>) => {
+    const category = s.service_categories as { name: string } | null;
+    return {
+      id: s.id as string,
+      name: s.name as string,
+      duration: s.duration_minutes as number,
+      price: s.price as number,
+      categoryId: (s.category_id as string) || undefined,
+      categoryName: category?.name || undefined,
+    };
+  });
 
-  // Transform services
-  const servicesForModal = (services || []).map(s => ({
-    id: s.id,
-    name: s.name,
-    duration: s.duration_minutes,
-    price: s.price,
-    categoryId: s.category?.id,
-    categoryName: s.category?.name,
-  }));
+  // Staff-Services map
+  const staffServicesMap: Record<string, string[]> = {};
+  for (const ss of (staffServicesResult.data || []) as Array<{ staff_id: string; service_id: string }>) {
+    if (!staffServicesMap[ss.staff_id]) staffServicesMap[ss.staff_id] = [];
+    staffServicesMap[ss.staff_id].push(ss.service_id);
+  }
 
   return (
     <CalendarioContent
-      initialEvents={events}
-      staffList={staff || []}
       businessId={businessId}
-      businessHours={businessHours || []}
-      closures={closures || []}
-      customers={customersForModal}
-      services={servicesForModal}
-      staffServices={staffServices || []}
+      initialEvents={events}
+      initialStaff={staff}
+      businessHours={businessHours}
+      closures={closures}
+      customers={customers}
+      services={services}
+      staffServices={staffServicesMap}
     />
   );
 }

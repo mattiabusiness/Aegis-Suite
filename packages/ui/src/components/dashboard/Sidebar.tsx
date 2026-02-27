@@ -1,5 +1,5 @@
 // ============================================================================
-// AEGIS SUITE - SIDEBAR COMPONENT
+// AEGIS SUITE - SIDEBAR COMPONENT (Perfected v3)
 // File: packages/ui/src/components/dashboard/Sidebar.tsx
 // ============================================================================
 
@@ -8,55 +8,33 @@
 import * as React from 'react';
 import {
   ChevronLeft,
-  ChevronRight,
   LogOut,
   type LucideIcon,
 } from 'lucide-react';
 
 // ============================================================================
-// THEME TYPES
+// THEME TYPES (unchanged — backward compatible)
 // ============================================================================
 
 export interface SidebarTheme {
-  /** Sidebar background (supports gradients) */
   background: string;
-  /** Sidebar border color */
   borderColor: string;
-  /** Logo container background */
   logoBackground: string;
-  /** Brand name text color */
   brandTextColor: string;
-  /** Section label text color */
   sectionLabelColor: string;
-  /** Menu item default text color */
   itemTextColor: string;
-  /** Menu item hover background */
   itemHoverBackground: string;
-  /** Menu item hover text color */
   itemHoverTextColor: string;
-  /** Menu item active background */
   itemActiveBackground: string;
-  /** Menu item active text color */
   itemActiveTextColor: string;
-  /** Badge background */
   badgeBackground: string;
-  /** Badge text color */
   badgeTextColor: string;
-  /** Collapse button text color */
   collapseButtonColor: string;
-  /** Tooltip background */
   tooltipBackground: string;
-  /** Tooltip text color */
   tooltipTextColor: string;
-  /** Divider/separator color */
   dividerColor: string;
-  /** Logout hover color */
   logoutHoverColor: string;
 }
-
-// ============================================================================
-// DEFAULT THEME (Dark - fallback)
-// ============================================================================
 
 export const defaultSidebarTheme: SidebarTheme = {
   background: 'bg-gray-900',
@@ -79,7 +57,7 @@ export const defaultSidebarTheme: SidebarTheme = {
 };
 
 // ============================================================================
-// TYPES
+// TYPES (unchanged)
 // ============================================================================
 
 export interface SidebarMenuItem {
@@ -97,229 +75,243 @@ export interface SidebarMenuSection {
 }
 
 export interface SidebarProps {
-  /** Logo component or image URL */
   logo: React.ReactNode | string;
-  /** Brand name shown next to logo */
   brandName: string;
-  /** Menu sections configuration */
   menuSections: SidebarMenuSection[];
-  /** Currently active item id */
   activeItemId?: string;
-  /** Collapsed state */
   collapsed?: boolean;
-  /** Callback when collapse state changes */
   onCollapsedChange?: (collapsed: boolean) => void;
-  /** Callback when menu item is clicked */
   onMenuItemClick?: (item: SidebarMenuItem) => void;
-  /** Callback when logout is clicked */
   onLogout?: () => void;
-  /** Callback when help is clicked */
   onHelp?: () => void;
-  /** Show help button */
   showHelp?: boolean;
-  /** Show logout button */
   showLogout?: boolean;
-  /** Theme configuration */
   theme?: SidebarTheme;
-  /** Custom className */
   className?: string;
 }
 
 // ============================================================================
-// STYLES (static parts only)
+// CONSTANTS
 // ============================================================================
 
-const sidebarStyles = {
-  container: `
-    fixed left-0 top-0 h-screen
-    flex flex-col
-    transition-all duration-300 ease-in-out
-    z-40
-    border-r
-  `,
-  expanded: 'w-64',
-  collapsed: 'w-24',
-  
-  // Header con logo e collapse button
-  header: `
-    flex items-center justify-between
-    px-4 py-5
-    border-b
-  `,
-  headerCollapsed: `
-    flex items-center justify-between
-    px-3 py-5
-    border-b
-  `,
-  headerLeft: `
-    flex items-center gap-3
-    min-w-0
-  `,
-  logoContainer: `
-    flex-shrink-0
-    w-10 h-10
-    rounded-xl
-    flex items-center justify-center
-    shadow-lg
-  `,
-  logoImage: 'w-6 h-6 object-contain',
-  brandName: `
-    font-bold text-lg
-    whitespace-nowrap
-    overflow-hidden
-    transition-opacity duration-200
-  `,
-  
-  // Collapse button (in header)
-  collapseButton: `
-    flex-shrink-0
-    w-8 h-8
-    flex items-center justify-center
-    rounded-lg
-    transition-all duration-150
-    cursor-pointer
-    group
-    relative
-  `,
-  collapseTooltip: `
-    absolute left-full ml-2
-    px-2 py-1
-    text-xs font-medium
-    rounded-md
-    shadow-lg
-    whitespace-nowrap
-    opacity-0 invisible
-    group-hover:opacity-100 group-hover:visible
-    transition-all duration-150
-    z-50
-    pointer-events-none
-  `,
-  
-  // Navigation - nascondo scrollbar
-  nav: `
-    flex-1 
-    overflow-y-auto
-    py-4
-    scrollbar-none
-    [-ms-overflow-style:none]
-    [scrollbar-width:none]
-    [&::-webkit-scrollbar]:hidden
-  `,
-  section: 'mb-6',
-  sectionLabel: `
-    px-4 mb-2
-    text-xs font-semibold uppercase tracking-wider
-    whitespace-nowrap
-    overflow-hidden
-  `,
-  
-  // Menu items
-  menuItem: `
-    flex items-center gap-3
-    mx-3 px-3 py-2.5
-    rounded-lg
-    transition-all duration-150
-    cursor-pointer
-    group
-    relative
-  `,
-  menuItemIcon: `
-    flex-shrink-0
-    w-5 h-5
-    transition-colors duration-150
-  `,
-  menuItemLabel: `
-    flex-1
-    text-sm font-medium
-    whitespace-nowrap
-    overflow-hidden
-    transition-opacity duration-200
-  `,
-  menuItemBadge: `
-    flex-shrink-0
-    px-2 py-0.5
-    text-xs font-semibold
-    rounded-full
-  `,
-  
-  // Tooltip (quando collapsed)
-  tooltip: `
-    absolute left-full ml-3
-    px-3 py-2
-    text-sm font-medium
-    rounded-lg
-    shadow-lg
-    whitespace-nowrap
-    opacity-0 invisible
-    group-hover:opacity-100 group-hover:visible
-    transition-all duration-150
-    z-50
-    pointer-events-none
-  `,
-  
-  // Footer
-  footer: `
-    border-t
-    py-3
-    mt-auto
-  `,
-};
+const EXPANDED_W = 272;
+const COLLAPSED_W = 104;
+const TRANSITION = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
 // ============================================================================
-// HELPER COMPONENTS
+// MENU ITEM COMPONENT
+// Labels stay in DOM always — opacity + max-width transition for smooth collapse
 // ============================================================================
 
 interface MenuItemComponentProps {
   item: SidebarMenuItem;
   isActive: boolean;
   collapsed: boolean;
-  theme: SidebarTheme;
   onClick: () => void;
+  index: number;
+  mounted: boolean;
+  compact?: boolean;
 }
 
-function MenuItemComponent({ item, isActive, collapsed, theme, onClick }: MenuItemComponentProps) {
+function MenuItemComponent({ item, isActive, collapsed, onClick, index, mounted, compact }: MenuItemComponentProps) {
   const Icon = item.icon;
-  
+  const [hovered, setHovered] = React.useState(false);
+
+  const py = compact ? 11 : 15;
+  const px = compact ? 14 : 20;
+  const iconSize = compact ? 20 : 24;
+  const fontSize = compact ? '0.87rem' : '1rem';
+
   return (
     <div
       onClick={onClick}
-      className={`
-        ${sidebarStyles.menuItem}
-        ${theme.itemTextColor}
-        ${theme.itemHoverBackground}
-        ${theme.itemHoverTextColor}
-        ${isActive ? `${theme.itemActiveBackground} ${theme.itemActiveTextColor}` : ''}
-      `.trim()}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="relative mx-2 rounded-xl cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent"
+      style={{
+        padding: collapsed ? `${py}px` : `${py}px ${px}px`,
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? 'translateX(0)' : 'translateX(-12px)',
+        transition: `opacity 0.35s ease ${index * 0.04}s, transform 0.35s ease ${index * 0.04}s, padding 0.3s cubic-bezier(0.4,0,0.2,1)`,
+      }}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          onClick();
-        }
-      }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
     >
-      <Icon className={sidebarStyles.menuItemIcon} />
-      
-      {!collapsed && (
-        <>
-          <span className={sidebarStyles.menuItemLabel}>
-            {item.label}
-          </span>
-          {item.badge && (
-            <span className={`${sidebarStyles.menuItemBadge} ${theme.badgeBackground} ${theme.badgeTextColor}`}>
-              {item.badge}
-            </span>
-          )}
-        </>
-      )}
-      
-      {/* Tooltip quando collapsed */}
-      {collapsed && (
-        <div className={`${sidebarStyles.tooltip} ${theme.tooltipBackground} ${theme.tooltipTextColor}`}>
+      {/* Background glow */}
+      <div
+        className="absolute inset-0 rounded-xl"
+        style={{
+          background: isActive
+            ? 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))'
+            : hovered
+              ? 'rgba(255,255,255,0.06)'
+              : 'transparent',
+          borderLeft: isActive
+            ? '3px solid rgba(255,255,255,0.9)'
+            : hovered
+              ? '3px solid rgba(255,255,255,0.25)'
+              : '3px solid transparent',
+          backdropFilter: isActive ? 'blur(8px)' : 'none',
+          boxShadow: isActive
+            ? '0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)'
+            : 'none',
+          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      />
+
+      {/* Content row */}
+      <div className="relative flex items-center gap-3" style={{ justifyContent: collapsed ? 'center' : 'flex-start', transition: 'justify-content 0.3s' }}>
+        {/* Icon */}
+        <div
+          className="flex-shrink-0"
+          style={{
+            transform: hovered && !isActive ? 'scale(1.1)' : 'scale(1)',
+            filter: isActive
+              ? 'drop-shadow(0 0 6px rgba(255,255,255,0.3))'
+              : hovered
+                ? 'drop-shadow(0 0 4px rgba(255,255,255,0.15))'
+                : 'none',
+            transition: 'transform 0.2s ease, filter 0.2s ease',
+          }}
+        >
+          <Icon
+            style={{
+              width: iconSize,
+              height: iconSize,
+              color: isActive ? '#fff' : hovered ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)',
+              transition: 'color 0.2s ease',
+            }}
+          />
+        </div>
+
+        {/* Label — always in DOM, animated via opacity + overflow */}
+        <span
+          className="whitespace-nowrap"
+          style={{
+            fontSize,
+            fontWeight: isActive ? 600 : 500,
+            color: isActive ? '#fff' : hovered ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)',
+            transform: hovered && !collapsed ? 'translateX(2px)' : 'translateX(0)',
+            opacity: collapsed ? 0 : 1,
+            maxWidth: collapsed ? 0 : 180,
+            overflow: 'hidden',
+            transition: 'color 0.2s ease, transform 0.2s ease, opacity 0.25s ease, max-width 0.3s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        >
           {item.label}
-          {item.badge && (
-            <span className={`ml-2 ${theme.itemActiveTextColor}`}>({item.badge})</span>
-          )}
+        </span>
+
+        {/* Badge */}
+        {item.badge && (
+          <span
+            className="flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded-full"
+            style={{
+              background: isActive ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
+              color: '#fff',
+              opacity: collapsed ? 0 : 1,
+              maxWidth: collapsed ? 0 : 60,
+              overflow: 'hidden',
+              transition: 'opacity 0.25s ease, max-width 0.3s ease',
+            }}
+          >
+            {item.badge}
+          </span>
+        )}
+      </div>
+
+      {/* Tooltip (collapsed) */}
+      {collapsed && (
+        <div
+          className="sb-tooltip absolute left-full ml-3 px-3 py-2 text-sm font-medium rounded-xl whitespace-nowrap pointer-events-none z-50"
+          style={{
+            background: 'rgba(15,23,42,0.95)',
+            color: '#fff',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            opacity: 0,
+            transform: 'translateX(-4px)',
+            transition: 'opacity 0.15s ease, transform 0.15s ease',
+          }}
+        >
+          {item.label}
+          {item.badge && <span className="ml-2 opacity-60">({item.badge})</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// LOGOUT BUTTON (scoped red hover)
+// ============================================================================
+
+function LogoutButton({ collapsed, mounted, onLogout }: { collapsed: boolean; mounted: boolean; onLogout?: () => void }) {
+  const [hovered, setHovered] = React.useState(false);
+
+  return (
+    <div
+      onClick={onLogout}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="relative mx-2 rounded-xl cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+      style={{
+        padding: collapsed ? '10px' : '10px 14px',
+        opacity: mounted ? 1 : 0,
+        transition: 'opacity 0.4s ease 0.4s, padding 0.3s cubic-bezier(0.4,0,0.2,1)',
+      }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onLogout?.(); }}
+    >
+      <div
+        className="absolute inset-0 rounded-xl"
+        style={{
+          background: hovered ? 'rgba(239,68,68,0.08)' : 'transparent',
+          transition: 'background 0.2s ease',
+        }}
+      />
+      <div className="relative flex items-center gap-3" style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}>
+        <LogOut
+          className="flex-shrink-0"
+          style={{
+            width: 20,
+            height: 20,
+            color: hovered ? '#f87171' : 'rgba(255,255,255,0.4)',
+            transition: 'color 0.2s ease',
+          }}
+        />
+        <span
+          className="font-medium whitespace-nowrap"
+          style={{
+            fontSize: '0.87rem',
+            color: hovered ? '#f87171' : 'rgba(255,255,255,0.4)',
+            opacity: collapsed ? 0 : 1,
+            maxWidth: collapsed ? 0 : 100,
+            overflow: 'hidden',
+            transition: 'color 0.2s ease, opacity 0.25s ease, max-width 0.3s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        >
+          Esci
+        </span>
+      </div>
+
+      {collapsed && (
+        <div
+          className="sb-tooltip absolute left-full ml-3 px-3 py-2 text-sm font-medium rounded-xl whitespace-nowrap pointer-events-none z-50"
+          style={{
+            background: 'rgba(15,23,42,0.95)',
+            color: '#fff',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            opacity: 0,
+            transform: 'translateX(-4px)',
+            transition: 'opacity 0.15s ease, transform 0.15s ease',
+          }}
+        >
+          Esci
         </div>
       )}
     </div>
@@ -343,136 +335,290 @@ export function Sidebar({
   theme = defaultSidebarTheme,
   className = '',
 }: SidebarProps) {
-  
-  const handleCollapse = () => {
-    onCollapsedChange?.(!collapsed);
-  };
+  const [mounted, setMounted] = React.useState(false);
+  const [collapseHovered, setCollapseHovered] = React.useState(false);
+  const [transitioning, setTransitioning] = React.useState(false);
+  const [tooltipPos, setTooltipPos] = React.useState<{ top: number; left: number } | null>(null);
+  const collapseBtnRef = React.useRef<HTMLDivElement>(null);
 
-  const handleItemClick = (item: SidebarMenuItem) => {
-    onMenuItemClick?.(item);
+  // Position tooltip next to button (fixed, outside sidebar overflow)
+  React.useEffect(() => {
+    if (collapseHovered && collapseBtnRef.current) {
+      const rect = collapseBtnRef.current.getBoundingClientRect();
+      setTooltipPos({ top: rect.top + rect.height / 2, left: rect.right + 10 });
+    } else {
+      setTooltipPos(null);
+    }
+  }, [collapseHovered]);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleCollapse = () => {
+    setTransitioning(true);
+    onCollapsedChange?.(!collapsed);
+    setTimeout(() => setTransitioning(false), 350);
   };
+  const handleItemClick = (item: SidebarMenuItem) => onMenuItemClick?.(item);
+
+  // Split: first section = main nav, rest = bottom support
+  const mainSections = menuSections.slice(0, 1);
+  const bottomSections = menuSections.slice(1);
+
+  let globalIndex = 0;
 
   return (
     <aside
-      className={`
-        ${sidebarStyles.container}
-        ${theme.background}
-        ${theme.borderColor}
-        ${collapsed ? sidebarStyles.collapsed : sidebarStyles.expanded}
-        ${className}
-      `.trim()}
+      className={`fixed left-0 top-0 h-screen flex flex-col z-40 ${className}`}
+      style={{
+        width: collapsed ? COLLAPSED_W : EXPANDED_W,
+        background: 'linear-gradient(145deg, #3b0764 0%, #581c87 30%, #6b21a8 60%, #7c3aed 100%)',
+        borderRight: '1px solid rgba(168,85,247,0.12)',
+        boxShadow: '4px 0 32px rgba(88,28,135,0.08), 1px 0 0 rgba(168,85,247,0.06)',
+        transition: `width 0.3s cubic-bezier(0.4, 0, 0.2, 1)`,
+        overflow: 'hidden',
+      }}
     >
-      {/* Header con Logo e Collapse Button */}
-      <div className={`${collapsed ? sidebarStyles.headerCollapsed : sidebarStyles.header} ${theme.dividerColor}`}>
-        {/* Logo - sempre a sinistra */}
-        <div className={`${sidebarStyles.logoContainer} ${theme.logoBackground}`}>
+
+      {/* Ambient glow */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
+        style={{
+          width: 200,
+          height: 200,
+          background: 'radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%)',
+          filter: 'blur(40px)',
+        }}
+      />
+
+      {/* Transition blur overlay */}
+      {transitioning && (
+        <div
+          className="absolute inset-0 z-20 pointer-events-none"
+          style={{
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            background: 'rgba(59,7,100,0.15)',
+            animation: 'sb-blur-fade 0.35s ease-out forwards',
+          }}
+        />
+      )}
+
+      {/* ═══ Header ═══ */}
+      <div
+        className="relative flex items-center border-b"
+        style={{
+          padding: collapsed ? '20px 14px' : '20px 18px',
+          borderColor: 'rgba(255,255,255,0.06)',
+          transition: 'padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        {/* Logo */}
+        <div
+          className="flex-shrink-0 rounded-xl flex items-center justify-center"
+          style={{
+            width: 42,
+            height: 42,
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(126,34,206,0.4))',
+            border: '1px solid rgba(168,85,247,0.25)',
+            boxShadow: '0 4px 16px rgba(168,85,247,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+            animation: 'none',
+          }}
+        >
           {typeof logo === 'string' ? (
-            <img src={logo} alt={brandName} className={sidebarStyles.logoImage} />
+            <img src={logo} alt={brandName} className="w-6 h-6 object-contain" />
           ) : (
             logo
           )}
         </div>
-        
-        {/* Brand name - solo quando expanded */}
-        {!collapsed && (
-          <span className={`${sidebarStyles.brandName} ${theme.brandTextColor}  ml-3 flex-1`}>
-            {brandName}
-          </span>
-        )}
-        
-        {/* Collapse Button - sempre a destra */}
+
+        {/* Brand — smooth collapse */}
+        <span
+          className="ml-3 font-bold text-white whitespace-nowrap"
+          style={{
+            fontSize: '1.05rem',
+            letterSpacing: '-0.01em',
+            opacity: collapsed ? 0 : 1,
+            maxWidth: collapsed ? 0 : 160,
+            overflow: 'hidden',
+            transition: 'opacity 0.25s ease, max-width 0.3s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        >
+          {brandName}
+        </span>
+
+        {/* Collapse button — always visible, bigger hit area */}
         <div
           onClick={handleCollapse}
-          className={`
-            ${sidebarStyles.collapseButton}
-            ${theme.collapseButtonColor}
-            ${theme.itemHoverBackground}
-            ${theme.itemHoverTextColor}
-          `.trim()}
+          onMouseEnter={() => setCollapseHovered(true)}
+          onMouseLeave={() => setCollapseHovered(false)}
+          className={`sb-collapse-btn flex-shrink-0 rounded-lg flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${collapsed ? '' : 'ml-auto'}`}
+        ref={collapseBtnRef}
+          style={{
+            width: 28,
+            height: 28,
+            minWidth: 28,
+            background: collapseHovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+            border: '1px solid',
+            borderColor: collapseHovered ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
+            transition: 'all 0.2s ease',
+          }}
           role="button"
           tabIndex={0}
           aria-label={collapsed ? 'Espandi menu' : 'Comprimi menu'}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              handleCollapse();
-            }
-          }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCollapse(); }}
         >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
+          <div
+            style={{
+              transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)',
+              color: collapseHovered ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
+              transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), color 0.2s ease',
+            }}
+          >
             <ChevronLeft className="w-4 h-4" />
-          )}
-          {/* Tooltip */}
-          <div className={`${sidebarStyles.collapseTooltip} ${theme.tooltipBackground} ${theme.tooltipTextColor}`}>
-            {collapsed ? 'Espandi menu' : 'Comprimi menu'}
           </div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className={sidebarStyles.nav}>
-        {menuSections.map((section, index) => (
-          <div key={section.id} className={sidebarStyles.section}>
-            {/* Divider between sections (except first) */}
-            {index > 0 && section.label && !collapsed && (
-              <div className={`mx-4 mb-4 border-t ${theme.dividerColor}`} />
-            )}
-            
-            {/* Section Label */}
-            {section.label && !collapsed && (
-              <div className={`${sidebarStyles.sectionLabel} ${theme.sectionLabelColor}`}>
+      {/* ═══ Main Navigation ═══ */}
+      <nav
+        className="flex-1 overflow-y-auto py-4"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {mainSections.map((section, sectionIndex) => (
+          <div key={section.id} className="mb-2">
+            {section.label && (
+              <div
+                className="px-5 mb-3 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap overflow-hidden"
+                style={{
+                  color: 'rgba(255,255,255,0.25)',
+                  opacity: mounted && !collapsed ? 1 : 0,
+                  maxHeight: collapsed ? 0 : 20,
+                  marginBottom: collapsed ? 0 : 12,
+                  transform: mounted ? 'translateY(0)' : 'translateY(6px)',
+                  transition: `opacity 0.3s ease ${sectionIndex * 0.1}s, transform 0.4s ease ${sectionIndex * 0.1}s, max-height 0.3s ease, margin-bottom 0.3s ease`,
+                }}
+              >
                 {section.label}
               </div>
             )}
-            
-            {/* Section Items */}
-            {section.items.map((item) => (
+
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const itemIndex = globalIndex++;
+                return (
+                  <MenuItemComponent
+                    key={item.id}
+                    item={item}
+                    isActive={activeItemId === item.id}
+                    collapsed={collapsed}
+                    onClick={() => handleItemClick(item)}
+                    index={itemIndex}
+                    mounted={mounted}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* ═══ Footer: Support + Logout ═══ */}
+      <div
+        className="mt-auto"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        {/* Support items (Impostazioni, Aiuto) */}
+        <div className="pt-2 pb-1 space-y-0.5">
+          {bottomSections.map((section) =>
+            section.items.map((item) => (
               <MenuItemComponent
                 key={item.id}
                 item={item}
                 isActive={activeItemId === item.id}
                 collapsed={collapsed}
-                theme={theme}
                 onClick={() => handleItemClick(item)}
+                index={globalIndex++}
+                mounted={mounted}
+                compact
               />
-            ))}
-          </div>
-        ))}
-      </nav>
+            ))
+          )}
+        </div>
 
-      {/* Footer - Solo Logout */}
-      <div className={`${sidebarStyles.footer} ${theme.dividerColor}`}>
-        {/* Logout Button */}
-        {showLogout && (
-          <div
-            onClick={onLogout}
-            className={`
-              ${sidebarStyles.menuItem}
-              ${theme.itemTextColor}
-              ${theme.itemHoverBackground}
-              ${theme.logoutHoverColor}
-            `.trim()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                onLogout?.();
-              }
-            }}
-          >
-            <LogOut className={sidebarStyles.menuItemIcon} />
-            {!collapsed && (
-              <span className={sidebarStyles.menuItemLabel}>Esci</span>
-            )}
-            {collapsed && (
-              <div className={`${sidebarStyles.tooltip} ${theme.tooltipBackground} ${theme.tooltipTextColor}`}>
-                Esci
-              </div>
-            )}
-          </div>
-        )}
+        {/* Divider */}
+        <div
+          className="mx-4 my-1"
+          style={{
+            height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)',
+          }}
+        />
+
+        {/* Logout */}
+        <div className="pb-3 pt-1">
+          {showLogout && (
+            <LogoutButton collapsed={collapsed} mounted={mounted} onLogout={onLogout} />
+          )}
+        </div>
       </div>
+
+      {/* Collapse tooltip (fixed, outside sidebar overflow) */}
+      {tooltipPos && (
+        <div
+          style={{
+            position: 'fixed',
+            top: tooltipPos.top,
+            left: tooltipPos.left,
+            transform: 'translateY(-50%)',
+            padding: '6px 12px',
+            fontSize: '0.78rem',
+            fontWeight: 500,
+            color: '#fff',
+            background: 'linear-gradient(135deg, rgba(88,28,135,0.95), rgba(107,33,168,0.95))',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: 10,
+            border: '1px solid rgba(168,85,247,0.2)',
+            boxShadow: '0 8px 24px rgba(88,28,135,0.3), 0 0 0 1px rgba(168,85,247,0.1)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            animation: 'sb-tip-in 0.15s ease-out',
+          }}
+        >
+          {collapsed ? 'Apri barra laterale' : 'Chiudi barra laterale'}
+        </div>
+      )}
+
+      {/* ═══ Styles ═══ */}
+      <style>{`
+        @keyframes sb-tip-in {
+          from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
+          to { opacity: 1; transform: translateY(-50%) translateX(0); }
+        }
+        @keyframes sb-blur-fade {
+          0% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes sb-breathe {
+          0%, 100% {
+            box-shadow: 0 4px 16px rgba(168,85,247,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+          }
+          50% {
+            box-shadow: 0 6px 28px rgba(168,85,247,0.45), 0 0 14px rgba(168,85,247,0.2), inset 0 1px 0 rgba(255,255,255,0.18);
+          }
+        }
+        aside nav::-webkit-scrollbar { display: none; }
+        .mx-2:hover .sb-tooltip,
+        .sb-collapse-btn:hover .sb-tooltip,
+        .sb-collapse-btn:hover .sb-collapse-tooltip {      </div>
+          opacity: 1 !important;
+          transform: translateX(0) !important;
+        }
+      `}</style>
     </aside>
   );
 }

@@ -1,18 +1,19 @@
 // ============================================================================
-// AEGIS BEAUTY - CALENDARIO CONTENT
+// AEGIS BEAUTY - CALENDARIO CONTENT (v2 — Dynamic Fetch + Availability)
 // File: apps/aegis-beauty/app/(dashboard)/dashboard/calendario/CalendarioContent.tsx
+//
+// Changes from v1:
+//  - Dynamic appointment fetch when navigating (not just initial week)
+//  - Availability API integration for appointment modal
+//  - Slot picker instead of static time dropdown
+//  - Better error handling and loading states
 // ============================================================================
 
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  PageHeader,
   Calendar,
-  Card,
-  CalendarEventListItem,
-  EmptyAppointments,
   AppointmentModal,
   EventDetailModal,
   type CalendarEventData,
@@ -24,9 +25,10 @@ import {
   type Staff,
   type AppointmentFormData,
   type StaffServicesMap,
+  type SlotInfo,
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Users, Briefcase, ChevronDown } from 'lucide-react';
 
 // ============================================================================
 // TYPES
@@ -38,36 +40,59 @@ interface StaffMember {
   color: string | null;
 }
 
-interface CustomerData {
-  id: string;
-  name: string;
-  phone?: string;
-  email?: string;
-}
-
-interface ServiceData {
-  id: string;
-  name: string;
-  duration: number;
-  price: number;
-  categoryId?: string;
-  categoryName?: string;
-}
-
-interface StaffServiceData {
-  staff_id: string;
-  service_id: string;
-}
-
 interface CalendarioContentProps {
-  initialEvents: CalendarEventData[];
-  staffList: StaffMember[];
   businessId: string;
+  initialEvents: CalendarEventData[];
+  initialStaff: StaffMember[];
   businessHours: BusinessHoursData[];
   closures: ClosureData[];
-  customers: CustomerData[];
-  services: ServiceData[];
-  staffServices: StaffServiceData[];
+  customers: Customer[];
+  services: Service[];
+  staffServices: StaffServicesMap;
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+function getDateRange(date: Date, view: CalendarView): { start: string; end: string } {
+  const d = new Date(date);
+
+  if (view === 'day') {
+    const dateStr = formatDateStr(d);
+    return { start: `${dateStr}T00:00:00`, end: `${dateStr}T23:59:59` };
+  }
+
+  if (view === 'week') {
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+    const start = new Date(d);
+    start.setDate(diff);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    return {
+      start: `${formatDateStr(start)}T00:00:00`,
+      end: `${formatDateStr(end)}T23:59:59`,
+    };
+  }
+
+  // Month: fetch full month + buffer
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  return {
+    start: `${formatDateStr(start)}T00:00:00`,
+    end: `${formatDateStr(end)}T23:59:59`,
+  };
+}
+
+function formatDateStr(d: Date): string {
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 }
 
 // ============================================================================
@@ -75,123 +100,254 @@ interface CalendarioContentProps {
 // ============================================================================
 
 export function CalendarioContent({
-  initialEvents,
-  staffList,
   businessId,
+  initialEvents,
+  initialStaff,
   businessHours,
   closures,
-  customers,
-  services,
-  staffServices,
+  customers: initialCustomers,
+  services: initialServices,
+  staffServices: initialStaffServices,
 }: CalendarioContentProps) {
-  const router = useRouter();
   const supabase = createClient();
-  
-  // State
-  const [events, setEvents] = useState<CalendarEventData[]>(initialEvents);
+
+  // ========================================================================
+  // STATE
+  // ========================================================================
+
   const [view, setView] = useState<CalendarView>('week');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [events, setEvents] = useState<CalendarEventData[]>(initialEvents);
+  const [loading, setLoading] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  
+  const [selectedServiceFilter, setSelectedServiceFilter] = useState<string | null>(null);
+  const [showStaffFilter, setShowStaffFilter] = useState(false);
+  const [showServiceFilter, setShowServiceFilter] = useState(false);
+  const [btnRipple, setBtnRipple] = useState<{ x: number; y: number; id: number } | null>(null);
+  const staffList = initialStaff;
+
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalInitialDate, setModalInitialDate] = useState<Date | undefined>();
   const [modalInitialTime, setModalInitialTime] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Build staffServices map for AppointmentModal
-  const staffServicesMap: StaffServicesMap = {};
-  staffServices.forEach(ss => {
-    if (!staffServicesMap[ss.staff_id]) {
-      staffServicesMap[ss.staff_id] = [];
-    }
-    staffServicesMap[ss.staff_id].push(ss.service_id);
-  });
+  // Event detail modal
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Transform data for AppointmentModal
-  const modalCustomers: Customer[] = customers.map(c => ({
-    id: c.id,
-    name: c.name,
-    phone: c.phone,
-    email: c.email,
-  }));
+  // Availability slots for modal
+  const [availableSlots, setAvailableSlots] = useState<SlotInfo[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
 
-  const modalServices: Service[] = services.map(s => ({
-    id: s.id,
-    name: s.name,
-    duration: s.duration,
-    price: s.price,
-    categoryId: s.categoryId,
-    categoryName: s.categoryName,
-  }));
-
-  const modalStaff: Staff[] = staffList.map(s => ({
+  // Customers (can grow as new ones are created)
+  const [modalCustomers] = useState<Customer[]>(initialCustomers);
+  const modalServices: Service[] = initialServices;
+  const modalStaff: Staff[] = initialStaff.map(s => ({
     id: s.id,
     name: s.full_name,
     color: s.color || undefined,
   }));
+  const staffServicesMap = initialStaffServices;
 
-  // Filtra eventi per staff selezionato
-  const filteredEvents = selectedStaff
-    ? events.filter((e) => e.staffName === staffList.find(s => s.id === selectedStaff)?.full_name)
-    : events;
+  // Track last fetched range to avoid redundant fetches
+  const lastFetchedRange = useRef<string>('');
 
-  // Eventi di oggi per la sidebar
-  const todayEvents = events.filter((e) => {
-    const today = new Date();
-    const eventDate = new Date(e.startTime);
-    return (
-      eventDate.getDate() === today.getDate() &&
-      eventDate.getMonth() === today.getMonth() &&
-      eventDate.getFullYear() === today.getFullYear()
-    );
-  });
+  // ========================================================================
+  // DYNAMIC APPOINTMENT FETCHING
+  // ========================================================================
 
-  // ============================================================================
+  const fetchAppointments = useCallback(async (date: Date, currentView: CalendarView) => {
+    const range = getDateRange(date, currentView);
+    const rangeKey = `${range.start}_${range.end}`;
+
+    // Skip if already fetched this range
+    if (rangeKey === lastFetchedRange.current) return;
+    lastFetchedRange.current = rangeKey;
+
+    setLoading(true);
+    try {
+      const { data: appointments, error } = await supabase
+        .from('appointments')
+        .select(`
+          id, start_time, end_time, status, staff_notes,
+          customer:customers(full_name),
+          staff:staff(full_name, color),
+          appointment_services(service_name)
+        `)
+        .eq('business_id', businessId)
+        .gte('start_time', range.start)
+        .lte('start_time', range.end)
+        .order('start_time', { ascending: true });
+
+      if (error) throw error;
+
+      const mapped: CalendarEventData[] = (appointments || []).map((a: Record<string, unknown>) => {
+        const customer = a.customer as { full_name: string } | null;
+        const staff = a.staff as { full_name: string; color: string | null } | null;
+        const services = a.appointment_services as Array<{ service_name: string }> | null;
+
+        return {
+          id: a.id as string,
+          title: services?.[0]?.service_name || 'Appuntamento',
+          startTime: new Date(a.start_time as string),
+          endTime: new Date(a.end_time as string),
+          customerName: customer?.full_name,
+          staffName: staff?.full_name,
+          staffColor: staff?.color || undefined,
+          staffId: (a.staff_id as string) || undefined,
+          status: a.status as CalendarEventData['status'],
+          notes: a.staff_notes as string | undefined,
+        };
+      });
+
+      setEvents(mapped);
+    } catch (err) {
+      console.error('Error fetching appointments:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [businessId, supabase]);
+
+  // Fetch when date or view changes
+  useEffect(() => {
+    fetchAppointments(selectedDate, view);
+  }, [selectedDate, view, fetchAppointments]);
+
+  // ========================================================================
+  // AVAILABILITY SLOT FETCHING
+  // ========================================================================
+
+  const fetchAvailableSlots = useCallback(async (
+    date: string,
+    serviceId: string,
+    staffId?: string | null,
+  ) => {
+    setSlotsLoading(true);
+    setSlotsError(null);
+    setAvailableSlots([]);
+
+    try {
+      const params = new URLSearchParams({
+        date,
+        serviceId,
+        businessId,
+      });
+      if (staffId) params.set('staffId', staffId);
+
+      const response = await fetch(`/api/availability?${params}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Errore nel caricamento');
+      }
+
+      setAvailableSlots(() => {
+        const slots: SlotInfo[] = data.slots || [];
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (date === todayStr) {
+          const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+          return slots.filter(s => {
+            const [h, m] = s.time.split(':').map(Number);
+            return h * 60 + m > nowMinutes;
+          });
+        }
+        return slots;
+      });
+    } catch (err) {
+      console.error('Error fetching slots:', err);
+      setSlotsError(err instanceof Error ? err.message : 'Errore nel caricamento orari');
+    } finally {
+      setSlotsLoading(false);
+    }
+  }, [businessId]);
+
+  // ========================================================================
   // HANDLERS
-  // ============================================================================
+  // ========================================================================
 
-  const handleEventClick = (event: CalendarEventData) => {
-    setSelectedEvent(event);
+  const handleNewClick = () => {
+    setModalInitialDate(selectedDate);
+    setModalInitialTime(undefined);
+    setAvailableSlots([]);
+    setIsModalOpen(true);
   };
 
   const handleSlotClick = (date: Date, hour: number, minutes: number) => {
     setModalInitialDate(date);
     setModalInitialTime(`${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+    setAvailableSlots([]);
     setIsModalOpen(true);
   };
 
-  const handleNewClick = () => {
-    setModalInitialDate(undefined);
-    setModalInitialTime(undefined);
-    setIsModalOpen(true);
+  const handleEventClick = (event: CalendarEventData) => {
+    setSelectedEvent(event);
   };
 
   const handleStaffFilter = (staffId: string | null) => {
     setSelectedStaff(staffId);
+    setShowStaffFilter(false);
   };
 
-  // ============================================================================
-  // STATUS UPDATE HANDLERS
-  // ============================================================================
+  const handleServiceFilter = (serviceId: string | null) => {
+    setSelectedServiceFilter(serviceId);
+    setShowServiceFilter(false);
+  };
 
-  const updateEventStatus = async (eventId: string, newStatus: 'completed' | 'no_show' | 'cancelled') => {
+  // Filter events by selected staff AND service
+  const filteredEvents = events.filter(e => {
+    // Staff filter
+    if (selectedStaff) {
+      const ext = e as CalendarEventData & { staffId?: string };
+      if (ext.staffId) {
+        if (ext.staffId !== selectedStaff) return false;
+      } else {
+        const staffMember = staffList.find(s => s.id === selectedStaff);
+        if (!staffMember || e.staffName !== staffMember.full_name) return false;
+      }
+    }
+    // Service filter
+    if (selectedServiceFilter) {
+      const svc = initialServices.find(s => s.id === selectedServiceFilter);
+      if (svc && e.title !== svc.name) return false;
+    }
+    return true;
+  });
+
+  // Next 5 upcoming events — only confirmed/pending (to be served)
+  const now = new Date();
+  const upcomingEvents = events
+    .filter(e => {
+      const start = new Date(e.startTime);
+      return start >= now && (e.status === 'confirmed' || e.status === 'pending');
+    })
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+    .slice(0, 5);
+
+  // ========================================================================
+  // STATUS UPDATES
+  // ========================================================================
+
+  const updateEventStatus = async (eventId: string, newStatus: string) => {
     setIsUpdatingStatus(true);
     try {
-      const { error } = await (supabase
-        .from('appointments') as any)
-        .update({ status: newStatus })
+      const updateData: Record<string, unknown> = { status: newStatus };
+      if (newStatus === 'completed') updateData.completed_at = new Date().toISOString();
+      if (newStatus === 'cancelled') {
+        updateData.cancelled_at = new Date().toISOString();
+        updateData.cancellation_reason = 'Cancellato dal gestore';
+      }
+
+      const { error } = await supabase
+        .from('appointments')
+        .update(updateData as never)
         .eq('id', eventId);
 
       if (error) throw error;
 
-      // Update local state
       setEvents(prev =>
-        prev.map(e =>
-          e.id === eventId ? { ...e, status: newStatus } : e
-        )
+        prev.map(e => e.id === eventId ? { ...e, status: newStatus as CalendarEventData['status'] } : e)
       );
       setSelectedEvent(null);
     } catch (error) {
@@ -202,49 +358,29 @@ export function CalendarioContent({
     }
   };
 
-  const handleComplete = (eventId: string) => updateEventStatus(eventId, 'completed');
-  const handleNoShow = (eventId: string) => updateEventStatus(eventId, 'no_show');
-  const handleCancel = (eventId: string) => updateEventStatus(eventId, 'cancelled');
-
-  // ============================================================================
+  // ========================================================================
   // APPOINTMENT CREATION
-  // ============================================================================
+  // ========================================================================
 
   const handleModalSubmit = async (data: AppointmentFormData) => {
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/appointments/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: data.customerId,
-          customerFirstName: data.customerFirstName,
-          customerLastName: data.customerLastName,
-          customerPhone: data.customerPhone,
-          customerEmail: data.customerEmail,
-          isNewCustomer: data.isNewCustomer,
-          sendInvite: data.sendInvite,
-          serviceId: data.serviceId,
-          staffId: data.staffId,
-          date: data.date,
-          time: data.time,
-          notes: data.notes,
-          businessId: businessId,
+          ...data,
+          businessId,
         }),
       });
-      
+
       const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Errore nella creazione');
-      }
-      
-      // Aggiungi evento al calendario
-      const selectedService = services.find(s => s.id === data.serviceId);
+      if (!response.ok) throw new Error(result.error || 'Errore nella creazione');
+
+      // Add new event to calendar
+      const selectedService = initialServices.find(s => s.id === data.serviceId);
       const selectedStaffMember = staffList.find(s => s.id === data.staffId);
-      
+
       const newEvent: CalendarEventData = {
         id: result.appointment.id,
         title: result.appointment.serviceName || selectedService?.name || 'Appuntamento',
@@ -252,17 +388,16 @@ export function CalendarioContent({
         endTime: new Date(result.appointment.endTime),
         customerName: result.appointment.customerName,
         staffName: result.appointment.staffName || selectedStaffMember?.full_name,
+        staffColor: selectedStaffMember?.color || undefined,
         status: result.appointment.status || 'confirmed',
         notes: result.appointment.notes || undefined,
       };
-      
+
       setEvents(prev => [...prev, newEvent]);
       setIsModalOpen(false);
-      
-      if (result.inviteSent) {
-        console.log('✅ Invito inviato a:', data.customerEmail);
-      }
-      
+
+      // Reset fetch cache so next navigation refetches
+      lastFetchedRange.current = '';
     } catch (error) {
       console.error('Error creating appointment:', error);
       alert(error instanceof Error ? error.message : 'Errore nella creazione dell\'appuntamento');
@@ -271,141 +406,266 @@ export function CalendarioContent({
     }
   };
 
-  // ============================================================================
+  // ========================================================================
+  // RENDER HELPERS
+  // ========================================================================
+
+  const selectedStaffName = selectedStaff ? staffList.find(s => s.id === selectedStaff)?.full_name : null;
+  const selectedServiceName = selectedServiceFilter ? initialServices.find(s => s.id === selectedServiceFilter)?.name : null;
+
+  const formatUpcomingDate = (d: Date) => {
+    const today = new Date();
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const time = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    if (isSameDay(d, today)) return `Oggi ${time}`;
+    if (isSameDay(d, tomorrow)) return `Domani ${time}`;
+    const day = d.toLocaleDateString('it-IT', { weekday: 'short' });
+    return `${day.charAt(0).toUpperCase() + day.slice(1)} ${d.getDate()} · ${time}`;
+  };
+
+  // ========================================================================
   // RENDER
-  // ============================================================================
+  // ========================================================================
 
   return (
     <>
-      <div className="min-h-[calc(100vh-7rem)]">
-        {/* Header */}
-        <PageHeader
-          title="Calendario"
-          description="Gestisci gli appuntamenti del tuo salone"
-          actions={[
-            {
-              id: 'new-appointment',
-              label: 'Nuovo appuntamento',
-              onClick: handleNewClick,
-              icon: Plus,
-            },
-          ]}
-        />
+      <div className="flex gap-4" style={{ height: 'calc(100vh - 7.5rem)', overflow: 'hidden', animation: 'calC-fadeIn 0.35s ease-out both' }}>
 
-        {/* Staff filter bar */}
-        {staffList.length > 0 && (
-          <div className="mt-4 flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-gray-500 font-medium">Filtra per staff:</span>
-            <button
-              onClick={() => handleStaffFilter(null)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                selectedStaff === null
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Tutti
-            </button>
-            {staffList.map(s => (
+        {/* ============================================================== */}
+        {/* LEFT SIDEBAR                                                    */}
+        {/* ============================================================== */}
+        <div className="w-72 flex-shrink-0 flex flex-col gap-2 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.1) transparent' }}>
+
+          {/* Page title — same format as other pages */}
+          <div className="pb-0.5">
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Calendario</h1>
+            <p className="text-gray-500 mt-0.5 text-sm">Gestisci gli appuntamenti del tuo business</p>
+          </div>
+
+          {/* Nuovo appuntamento button — with ripple */}
+          <button
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setBtnRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top, id: Date.now() });
+              setTimeout(() => setBtnRipple(null), 600);
+              handleNewClick();
+            }}
+            className="relative w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl text-white text-sm font-semibold overflow-hidden transition-all duration-200"
+            style={{
+              background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)'; }}
+          >
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%)', animation: 'calC-shimmer 2.5s ease-in-out infinite' }} />
+            {btnRipple && (
+              <span key={btnRipple.id} className="absolute rounded-full pointer-events-none"
+                style={{
+                  left: btnRipple.x, top: btnRipple.y,
+                  width: 4, height: 4,
+                  background: 'rgba(255,255,255,0.35)',
+                  transform: 'translate(-50%,-50%)',
+                  animation: 'calC-ripple 0.6s ease-out forwards',
+                }}
+              />
+            )}
+            <Plus className="w-4.5 h-4.5 relative z-10" />
+            <span className="relative z-10">Nuovo appuntamento</span>
+          </button>
+
+          {/* Filtri */}
+          <div
+            className="rounded-2xl p-3"
+            style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', border: '1px solid rgba(168,85,247,0.08)', }}
+          >
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Filtri</p>
+            <div className="flex gap-2">
+              {/* Staff toggle */}
               <button
-                key={s.id}
-                onClick={() => handleStaffFilter(s.id)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
-                  selectedStaff === s.id
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                onClick={() => { setShowStaffFilter(!showStaffFilter); setShowServiceFilter(false); }}
+                className="flex-1 flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
+                style={{
+                  background: selectedStaff || showStaffFilter ? 'rgba(147,51,234,0.08)' : 'rgba(0,0,0,0.02)',
+                  color: selectedStaff || showStaffFilter ? '#7c3aed' : '#6b7280',
+                  border: `1px solid ${selectedStaff || showStaffFilter ? 'rgba(147,51,234,0.15)' : 'rgba(0,0,0,0.04)'}`,
+                }}
               >
-                <span
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: s.color || '#9333ea' }}
-                />
-                {s.full_name}
+                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />{selectedStaffName || 'Staff'}</span>
+                <ChevronDown className="w-3 h-3" style={{ transform: showStaffFilter ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
               </button>
-            ))}
-          </div>
-        )}
+              {/* Service toggle */}
+              <button
+                onClick={() => { setShowServiceFilter(!showServiceFilter); setShowStaffFilter(false); }}
+                className="flex-1 flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
+                style={{
+                  background: selectedServiceFilter || showServiceFilter ? 'rgba(147,51,234,0.08)' : 'rgba(0,0,0,0.02)',
+                  color: selectedServiceFilter || showServiceFilter ? '#7c3aed' : '#6b7280',
+                  border: `1px solid ${selectedServiceFilter || showServiceFilter ? 'rgba(147,51,234,0.15)' : 'rgba(0,0,0,0.04)'}`,
+                }}
+              >
+                <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" />{selectedServiceName || 'Servizio'}</span>
+                <ChevronDown className="w-3 h-3" style={{ transform: showServiceFilter ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+            </div>
 
-        {/* Layout calendario + sidebar */}
-        <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Calendario principale */}
-          <div className="lg:col-span-3">
-            <Calendar
-              view={view}
-              onViewChange={setView}
-              selectedDate={selectedDate}
-              onDateChange={setSelectedDate}
-              events={filteredEvents}
-              onEventClick={handleEventClick}
-              onSlotClick={handleSlotClick}
-              businessHours={businessHours}
-              closures={closures}
-            />
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4">
-            {/* Appuntamenti di oggi */}
-            <Card padding="md">
-              <h3 className="font-semibold text-gray-900 mb-3">
-                Oggi ({todayEvents.length})
-              </h3>
-              {todayEvents.length > 0 ? (
-                <div className="space-y-2">
-                  {todayEvents
-                    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-                    .map(event => (
-                      <CalendarEventListItem
-                        key={event.id}
-                        event={event}
-                        onClick={() => handleEventClick(event)}
-                      />
-                    ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-4">
-                  Nessun appuntamento oggi
-                </p>
-              )}
-            </Card>
-
-            {/* Quick stats */}
-            <Card padding="md">
-              <h3 className="font-semibold text-gray-900 mb-3">Statistiche</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Questa settimana</span>
-                  <span className="font-medium">{events.length} app.</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Confermati</span>
-                  <span className="font-medium text-green-600">
-                    {events.filter(e => e.status === 'confirmed').length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">In attesa</span>
-                  <span className="font-medium text-amber-600">
-                    {events.filter(e => e.status === 'pending').length}
-                  </span>
-                </div>
+            {/* Staff dropdown list */}
+            {showStaffFilter && (
+              <div className="mt-2 space-y-0.5 max-h-48 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                <button onClick={() => handleStaffFilter(null)}
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium"
+                  style={{ background: !selectedStaff ? 'rgba(147,51,234,0.08)' : 'transparent', color: !selectedStaff ? '#7c3aed' : '#374151', transition: 'background 0.15s, color 0.15s', animation: 'calC-listItem 0.25s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0ms' }}
+                  onMouseEnter={(e) => { if (selectedStaff) e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; }}
+                  onMouseLeave={(e) => { if (selectedStaff) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  Tutti
+                </button>
+                {staffList.map((s, i) => (
+                  <button key={s.id} onClick={() => handleStaffFilter(s.id)}
+                    className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2"
+                    style={{ background: selectedStaff === s.id ? 'rgba(147,51,234,0.08)' : 'transparent', color: selectedStaff === s.id ? '#7c3aed' : '#374151', transition: 'background 0.15s, color 0.15s', animation: 'calC-listItem 0.25s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${(i + 1) * 40}ms` }}
+                    onMouseEnter={(e) => { if (selectedStaff !== s.id) e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; }}
+                    onMouseLeave={(e) => { if (selectedStaff !== s.id) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color || '#9333ea' }} />
+                    {s.full_name}
+                  </button>
+                ))}
               </div>
-            </Card>
+            )}
+
+            {/* Service dropdown list */}
+            {showServiceFilter && (
+              <div className="mt-2 space-y-0.5 max-h-48 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                <button onClick={() => handleServiceFilter(null)}
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium"
+                  style={{ background: !selectedServiceFilter ? 'rgba(147,51,234,0.08)' : 'transparent', color: !selectedServiceFilter ? '#7c3aed' : '#374151', transition: 'background 0.15s, color 0.15s', animation: 'calC-listItem 0.25s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0ms' }}
+                  onMouseEnter={(e) => { if (selectedServiceFilter) e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; }}
+                  onMouseLeave={(e) => { if (selectedServiceFilter) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  Tutti
+                </button>
+                {initialServices.map((s, i) => (
+                  <button key={s.id} onClick={() => handleServiceFilter(s.id)}
+                    className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between"
+                    style={{ background: selectedServiceFilter === s.id ? 'rgba(147,51,234,0.08)' : 'transparent', color: selectedServiceFilter === s.id ? '#7c3aed' : '#374151', transition: 'background 0.15s, color 0.15s', animation: 'calC-listItem 0.25s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${(i + 1) * 40}ms` }}
+                    onMouseEnter={(e) => { if (selectedServiceFilter !== s.id) e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; }}
+                    onMouseLeave={(e) => { if (selectedServiceFilter !== s.id) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span className="truncate">{s.name}</span>
+                    <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">{s.duration}min</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Prossimi appuntamenti — compact */}
+          <div
+            className="rounded-2xl p-2.5 flex-1 min-h-0 flex flex-col"
+            style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', border: '1px solid rgba(168,85,247,0.08)', }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Prossimi</p>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                style={{ background: upcomingEvents.length > 0 ? 'rgba(147,51,234,0.08)' : 'rgba(0,0,0,0.03)', color: upcomingEvents.length > 0 ? '#7c3aed' : '#9ca3af' }}
+              >
+                {upcomingEvents.length}
+              </span>
+            </div>
+            {upcomingEvents.length > 0 ? (
+              <div className="space-y-1 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                {upcomingEvents.map((event, i) => {
+                  const statusColor = event.status === 'confirmed' ? '#10b981' : event.status === 'pending' ? '#f59e0b' : event.status === 'cancelled' ? '#ef4444' : event.status === 'no_show' ? '#8b5cf6' : '#6b7280';
+                  return (
+                    <div key={event.id}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-all duration-150"
+                      style={{ background: 'rgba(0,0,0,0.015)', border: '1px solid rgba(0,0,0,0.03)', animation: 'calC-listItem 0.2s ease-out both', animationDelay: `${i * 40}ms`, transition: 'all 0.18s ease' }}
+                      onClick={() => handleEventClick(event)}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(147,51,234,0.12)'; e.currentTarget.style.borderColor = 'rgba(147,51,234,0.3)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(147,51,234,0.2)'; e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.015)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.03)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; }}
+                    >
+                      {/* Status color bar */}
+                      <div className="w-0.5 h-7 rounded-full flex-shrink-0" style={{ background: statusColor }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold text-gray-900 truncate">{event.title}</p>
+                        <p className="text-[9px] text-gray-400 truncate">
+                          {event.customerName}{event.staffName ? ` · ${event.staffName}` : ''}
+                        </p>
+                      </div>
+                      <p className="text-[9px] font-semibold flex-shrink-0" style={{ color: '#7c3aed' }}>
+                        {formatUpcomingDate(new Date(event.startTime))}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center py-3">
+                <div className="w-8 h-8 rounded-full mb-1.5 flex items-center justify-center" style={{ background: 'rgba(147,51,234,0.06)' }}>
+                  <CalendarIcon className="w-3.5 h-3.5" style={{ color: '#c4b5fd' }} />
+                </div>
+                <p className="text-[10px] text-gray-400">Nessun prossimo</p>
+              </div>
+            )}
+          </div>
+
+          {/* Stats mini — compact */}
+          <div
+            className="rounded-2xl p-2"
+            style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', border: '1px solid rgba(168,85,247,0.08)', }}
+          >
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Statistiche</p>
+            <div className="grid grid-cols-4 gap-1">
+              <div className="text-center py-1 rounded-md" style={{ background: 'rgba(0,0,0,0.015)' }}>
+                <p className="text-sm font-bold text-gray-900">{events.length}</p>
+                <p className="text-[8px] text-gray-400">Totali</p>
+              </div>
+              <div className="text-center py-1 rounded-md" style={{ background: 'rgba(0,0,0,0.015)' }}>
+                <p className="text-sm font-bold" style={{ color: '#6d28d9' }}>{events.filter(e => e.status === 'confirmed').length}</p>
+                <p className="text-[8px] text-gray-400">Confermati</p>
+              </div>
+              <div className="text-center py-1 rounded-md" style={{ background: 'rgba(0,0,0,0.015)' }}>
+                <p className="text-sm font-bold" style={{ color: '#047857' }}>{events.filter(e => e.status === 'completed').length}</p>
+                <p className="text-[8px] text-gray-400">Completati</p>
+              </div>
+              <div className="text-center py-1 rounded-md" style={{ background: 'rgba(0,0,0,0.015)' }}>
+                <p className="text-sm font-bold" style={{ color: '#4b5563' }}>{events.filter(e => e.status === 'no_show').length}</p>
+                <p className="text-[8px] text-gray-400">No-show</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ============================================================== */}
+        {/* RIGHT - CALENDAR (full remaining space)                         */}
+        {/* ============================================================== */}
+        <div className="flex-1 min-w-0">
+          <Calendar
+            view={view}
+            onViewChange={setView}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            events={filteredEvents}
+            onEventClick={handleEventClick}
+            onSlotClick={handleSlotClick}
+            businessHours={businessHours}
+            closures={closures}
+            className="h-full"
+          />
         </div>
       </div>
 
-      {/* Event detail modal (from UI package) */}
+      {/* Event detail modal */}
       <EventDetailModal
         event={selectedEvent}
         onClose={() => setSelectedEvent(null)}
-        onComplete={handleComplete}
-        onNoShow={handleNoShow}
-        onCancel={handleCancel}
+        onComplete={(id) => updateEventStatus(id, 'completed')}
+        onNoShow={(id) => updateEventStatus(id, 'no_show')}
+        onCancel={(id) => updateEventStatus(id, 'cancelled')}
         isLoading={isUpdatingStatus}
       />
 
-      {/* Modal Nuovo Appuntamento */}
+      {/* Appointment modal */}
       <AppointmentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -419,6 +679,10 @@ export function CalendarioContent({
         initialDate={modalInitialDate}
         initialTime={modalInitialTime}
         isLoading={isSubmitting}
+        availableSlots={availableSlots}
+        slotsLoading={slotsLoading}
+        slotsError={slotsError || undefined}
+        onSlotsNeeded={fetchAvailableSlots}
         labels={{
           title: 'Nuovo Appuntamento',
           customer: 'Cliente',
@@ -429,6 +693,14 @@ export function CalendarioContent({
           submit: 'Crea appuntamento',
         }}
       />
+
+      <style>{`
+        @keyframes calC-fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes calC-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes calC-dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes calC-ripple { 0% { width: 4px; height: 4px; opacity: 0.5; } 100% { width: 300px; height: 300px; opacity: 0; } }
+        @keyframes calC-listItem { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      `}</style>
     </>
   );
 }

@@ -1,16 +1,16 @@
 // ============================================================================
-// AEGIS SUITE - STAFF MODAL COMPONENTS
+// AEGIS SUITE - STAFF MODAL COMPONENTS (Perfected v2)
 // File: packages/ui/src/components/dashboard/StaffModal.tsx
-// Reusable modals for staff management: add/edit, services, hours
+// Portal/glass/glow pattern matching ServiceModal & CategoryModal.
+// Contains: StaffModal, StaffServicesModal, StaffHoursModal
 // ============================================================================
 
 'use client';
 
 import * as React from 'react';
-import { X, ChevronDown, Check, Search, Clock } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Alert } from '../ui/alert';
+import { createPortal } from 'react-dom';
+import { X, Check, Search, Clock, Users } from 'lucide-react';
+import { AnimatedSelect } from '../ui/AnimatedList';
 
 // ============================================================================
 // TYPES
@@ -28,27 +28,17 @@ export interface StaffFormData {
 }
 
 export interface StaffModalProps {
-  /** Modal open state */
   isOpen: boolean;
-  /** Close modal callback */
   onClose: () => void;
-  /** Submit callback */
   onSubmit: (data: StaffFormData) => Promise<void>;
-  /** Initial data for editing (null for new staff) */
   initialData?: Partial<StaffFormData> | null;
-  /** Modal title */
   title?: string;
-  /** Submit button text */
   submitText?: string;
-  /** Error message */
   error?: string;
-  /** Hide owner role option (when owner already exists) */
   hideOwnerRole?: boolean;
-  /** Staff is incomplete (no user_id yet) - will show QR code flow */
   isIncomplete?: boolean;
 }
 
-// Staff Services Modal Types
 export interface ServiceOption {
   id: string;
   name: string;
@@ -67,7 +57,6 @@ export interface StaffServicesModalProps {
   error?: string;
 }
 
-// Staff Hours Modal Types
 export interface DayHours {
   dayOfWeek: string;
   dayLabel: string;
@@ -93,9 +82,9 @@ export interface StaffHoursModalProps {
 // CONSTANTS
 // ============================================================================
 
-const ROLE_OPTIONS: { value: StaffRole; label: string; description: string }[] = [
-  { value: 'owner', label: 'Titolare', description: 'Accesso completo a tutte le funzionalità' },
-  { value: 'employee', label: 'Collaboratore', description: 'Vede solo i propri appuntamenti' },
+const ROLE_OPTIONS = [
+  { value: 'owner', label: 'Titolare' },
+  { value: 'employee', label: 'Collaboratore' },
 ];
 
 const COLOR_OPTIONS = [
@@ -109,90 +98,269 @@ const COLOR_OPTIONS = [
   { value: '#14b8a6', label: 'Teal' },
 ];
 
-const DAY_LABELS: Record<string, string> = {
-  monday: 'Lunedì',
-  tuesday: 'Martedì',
-  wednesday: 'Mercoledì',
-  thursday: 'Giovedì',
-  friday: 'Venerdì',
-  saturday: 'Sabato',
-  sunday: 'Domenica',
+// ============================================================================
+// SHARED STYLES
+// ============================================================================
+
+const inputStyle: React.CSSProperties = {
+  background: '#fff',
+  border: '1px solid rgba(0,0,0,0.08)',
+  borderRadius: 12,
+  transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
 };
+
+const focusHandlers = {
+  onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    e.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)';
+    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.08), 0 0 20px rgba(168,85,247,0.04)';
+  },
+  onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    e.currentTarget.style.borderColor = 'rgba(0,0,0,0.08)';
+    e.currentTarget.style.boxShadow = 'none';
+  },
+};
+
+// ============================================================================
+// SHARED MODAL WRAPPER
+// ============================================================================
+
+function ModalShell({
+  isOpen, onClose, title, subtitle, maxWidth = 'max-w-lg', children,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  subtitle?: string;
+  maxWidth?: string;
+  children: React.ReactNode | ((args: { handleClose: () => void; doShake: () => void }) => React.ReactNode);
+}) {
+  const [mounted, setMounted] = React.useState(false);
+  const [closing, setClosing] = React.useState(false);
+  const [shake, setShake] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setClosing(false);
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setMounted(true));
+      });
+    } else {
+      setMounted(false);
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setClosing(true);
+    setMounted(false);
+    setTimeout(() => { setClosing(false); onClose(); }, 200);
+  };
+
+  const doShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  };
+
+  if (!isOpen && !closing) return null;
+
+  const content = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0"
+        onClick={handleClose}
+        style={{
+          background: 'rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          opacity: mounted ? 1 : 0,
+          transition: 'opacity 0.2s ease',
+        }}
+      />
+
+      <div
+        className={`relative w-full ${maxWidth} ${shake ? 'stm-shake' : ''}`}
+        style={{
+          background: 'rgba(255,255,255,0.97)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderRadius: 24,
+          border: '1px solid rgba(168,85,247,0.35)',
+          boxShadow: mounted
+            ? '0 24px 80px rgba(0,0,0,0.12), 0 8px 32px rgba(147,51,234,0.12), 0 0 0 1px rgba(168,85,247,0.2), 0 0 40px rgba(168,85,247,0.18), 0 0 80px rgba(147,51,234,0.08)'
+            : '0 8px 32px rgba(0,0,0,0.08)',
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(8px)',
+          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          maxHeight: 'calc(100vh - 2rem)',
+          overflowY: 'auto',
+          scrollbarWidth: 'none' as const,
+        }}
+      >
+        {/* Ambient glow */}
+        <div
+          className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ width: 200, height: 100, background: 'radial-gradient(ellipse, rgba(168,85,247,0.1) 0%, transparent 70%)', filter: 'blur(30px)' }}
+        />
+
+        {/* Close */}
+        <button
+          onClick={handleClose}
+          className="absolute right-4 top-4 p-2 rounded-xl z-10 outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+          style={{ color: 'rgba(0,0,0,0.3)', transition: 'all 0.15s ease' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(0,0,0,0.6)'; e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(0,0,0,0.3)'; e.currentTarget.style.background = 'transparent'; }}
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Header */}
+        <div className="px-6 pt-7 pb-4">
+          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+          {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+        </div>
+
+        <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.15), transparent)' }} />
+
+        {typeof children === 'function' ? (children as (args: { handleClose: () => void; doShake: () => void }) => React.ReactNode)({ handleClose, doShake }) : children}
+
+        <style>{`
+          .stm-shake { animation: stmShake 0.45s ease-in-out; }
+          @keyframes stmShake {
+            0%,100% { transform: scale(1) translateX(0); }
+            15%,55%,85% { transform: scale(1) translateX(-5px); }
+            35%,75% { transform: scale(1) translateX(5px); }
+          }
+          @keyframes stmShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          @keyframes stmBounce {
+            0% { transform: scale(0.5); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+          }
+          @keyframes stmCheckIn {
+            0% { opacity: 0; transform: scale(0) rotate(-45deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0); }
+          }
+          @keyframes stmCardIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes stmRipple {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+          }
+        `}</style>
+
+        <div className="absolute bottom-0 left-6 right-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.15), transparent)', borderRadius: '0 0 24px 24px' }} />
+      </div>
+    </div>
+  );
+
+  return createPortal(content, document.body);
+}
+
+// ============================================================================
+// SUBMIT BUTTON (shared)
+// ============================================================================
+
+function SubmitButton({ loading, label, onClick }: { loading: boolean; label: string; onClick: (e: React.MouseEvent) => void }) {
+  return (
+    <button
+      type="submit"
+      onClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const container = e.currentTarget.querySelector('[data-ripple]');
+        if (container) {
+          const span = document.createElement('span');
+          Object.assign(span.style, {
+            position: 'absolute', left: `${x - 50}px`, top: `${y - 50}px`,
+            width: '100px', height: '100px', borderRadius: '50%',
+            background: 'rgba(255,255,255,0.35)',
+            animation: 'stmRipple 0.6s ease-out forwards', pointerEvents: 'none',
+          });
+          container.appendChild(span);
+          setTimeout(() => span.remove(), 600);
+        }
+        onClick(e);
+      }}
+      disabled={loading}
+      className="relative flex-1 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden"
+      style={{
+        background: loading ? '#c084fc' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
+        boxShadow: loading ? 'none' : '0 2px 8px rgba(147,51,234,0.25)',
+        opacity: loading ? 0.7 : 1,
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => { if (!loading) e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = loading ? 'none' : '0 2px 8px rgba(147,51,234,0.25)'; }}
+    >
+      {!loading && (
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+          animation: 'stmShimmer 2.5s ease-in-out infinite',
+        }} />
+      )}
+      <div data-ripple="" className="absolute inset-0 pointer-events-none" />
+      <span className="relative z-10">
+        {loading ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Salvataggio...
+          </span>
+        ) : label}
+      </span>
+    </button>
+  );
+}
+
+function CancelButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-600"
+      style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)', transition: 'all 0.15s ease' }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; }}
+    >
+      Annulla
+    </button>
+  );
+}
 
 // ============================================================================
 // STAFF MODAL (Add/Edit)
 // ============================================================================
 
 export function StaffModal({
-  isOpen,
-  onClose,
-  onSubmit,
-  initialData = null,
-  title,
-  submitText,
-  error,
-  hideOwnerRole = false,
-  isIncomplete = false,
+  isOpen, onClose, onSubmit, initialData = null, title, submitText, error, hideOwnerRole = false, isIncomplete = false,
 }: StaffModalProps) {
   const isEditing = !!initialData?.fullName;
   const isCompletingProfile = isEditing && isIncomplete;
-  
-  // Determine title
-  const modalTitle = title || (
-    isCompletingProfile 
-      ? 'Completa profilo' 
-      : isEditing 
-        ? 'Modifica membro' 
-        : 'Nuovo membro dello staff'
-  );
-  
-  // Determine button text
-  const buttonText = submitText || (
-    isCompletingProfile
-      ? 'Salva e genera QR'
-      : isEditing 
-        ? 'Salva modifiche' 
-        : 'Crea e genera QR'
-  );
-  
-  // Show QR info for new staff OR completing incomplete profile
+  const modalTitle = title || (isCompletingProfile ? 'Completa profilo' : isEditing ? 'Modifica membro' : 'Nuovo membro dello staff');
+  const buttonText = submitText || (isCompletingProfile ? 'Salva e genera QR' : isEditing ? 'Salva modifiche' : 'Crea e genera QR');
   const showQRInfo = !isEditing || isCompletingProfile;
 
-  // Form state
   const [formData, setFormData] = React.useState<StaffFormData>({
-    fullName: initialData?.fullName || '',
-    email: initialData?.email || '',
-    phone: initialData?.phone || '',
-    role: initialData?.role || 'employee',
-    color: initialData?.color || '#9333ea',
-    isActive: initialData?.isActive ?? true,
+    fullName: '', email: '', phone: '', role: 'employee', color: '#9333ea', isActive: true,
   });
   const [loading, setLoading] = React.useState(false);
   const [formError, setFormError] = React.useState('');
+  const nameRef = React.useRef<HTMLInputElement>(null);
 
-  // Dropdown states
-  const [showRoleDropdown, setShowRoleDropdown] = React.useState(false);
-  const [showColorDropdown, setShowColorDropdown] = React.useState(false);
-  
-  // Refs for click outside
-  const roleRef = React.useRef<HTMLDivElement>(null);
-  const colorRef = React.useRef<HTMLDivElement>(null);
-
-  // Close dropdowns on click outside
-  React.useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (roleRef.current && !roleRef.current.contains(event.target as Node)) {
-        setShowRoleDropdown(false);
-      }
-      if (colorRef.current && !colorRef.current.contains(event.target as Node)) {
-        setShowColorDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Reset form when modal opens/closes or initialData changes
   React.useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -204,264 +372,142 @@ export function StaffModal({
         isActive: initialData?.isActive ?? true,
       });
       setFormError('');
-      setShowRoleDropdown(false);
-      setShowColorDropdown(false);
+      setTimeout(() => nameRef.current?.focus(), 280);
     }
   }, [isOpen, initialData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-
-    // Validation
-    if (!formData.fullName.trim()) {
-      setFormError('Inserisci il nome completo');
-      return;
-    }
-    if (!formData.email.trim()) {
-      setFormError('Inserisci l\'email');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setFormError('Email non valida');
-      return;
-    }
-    if (!formData.phone.trim()) {
-      setFormError('Inserisci il numero di telefono');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await onSubmit(formData);
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Errore durante il salvataggio. Riprova.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (field: keyof StaffFormData, value: string | boolean) => {
+  const update = (field: keyof StaffFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Get selected role
-  const selectedRole = ROLE_OPTIONS.find(r => r.value === formData.role);
-  
-  // Get selected color
-  const selectedColor = COLOR_OPTIONS.find(c => c.value === formData.color);
-
-  // Filter roles if hideOwnerRole
-  const availableRoles = hideOwnerRole 
-    ? ROLE_OPTIONS.filter(r => r.value !== 'owner')
-    : ROLE_OPTIONS;
-
-  if (!isOpen) return null;
-
+  const availableRoles = hideOwnerRole ? ROLE_OPTIONS.filter(r => r.value !== 'owner') : ROLE_OPTIONS;
   const displayError = error || formError;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50 transition-opacity"
-        onClick={onClose}
-      />
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      title={modalTitle}
+      subtitle={isCompletingProfile ? 'Completa i dati per attivare il profilo' : isEditing ? 'Modifica i dettagli del membro' : 'Aggiungi un nuovo membro al tuo team'}
+    >
+      {({ handleClose, doShake }: { handleClose: () => void; doShake: () => void }) => {
+        const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
+          e.preventDefault();
+          setFormError('');
+          if (!formData.fullName.trim()) { setFormError('Inserisci il nome completo *'); doShake(); return; }
+          if (!formData.email.trim()) { setFormError('Inserisci l\'email *'); doShake(); return; }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { setFormError('Email non valida *'); doShake(); return; }
+          if (!formData.phone.trim()) { setFormError('Inserisci il telefono *'); doShake(); return; }
 
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{modalTitle}</h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          setLoading(true);
+          try { await onSubmit(formData); } catch (err) {
+            setFormError(err instanceof Error ? err.message : 'Errore durante il salvataggio.');
+            doShake();
+          } finally { setLoading(false); }
+        };
 
-          {/* Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="px-6 py-4 space-y-4">
+        return (
+          <>
+            <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
               {displayError && (
-                <Alert variant="error">{displayError}</Alert>
+                <div className="p-3 rounded-xl text-sm text-red-700 flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)' }}>
+                  <span className="text-red-500 font-bold flex-shrink-0">*</span>
+                  {displayError}
+                </div>
               )}
 
-              {/* Info box for new staff or completing profile */}
               {showQRInfo && (
-                <div className="p-3 bg-purple-50 rounded-xl border border-purple-100">
-                  <p className="text-sm text-purple-700">
-                    {isCompletingProfile 
-                      ? <>Completando il profilo, verrà generato un <strong>QR code</strong> che il collaboratore può scansionare per completare la registrazione e accedere alla dashboard.</>
-                      : <>Dopo la creazione, verrà generato un <strong>QR code</strong> che il collaboratore può scansionare per completare la registrazione e accedere alla dashboard.</>
-                    }
-                  </p>
+                <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.1)', color: '#7c3aed' }}>
+                  {isCompletingProfile
+                    ? 'Completando il profilo verrà generato un QR code per la registrazione.'
+                    : 'Dopo la creazione verrà generato un QR code che il collaboratore può scansionare.'}
                 </div>
               )}
 
-              {/* Full Name */}
-              <Input
-                label="Nome completo"
-                placeholder="es. Mario Rossi"
-                value={formData.fullName}
-                onChange={(e) => handleChange('fullName', e.target.value)}
-                required
-              />
+              {/* Nome */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo <span className="text-red-400">*</span></label>
+                <input ref={nameRef} type="text" value={formData.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="es. Mario Rossi" className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
+              </div>
 
-              {/* Email */}
-              <Input
-                type="email"
-                label="Email"
-                placeholder="mario@esempio.it"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                required
-              />
-
-              {/* Phone */}
-              <Input
-                type="tel"
-                label="Telefono"
-                placeholder="+39 333 1234567"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                required
-              />
-
-              {/* Role and Color row */}
+              {/* Email + Telefono */}
               <div className="grid grid-cols-2 gap-4">
-                {/* Role - Modern Dropdown */}
-                <div ref={roleRef} className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ruolo
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => { setShowRoleDropdown(!showRoleDropdown); setShowColorDropdown(false); }}
-                    className="w-full flex items-center justify-between px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                  >
-                    <span className="text-gray-900">
-                      {selectedRole?.label || 'Seleziona ruolo'}
-                    </span>
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {showRoleDropdown && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
-                      {availableRoles.map(role => (
-                        <button
-                          key={role.value}
-                          type="button"
-                          onClick={() => { handleChange('role', role.value); setShowRoleDropdown(false); }}
-                          className="w-full flex flex-col items-start px-4 py-2.5 text-left hover:bg-purple-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <span className="text-sm font-medium text-gray-900">{role.label}</span>
-                            {formData.role === role.value && (
-                              <Check className="w-4 h-4 text-purple-600" />
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-500">{role.description}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-400">*</span></label>
+                  <input type="email" value={formData.email} onChange={(e) => update('email', e.target.value)} placeholder="email@esempio.it" className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
                 </div>
-
-                {/* Color - Modern Dropdown */}
-                <div ref={colorRef} className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Colore
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => { setShowColorDropdown(!showColorDropdown); setShowRoleDropdown(false); }}
-                    className="w-full flex items-center justify-between px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                  >
-                    <span className="flex items-center gap-2 text-gray-900">
-                      <span 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: formData.color }}
-                      />
-                      {selectedColor?.label || 'Seleziona'}
-                    </span>
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showColorDropdown ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {showColorDropdown && (
-                    <div className="absolute z-50 w-full bottom-full mb-1 bg-white border border-gray-200 rounded-xl shadow-lg">
-                      {COLOR_OPTIONS.map(color => (
-                        <button
-                          key={color.value}
-                          type="button"
-                          onClick={() => { handleChange('color', color.value); setShowColorDropdown(false); }}
-                          className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-purple-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
-                        >
-                          <span className="flex items-center gap-2 text-sm text-gray-900">
-                            <span 
-                              className="w-4 h-4 rounded-full" 
-                              style={{ backgroundColor: color.value }}
-                            />
-                            {color.label}
-                          </span>
-                          {formData.color === color.value && (
-                            <Check className="w-4 h-4 text-purple-600" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefono <span className="text-red-400">*</span></label>
+                  <input type="tel" value={formData.phone} onChange={(e) => update('phone', e.target.value)} placeholder="+39 333 1234567" className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
                 </div>
               </div>
 
-              {/* Active toggle - only for editing */}
-              {isEditing && (
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium text-gray-900">Membro attivo</p>
-                    <p className="text-sm text-gray-500">
-                      I membri disattivati non possono ricevere prenotazioni
-                    </p>
+              {/* Ruolo + Colore */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Ruolo</label>
+                  <AnimatedSelect
+                    value={formData.role}
+                    onChange={(val) => update('role', val)}
+                    options={availableRoles}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Colore</label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {COLOR_OPTIONS.map(c => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => update('color', c.value)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{
+                          background: c.value,
+                          border: formData.color === c.value ? '2px solid #1f2937' : '2px solid transparent',
+                          boxShadow: formData.color === c.value ? '0 0 0 2px rgba(255,255,255,0.8), 0 0 8px rgba(147,51,234,0.2)' : 'none',
+                          transition: 'all 0.15s ease',
+                          transform: formData.color === c.value ? 'scale(1.15)' : 'scale(1)',
+                        }}
+                        title={c.label}
+                      >
+                        {formData.color === c.value && <Check className="w-3.5 h-3.5 text-white" />}
+                      </button>
+                    ))}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleChange('isActive', !formData.isActive)}
-                    className={`
-                      relative w-12 h-6 rounded-full transition-colors
-                      ${formData.isActive ? 'bg-purple-600' : 'bg-gray-200'}
-                    `}
-                  >
-                    <span
-                      className={`
-                        absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform
-                        ${formData.isActive ? 'left-7' : 'left-1'}
-                      `}
-                    />
-                  </button>
+                </div>
+              </div>
+
+              {/* Toggle Attivo */}
+              {isEditing && (
+                <div
+                  className="flex items-center justify-between p-3.5 rounded-xl cursor-pointer"
+                  style={{
+                    background: formData.isActive ? 'rgba(16,185,129,0.04)' : 'rgba(0,0,0,0.015)',
+                    border: `1px solid ${formData.isActive ? 'rgba(16,185,129,0.15)' : 'rgba(0,0,0,0.06)'}`,
+                    transition: 'all 0.2s ease',
+                  }}
+                  onClick={() => update('isActive', !formData.isActive)}
+                >
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Membro attivo</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{formData.isActive ? 'Può ricevere appuntamenti' : 'Non visibile ai clienti'}</p>
+                  </div>
+                  <div className="w-11 h-6 rounded-full flex items-center px-0.5 flex-shrink-0" style={{ background: formData.isActive ? '#10b981' : '#d1d5db', transition: 'background 0.2s ease' }}>
+                    <div className="w-5 h-5 rounded-full bg-white" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.15)', transform: formData.isActive ? 'translateX(20px)' : 'translateX(0)', transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                  </div>
                 </div>
               )}
-            </div>
+            </form>
 
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={loading}
-              >
-                Annulla
-              </Button>
-              <Button type="submit" loading={loading}>
-                {buttonText}
-              </Button>
+            <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.1), transparent)' }} />
+            <div className="px-6 py-5 flex items-center gap-3">
+              <CancelButton onClick={handleClose} />
+              <SubmitButton loading={loading} label={buttonText} onClick={handleSubmit} />
             </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </>
+        );
+      }}
+    </ModalShell>
   );
 }
 
@@ -470,19 +516,12 @@ export function StaffModal({
 // ============================================================================
 
 export function StaffServicesModal({
-  isOpen,
-  onClose,
-  onSave,
-  staffName,
-  services,
-  assignedServiceIds,
-  error,
+  isOpen, onClose, onSave, staffName, services, assignedServiceIds, error,
 }: StaffServicesModalProps) {
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set(assignedServiceIds));
   const [searchQuery, setSearchQuery] = React.useState('');
   const [loading, setLoading] = React.useState(false);
 
-  // Reset when modal opens
   React.useEffect(() => {
     if (isOpen) {
       setSelectedIds(new Set(assignedServiceIds));
@@ -490,162 +529,155 @@ export function StaffServicesModal({
     }
   }, [isOpen, assignedServiceIds]);
 
-  // Filter services by search
-  const filteredServices = React.useMemo(() => {
+  const filtered = React.useMemo(() => {
     if (!searchQuery) return services;
-    const query = searchQuery.toLowerCase();
-    return services.filter(s => 
-      s.name.toLowerCase().includes(query) ||
-      s.categoryName?.toLowerCase().includes(query)
-    );
+    const q = searchQuery.toLowerCase();
+    return services.filter(s => s.name.toLowerCase().includes(q) || s.categoryName?.toLowerCase().includes(q));
   }, [services, searchQuery]);
 
-  // Group by category
-  const groupedServices = React.useMemo(() => {
-    const groups: Record<string, ServiceOption[]> = {};
-    filteredServices.forEach(service => {
-      const category = service.categoryName || 'Altri';
-      if (!groups[category]) groups[category] = [];
-      groups[category].push(service);
+  const grouped = React.useMemo(() => {
+    const g: Record<string, ServiceOption[]> = {};
+    filtered.forEach(s => {
+      const cat = s.categoryName || 'Altri';
+      if (!g[cat]) g[cat] = [];
+      g[cat].push(s);
     });
-    return groups;
-  }, [filteredServices]);
+    return g;
+  }, [filtered]);
 
-  const toggleService = (id: string) => {
+  const [lastToggled, setLastToggled] = React.useState<string | null>(null);
+
+  const toggle = (id: string) => {
+    setLastToggled(id);
     setSelectedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
-  };
-
-  const selectAll = () => {
-    setSelectedIds(new Set(services.map(s => s.id)));
-  };
-
-  const deselectAll = () => {
-    setSelectedIds(new Set());
+    setTimeout(() => setLastToggled(null), 300);
   };
 
   const handleSave = async () => {
     setLoading(true);
-    try {
-      await onSave(Array.from(selectedIds));
-      onClose();
-    } catch (err) {
-      console.error('Error saving services:', err);
-    } finally {
-      setLoading(false);
-    }
+    try { await onSave(Array.from(selectedIds)); onClose(); }
+    catch { /* error handled by parent */ }
+    finally { setLoading(false); }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Gestisci servizi</h2>
-              <p className="text-sm text-gray-500">{staffName}</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Content */}
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Servizi di ${staffName}`}
+      subtitle={`${selectedIds.size} servizi selezionati`}
+    >
+      {({ handleClose }: { handleClose: () => void }) => (
+        <>
           <div className="px-6 py-4">
-            {error && <Alert variant="error" className="mb-4">{error}</Alert>}
-
-            {/* Search + Select all */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Cerca servizi..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+            {error && (
+              <div className="mb-3 p-3 rounded-xl text-sm text-red-700 flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)' }}>
+                <span className="text-red-500 font-bold">*</span> {error}
               </div>
-              <button
-                type="button"
-                onClick={selectedIds.size === services.length ? deselectAll : selectAll}
-                className="text-sm text-purple-600 hover:text-purple-700 font-medium whitespace-nowrap"
-              >
-                {selectedIds.size === services.length ? 'Deseleziona tutti' : 'Seleziona tutti'}
+            )}
+
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <input
+                type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cerca servizi..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none"
+                style={{
+                  background: 'rgba(255,255,255,0.7)',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  borderRadius: 12,
+                  transition: 'all 0.15s ease',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.06)';
+                  e.currentTarget.style.background = '#fff';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
+                }}
+              />
+            </div>
+
+            {/* Quick actions */}
+            <div className="flex items-center gap-2 mb-4">
+              <button onClick={() => { setLastToggled('all'); setSelectedIds(new Set(services.map(s => s.id))); setTimeout(() => setLastToggled(null), 300); }} className="text-xs font-medium px-3 py-1.5 rounded-lg" style={{ color: '#9333ea', background: 'rgba(168,85,247,0.06)', transition: 'background 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; }}>
+                Seleziona tutti
+              </button>
+              <button onClick={() => setSelectedIds(new Set())} className="text-xs font-medium px-3 py-1.5 rounded-lg" style={{ color: '#6b7280', background: 'rgba(0,0,0,0.03)', transition: 'background 0.15s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; }}>
+                Deseleziona tutti
               </button>
             </div>
 
-            {/* Services list */}
-            <div className="max-h-80 overflow-y-auto space-y-4">
-              {Object.entries(groupedServices).map(([category, categoryServices]) => (
-                <div key={category}>
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                    {category}
-                  </h4>
+            {/* Service list */}
+            <div className="space-y-4 max-h-64 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' as const }}>
+              {Object.entries(grouped).map(([cat, items]) => (
+                <div key={cat}>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{cat}</p>
                   <div className="space-y-1">
-                    {categoryServices.map(service => (
-                      <label
-                        key={service.id}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    {items.map((s, si) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => toggle(s.id)}
+                        className="w-full flex items-center justify-between p-3 rounded-xl text-left"
+                        style={{
+                          background: selectedIds.has(s.id) ? 'rgba(168,85,247,0.06)' : 'transparent',
+                          border: `1px solid ${selectedIds.has(s.id) ? 'rgba(168,85,247,0.15)' : 'rgba(0,0,0,0.04)'}`,
+                          transition: 'all 0.15s ease',
+                          animation: `stmCardIn 0.35s ease-out ${0.03 * si}s both`,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)';
+                          e.currentTarget.style.background = selectedIds.has(s.id) ? 'rgba(168,85,247,0.09)' : 'rgba(168,85,247,0.03)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.06)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = selectedIds.has(s.id) ? 'rgba(168,85,247,0.06)' : 'transparent';
+                          e.currentTarget.style.borderColor = selectedIds.has(s.id) ? 'rgba(168,85,247,0.15)' : 'rgba(0,0,0,0.04)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(service.id)}
-                          onChange={() => toggleService(service.id)}
-                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">{service.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {service.duration} min • €{service.price}
-                          </p>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{s.name}</p>
+                          <p className="text-xs text-gray-400">{s.duration} min · €{s.price}</p>
                         </div>
-                      </label>
+                        <div
+                          className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                          style={{
+                            background: selectedIds.has(s.id) ? '#9333ea' : 'transparent',
+                            border: selectedIds.has(s.id) ? 'none' : '1.5px solid rgba(0,0,0,0.15)',
+                            transition: 'all 0.25s ease-out',
+                            transform: selectedIds.has(s.id) && (lastToggled === s.id || lastToggled === 'all') ? 'scale(1.1)' : selectedIds.has(s.id) ? 'scale(1)' : 'scale(0.9)',
+                          }}
+                        >
+                          {selectedIds.has(s.id) && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                      </button>
                     ))}
                   </div>
                 </div>
               ))}
-
-              {filteredServices.length === 0 && (
-                <p className="text-center text-gray-500 py-8">Nessun servizio trovato</p>
-              )}
-            </div>
-
-            {/* Summary */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium text-purple-600">{selectedIds.size}</span> di {services.length} servizi selezionati
-              </p>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-            <Button variant="outline" onClick={onClose} disabled={loading}>
-              Annulla
-            </Button>
-            <Button onClick={handleSave} loading={loading}>
-              Salva
-            </Button>
+          <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.1), transparent)' }} />
+          <div className="px-6 py-5 flex items-center gap-3">
+            <CancelButton onClick={handleClose} />
+            <SubmitButton loading={loading} label="Salva servizi" onClick={handleSave} />
           </div>
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    </ModalShell>
   );
 }
 
@@ -654,154 +686,125 @@ export function StaffServicesModal({
 // ============================================================================
 
 export function StaffHoursModal({
-  isOpen,
-  onClose,
-  onSave,
-  staffName,
-  businessHours,
-  currentHours,
-  useBusinessHours: initialUseBusinessHours,
-  error,
+  isOpen, onClose, onSave, staffName, businessHours, currentHours, useBusinessHours: initialUseBusinessHours, error,
 }: StaffHoursModalProps) {
-  const [useBusinessHours, setUseBusinessHours] = React.useState(initialUseBusinessHours);
-  const [customHours, setCustomHours] = React.useState<DayHours[]>(
-    currentHours || businessHours.map(h => ({ ...h }))
-  );
+  const [useBusinessHrs, setUseBusinessHrs] = React.useState(initialUseBusinessHours);
+  const [hours, setHours] = React.useState<DayHours[]>(currentHours || businessHours);
   const [loading, setLoading] = React.useState(false);
 
-  // Reset when modal opens
   React.useEffect(() => {
     if (isOpen) {
-      setUseBusinessHours(initialUseBusinessHours);
-      setCustomHours(currentHours || businessHours.map(h => ({ ...h })));
+      setUseBusinessHrs(initialUseBusinessHours);
+      setHours(currentHours?.length ? currentHours : businessHours);
     }
   }, [isOpen, initialUseBusinessHours, currentHours, businessHours]);
 
-  const updateDayHours = (dayOfWeek: string, field: keyof DayHours, value: string | boolean) => {
-    setCustomHours(prev => prev.map(h => 
-      h.dayOfWeek === dayOfWeek ? { ...h, [field]: value } : h
-    ));
+  const updateDay = (index: number, field: keyof DayHours, value: string | boolean) => {
+    setHours(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
   };
 
   const handleSave = async () => {
     setLoading(true);
-    try {
-      await onSave(useBusinessHours, useBusinessHours ? undefined : customHours);
-      onClose();
-    } catch (err) {
-      console.error('Error saving hours:', err);
-    } finally {
-      setLoading(false);
-    }
+    try { await onSave(useBusinessHrs, useBusinessHrs ? undefined : hours); }
+    catch { /* error handled by parent */ }
+    finally { setLoading(false); }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Gestisci orari</h2>
-              <p className="text-sm text-gray-500">{staffName}</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Content */}
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Orari di ${staffName}`}
+      subtitle="Configura la disponibilità settimanale"
+      maxWidth="max-w-xl"
+    >
+      {({ handleClose }: { handleClose: () => void }) => (
+        <>
           <div className="px-6 py-4">
-            {error && <Alert variant="error" className="mb-4">{error}</Alert>}
+            {error && (
+              <div className="mb-3 p-3 rounded-xl text-sm text-red-700 flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)' }}>
+                <span className="text-red-500 font-bold">*</span> {error}
+              </div>
+            )}
 
             {/* Toggle business hours */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl mb-4">
+            <div
+              className="flex items-center justify-between p-3.5 rounded-xl cursor-pointer mb-4"
+              style={{
+                background: useBusinessHrs ? 'rgba(168,85,247,0.04)' : 'rgba(0,0,0,0.015)',
+                border: `1px solid ${useBusinessHrs ? 'rgba(168,85,247,0.15)' : 'rgba(0,0,0,0.06)'}`,
+                transition: 'all 0.2s ease',
+              }}
+              onClick={() => setUseBusinessHrs(!useBusinessHrs)}
+            >
               <div>
-                <p className="font-medium text-gray-900">Usa orari del salone</p>
-                <p className="text-sm text-gray-500">Stessi orari di apertura dell'attività</p>
+                <p className="text-sm font-medium text-gray-900">Usa orari del negozio</p>
+                <p className="text-xs text-gray-400 mt-0.5">{useBusinessHrs ? 'Stesso orario del business' : 'Orari personalizzati'}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setUseBusinessHours(!useBusinessHours)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${
-                  useBusinessHours ? 'bg-purple-600' : 'bg-gray-200'
-                }`}
-              >
-                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                  useBusinessHours ? 'left-7' : 'left-1'
-                }`} />
-              </button>
+              <div className="w-11 h-6 rounded-full flex items-center px-0.5 flex-shrink-0" style={{ background: useBusinessHrs ? '#9333ea' : '#d1d5db', transition: 'background 0.2s ease' }}>
+                <div className="w-5 h-5 rounded-full bg-white" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.15)', transform: useBusinessHrs ? 'translateX(20px)' : 'translateX(0)', transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+              </div>
             </div>
 
             {/* Custom hours */}
-            {!useBusinessHours && (
-              <div className="space-y-3 max-h-72 overflow-y-auto">
-                {customHours.map(day => (
-                  <div key={day.dayOfWeek} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+            {!useBusinessHrs && (
+              <div className="space-y-2">
+                {hours.map((day, i) => (
+                  <div
+                    key={day.dayOfWeek}
+                    className="flex items-center gap-3 p-3 rounded-xl"
+                    style={{
+                      background: day.isOpen ? 'rgba(0,0,0,0.015)' : 'rgba(0,0,0,0.01)',
+                      border: '1px solid rgba(0,0,0,0.04)',
+                      opacity: day.isOpen ? 1 : 0.5,
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)';
+                      e.currentTarget.style.background = day.isOpen ? 'rgba(168,85,247,0.06)' : 'rgba(0,0,0,0.03)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.06)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(0,0,0,0.04)';
+                      e.currentTarget.style.background = day.isOpen ? 'rgba(0,0,0,0.015)' : 'rgba(0,0,0,0.01)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
                     {/* Day toggle */}
-                    <button
-                      type="button"
-                      onClick={() => updateDayHours(day.dayOfWeek, 'isOpen', !day.isOpen)}
-                      className={`w-24 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                        day.isOpen 
-                          ? 'bg-purple-100 text-purple-700' 
-                          : 'bg-gray-100 text-gray-400'
-                      }`}
+                    <div
+                      className="w-9 h-5 rounded-full flex items-center px-0.5 flex-shrink-0 cursor-pointer"
+                      style={{ background: day.isOpen ? '#10b981' : '#d1d5db', transition: 'background 0.2s ease' }}
+                      onClick={() => updateDay(i, 'isOpen', !day.isOpen)}
                     >
-                      {DAY_LABELS[day.dayOfWeek] || day.dayOfWeek}
-                    </button>
+                      <div className="w-4 h-4 rounded-full bg-white" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.15)', transform: day.isOpen ? 'translateX(16px)' : 'translateX(0)', transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                    </div>
 
-                    {/* Time inputs */}
-                    {day.isOpen ? (
+                    {/* Day label */}
+                    <span className="text-sm font-medium text-gray-900 w-20 flex-shrink-0">{day.dayLabel}</span>
+
+                    {/* Times */}
+                    {day.isOpen && (
                       <div className="flex items-center gap-2 flex-1">
-                        <input
-                          type="time"
-                          value={day.openTime1 || '09:00'}
-                          onChange={(e) => updateDayHours(day.dayOfWeek, 'openTime1', e.target.value)}
-                          className="px-2 py-1 border border-gray-200 rounded text-sm"
-                        />
-                        <span className="text-gray-400">-</span>
-                        <input
-                          type="time"
-                          value={day.closeTime1 || '18:00'}
-                          onChange={(e) => updateDayHours(day.dayOfWeek, 'closeTime1', e.target.value)}
-                          className="px-2 py-1 border border-gray-200 rounded text-sm"
-                        />
+                        <input type="time" value={day.openTime1 || '09:00'} onChange={(e) => updateDay(i, 'openTime1', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                        <span className="text-xs text-gray-400">—</span>
+                        <input type="time" value={day.closeTime1 || '18:00'} onChange={(e) => updateDay(i, 'closeTime1', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
                       </div>
-                    ) : (
-                      <span className="text-sm text-gray-400 flex-1">Chiuso</span>
                     )}
                   </div>
                 ))}
               </div>
             )}
-
-            {useBusinessHours && (
-              <div className="text-center py-8 text-gray-500">
-                <Clock className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>Questo membro seguirà gli orari del salone</p>
-              </div>
-            )}
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-            <Button variant="outline" onClick={onClose} disabled={loading}>
-              Annulla
-            </Button>
-            <Button onClick={handleSave} loading={loading}>
-              Salva
-            </Button>
+          <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.1), transparent)' }} />
+          <div className="px-6 py-5 flex items-center gap-3">
+            <CancelButton onClick={handleClose} />
+            <SubmitButton loading={loading} label="Salva orari" onClick={handleSave} />
           </div>
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    </ModalShell>
   );
 }

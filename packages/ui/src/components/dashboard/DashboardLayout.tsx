@@ -1,6 +1,8 @@
 // ============================================================================
-// AEGIS SUITE - DASHBOARD LAYOUT COMPONENT
+// AEGIS SUITE - DASHBOARD LAYOUT COMPONENT (Perfected v2)
 // File: packages/ui/src/components/dashboard/DashboardLayout.tsx
+// Subtle gradient bg, dot pattern, page transition fade, ambient orb glow.
+// All static — zero continuous animations for daily professional use.
 // ============================================================================
 
 'use client';
@@ -11,81 +13,40 @@ import { Header, type HeaderNotification, type HeaderUserMenuAction } from './He
 import type { DashboardTheme } from './Themes';
 
 // ============================================================================
-// TYPES
+// TYPES (unchanged)
 // ============================================================================
 
 export interface DashboardLayoutProps {
-  /** Dashboard theme configuration */
   theme: DashboardTheme;
-  /** Platform logo (component or URL) */
   platformLogo: React.ReactNode | string;
-  /** Menu sections configuration */
   menuSections: SidebarMenuSection[];
-  /** Currently active menu item id */
   activeItemId?: string;
-  /** Business name to display in header */
   businessName: string;
-  /** Business logo URL (optional) */
   businessLogo?: string;
-  /** User name */
   userName: string;
-  /** User email */
   userEmail?: string;
-  /** User avatar URL (optional) */
   userAvatar?: string;
-  /** Notifications list */
   notifications?: HeaderNotification[];
-  /** Unread notifications count (if not provided, calculated from notifications) */
   unreadCount?: number;
-  /** Callback when menu item is clicked */
   onMenuItemClick?: (item: SidebarMenuItem) => void;
-  /** Callback when notification is clicked */
   onNotificationClick?: (notification: HeaderNotification) => void;
-  /** Callback when "View all notifications" is clicked */
   onViewAllNotifications?: () => void;
-  /** Callback when profile is clicked */
   onProfileClick?: () => void;
-  /** Callback when settings is clicked */
   onSettingsClick?: () => void;
-  /** Callback when logout is clicked */
   onLogout?: () => void;
-  /** Callback when help is clicked */
   onHelp?: () => void;
-  /** Additional user menu actions */
   additionalMenuActions?: HeaderUserMenuAction[];
-  /** Show help button in sidebar */
   showHelp?: boolean;
-  /** Show logout button in sidebar */
   showLogout?: boolean;
-  /** Initial collapsed state */
   defaultCollapsed?: boolean;
-  /** Controlled collapsed state */
   collapsed?: boolean;
-  /** Callback when collapsed state changes */
   onCollapsedChange?: (collapsed: boolean) => void;
-  /** Page content */
   children: React.ReactNode;
-  /** Custom className for content area */
   contentClassName?: string;
+  /** Current pathname — used for page transition animation */
+  currentPath?: string;
 }
 
-// ============================================================================
-// STYLES
-// ============================================================================
-
-const layoutStyles = {
-  wrapper: 'min-h-screen bg-gray-50',
-  content: `
-    transition-all duration-300 ease-in-out
-    pt-16
-    min-h-screen
-  `,
-  contentExpanded: 'ml-64',
-  contentCollapsed: 'ml-24',
-  contentInner: `
-    p-6
-  `,
-};
 
 // ============================================================================
 // COMPONENT
@@ -118,22 +79,60 @@ export function DashboardLayout({
   onCollapsedChange,
   children,
   contentClassName = '',
+  currentPath,
 }: DashboardLayoutProps) {
-  // Handle collapsed state (controlled or uncontrolled)
   const [internalCollapsed, setInternalCollapsed] = React.useState(defaultCollapsed);
-  
+
   const isControlled = controlledCollapsed !== undefined;
   const collapsed = isControlled ? controlledCollapsed : internalCollapsed;
-  
+
   const handleCollapsedChange = (newCollapsed: boolean) => {
-    if (!isControlled) {
-      setInternalCollapsed(newCollapsed);
-    }
+    if (!isControlled) setInternalCollapsed(newCollapsed);
     onCollapsedChange?.(newCollapsed);
   };
 
   return (
-    <div className={layoutStyles.wrapper}>
+    <div
+      className="min-h-screen relative"
+      style={{
+        background: 'linear-gradient(180deg, #f8f7fc 0%, #f3f2f8 40%, #f0eef6 100%)',
+      }}
+    >
+      {/* ═══ Dot pattern (very subtle texture) ═══ */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(147,51,234,0.03) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
+      />
+
+      {/* ═══ Ambient orb glow (static, bottom-right) ═══ */}
+      <div
+        className="fixed pointer-events-none z-0"
+        style={{
+          width: 600,
+          height: 600,
+          bottom: -150,
+          right: -150,
+          background: 'radial-gradient(circle, rgba(168,85,247,0.18) 0%, rgba(147,51,234,0.08) 40%, transparent 70%)',
+          filter: 'blur(40px)',
+        }}
+      />
+
+      {/* ═══ Second ambient orb (static, top-left, even subtler) ═══ */}
+      <div
+        className="fixed pointer-events-none z-0"
+        style={{
+          width: 400,
+          height: 400,
+          top: -100,
+          left: 200,
+          background: 'radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%)',
+          filter: 'blur(35px)',
+        }}
+      />
+
       {/* Sidebar */}
       <Sidebar
         logo={platformLogo}
@@ -170,15 +169,30 @@ export function DashboardLayout({
 
       {/* Main Content */}
       <main
-        className={`
-          ${layoutStyles.content}
-          ${collapsed ? layoutStyles.contentCollapsed : layoutStyles.contentExpanded}
-        `.trim()}
+        className="relative z-10 min-h-screen"
+        style={{
+          paddingTop: 72,
+          marginLeft: collapsed ? 96 : 272,
+          transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
       >
-        <div className={`${layoutStyles.contentInner} ${contentClassName}`.trim()}>
-          {children}
+        <div className={`p-6 ${contentClassName}`.trim()}>
+          <div
+            key={currentPath || activeItemId}
+            style={{
+              animation: 'dl-page-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both',
+            }}
+          >
+            {children}
+          </div>
         </div>
       </main>
+    <style>{`
+        @keyframes dl-page-in {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
