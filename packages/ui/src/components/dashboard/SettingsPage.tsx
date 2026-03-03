@@ -1,93 +1,48 @@
 // ============================================================================
-// AEGIS SUITE - SETTINGS PAGE COMPONENT
+// AEGIS SUITE - SETTINGS PAGE COMPONENT (v3 — Pixel-perfect Onboarding Style)
 // File: packages/ui/src/components/dashboard/SettingsPage.tsx
-// Reusable settings page for all verticals
 // ============================================================================
 
 'use client';
 
 import * as React from 'react';
 import {
-  Store,
-  Clock,
-  CalendarCheck,
-  UserCog,
-  Save,
-  Upload,
-  X,
-  Copy,
-  Check,
-  Plus,
-  Trash2,
-  Eye,
-  EyeOff,
-  Link2,
-  Image,
-  RefreshCw,
-  Users,
-  Layers,
-  Info,
+  Store, Clock, CalendarCheck, UserCog,
+  Save, X, Copy, Check, Plus, Trash2,
+  Eye, EyeOff, RefreshCw, Users, Layers, Info,
+  ChevronLeft, ChevronRight, Calendar,
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
 // ============================================================================
-// TYPES
+// TYPES (unchanged)
 // ============================================================================
 
-export interface SettingsTab {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-}
+export interface SettingsTab { id: string; label: string; icon: LucideIcon; }
 
 export interface BusinessGeneralData {
-  name: string;
-  slug: string;
-  email: string;
-  phone: string;
-  website: string;
-  addressStreet: string;
-  addressCity: string;
-  addressProvince: string;
-  addressPostalCode: string;
-  description: string;
-  logoUrl: string;
-  workstations: number;
+  name: string; slug: string; email: string; phone: string; website: string;
+  addressStreet: string; addressCity: string; addressProvince: string;
+  addressPostalCode: string; description: string; logoUrl: string; workstations: number;
 }
 
 export interface BusinessHoursRow {
-  dayOfWeek: string;
-  dayLabel: string;
-  isOpen: boolean;
-  openTime1: string;
-  closeTime1: string;
-  openTime2: string;
-  closeTime2: string;
+  dayOfWeek: string; dayLabel: string; isOpen: boolean;
+  openTime1: string; closeTime1: string; openTime2: string; closeTime2: string;
 }
 
 export interface ClosureItem {
-  id: string;
-  title: string;
-  startDate: string;
-  endDate: string;
-  isRecurringYearly: boolean;
+  id: string; title: string; startDate: string; endDate: string; isRecurringYearly: boolean;
 }
 
 export interface BookingSettings {
-  bookingAdvanceMin: number;
-  bookingAdvanceMax: number;
-  cancellationPolicyHours: number;
-  bufferMinutes: number;
-  allowNoStaffPreference: boolean;
-  allowMultipleServices: boolean;
+  bookingAdvanceMin: number; bookingAdvanceMax: number;
+  cancellationPolicyHours: number; bufferMinutes: number;
+  allowNoStaffPreference: boolean; allowMultipleServices: boolean;
 }
 
-export interface AccountData {
-  fullName: string;
-  email: string;
-  phone: string;
-}
+export interface AccountData { fullName: string; email: string; phone: string; }
 
 export interface SettingsPageProps {
   generalData: BusinessGeneralData;
@@ -111,81 +66,237 @@ export interface SettingsPageProps {
 }
 
 // ============================================================================
+// KEYFRAMES — from onboarding steps
+// ============================================================================
+
+const KEYFRAMES = `
+@keyframes stFadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes stShimmer { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
+@keyframes stRipple { 0%{transform:scale(0);opacity:1} 100%{transform:scale(6);opacity:0} }
+@keyframes stCheck { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+@keyframes stBounceUp { 0%{transform:translateY(0)} 40%{transform:translateY(-8px)} 70%{transform:translateY(2px)} 100%{transform:translateY(0)} }
+@keyframes stBounceDown { 0%{transform:translateY(0)} 40%{transform:translateY(8px)} 70%{transform:translateY(-2px)} 100%{transform:translateY(0)} }
+@keyframes stDotIn { from { opacity:0; transform:scale(0); } to { opacity:1; transform:scale(1); } }
+@keyframes stPulse { 0% { box-shadow: 0 0 0 0 rgba(168,85,247,0.18); } 100% { box-shadow: 0 0 0 14px rgba(168,85,247,0); } }
+@keyframes stBreath { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes stShake { 0%,100%{transform:translateX(0)} 15%{transform:translateX(-6px)} 30%{transform:translateX(5px)} 45%{transform:translateX(-4px)} 60%{transform:translateX(3px)} 75%{transform:translateX(-2px)} }
+`;
+
+// ============================================================================
 // HELPERS
 // ============================================================================
 
-function getBusinessLabel(businessType?: string): string {
-  switch (businessType) {
-    case 'hair_salon': return 'salone';
-    case 'beauty_center': return 'centro estetico';
-    default: return 'salone';
-  }
-}
+function getBizLabel(bt?: string) { return bt === 'hair_salon' ? 'salone' : bt === 'beauty_center' ? 'centro estetico' : 'salone'; }
+function getWsLabel(bt?: string) { return bt === 'hair_salon' ? { s: 'poltrona', p: 'poltrone' } : bt === 'beauty_center' ? { s: 'cabina', p: 'cabine' } : { s: 'postazione', p: 'postazioni' }; }
 
-function getWorkstationLabel(businessType?: string): string {
-  switch (businessType) {
-    case 'hair_salon': return 'poltrone';
-    case 'beauty_center': return 'cabine';
-    default: return 'postazioni';
-  }
-}
+const TIME_OPTIONS: string[] = [];
+for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 15) TIME_OPTIONS.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
 
 // ============================================================================
-// SMALL COMPONENTS
+// GLASS INPUT — exact copy from Step2 GlassInput
 // ============================================================================
 
-const DEFAULT_TABS: SettingsTab[] = [
-  { id: 'general', label: 'Generale', icon: Store },
-  { id: 'hours', label: 'Orari', icon: Clock },
-  { id: 'bookings', label: 'Prenotazioni', icon: CalendarCheck },
-  { id: 'account', label: 'Account', icon: UserCog },
-];
-
-function SaveButton({ saving, saved, onClick, disabled }: {
-  saving: boolean; saved: boolean; onClick: () => void; disabled?: boolean;
+function GlassInput({ label, type = 'text', placeholder, value, onChange, error, maxLength, hint, disabled }: {
+  label: string; type?: string; placeholder?: string; value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string; maxLength?: number; hint?: string; disabled?: boolean;
 }) {
+  const [focused, setFocused] = React.useState(false);
+  const id = React.useId();
   return (
-    <Button onClick={onClick} loading={saving} disabled={disabled || saving} className="flex items-center gap-2">
-      {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-      {saved ? 'Salvato!' : 'Salva modifiche'}
-    </Button>
-  );
-}
-
-function Section({ title, description, children }: {
-  title: string; description?: string; children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
-      <div className="mb-4">
-        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-        {description && (
-          <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
-            <Info className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-            {description}
-          </p>
-        )}
-      </div>
-      {children}
+    <div className="w-full">
+      <label htmlFor={id} className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">{label}</label>
+      <input
+        id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} maxLength={maxLength}
+        disabled={disabled}
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        className={`w-full rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-300 ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+        style={{
+          background: disabled ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.6)',
+          backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+          border: error ? '1.5px solid #ef4444' : focused ? '1.5px solid #a855f7' : '1.5px solid rgba(0,0,0,0.08)',
+          boxShadow: error ? '0 0 0 3px rgba(239,68,68,0.1)' : focused ? '0 0 0 3px rgba(168,85,247,0.12), 0 2px 8px rgba(124,58,237,0.08)' : '0 1px 2px rgba(0,0,0,0.04)',
+        }}
+      />
+      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {hint && !error && (
+        <span className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+          <Info className="w-3 h-3 flex-shrink-0" />{hint}
+        </span>
+      )}
     </div>
   );
 }
 
-/** Small hint text with info icon */
-function Hint({ children }: { children: React.ReactNode }) {
+/** Textarea version of GlassInput */
+function GlassTextarea({ label, placeholder, value, onChange, hint, rows = 3 }: {
+  label: string; placeholder?: string; value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  hint?: string; rows?: number;
+}) {
+  const [focused, setFocused] = React.useState(false);
+  const id = React.useId();
   return (
-    <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-      <Info className="w-3 h-3 flex-shrink-0" />
-      {children}
-    </p>
+    <div className="w-full">
+      <label htmlFor={id} className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">{label}</label>
+      <textarea
+        id={id} placeholder={placeholder} value={value} onChange={onChange} rows={rows}
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        className="w-full rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-300 resize-none"
+        style={{
+          background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+          border: focused ? '1.5px solid #a855f7' : '1.5px solid rgba(0,0,0,0.08)',
+          boxShadow: focused ? '0 0 0 3px rgba(168,85,247,0.12), 0 2px 8px rgba(124,58,237,0.08)' : '0 1px 2px rgba(0,0,0,0.04)',
+        }}
+      />
+      {hint && <span className="flex items-center gap-1.5 text-xs text-gray-400 mt-1"><Info className="w-3 h-3 flex-shrink-0" />{hint}</span>}
+    </div>
   );
 }
 
-const TIME_OPTIONS: string[] = [];
-for (let h = 0; h < 24; h++) {
-  for (let m = 0; m < 60; m += 15) {
-    TIME_OPTIONS.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-  }
+/** Password input with glass focus style matching GlassInput */
+function PasswordInput({ value, onChange, show, onToggle }: {
+  value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; show: boolean; onToggle: () => void;
+}) {
+  const [focused, setFocused] = React.useState(false);
+  return (
+    <>
+      <input type={show ? 'text' : 'password'} value={value} onChange={onChange}
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        className="w-full rounded-xl px-4 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-300"
+        style={{
+          background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+          border: focused ? '1.5px solid #a855f7' : '1.5px solid rgba(0,0,0,0.08)',
+          boxShadow: focused ? '0 0 0 3px rgba(168,85,247,0.12), 0 2px 8px rgba(124,58,237,0.08)' : '0 1px 2px rgba(0,0,0,0.04)',
+        }}
+      />
+      <button type="button" onClick={onToggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </>
+  );
+}
+
+// ============================================================================
+// ANIMATED TOGGLE — exact copy from Step4
+// ============================================================================
+
+function AnimatedToggle({ enabled, onToggle, disabled }: { enabled: boolean; onToggle: () => void; disabled?: boolean }) {
+  return (
+    <button type="button" onClick={() => !disabled && onToggle()} disabled={disabled}
+      className={`relative flex-shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      style={{
+        width: 38, height: 21, borderRadius: 999,
+        background: enabled ? '#a855f7' : '#d1d5db',
+        boxShadow: enabled ? '0 2px 8px rgba(168,85,247,0.3)' : 'none',
+        transition: 'background 0.3s ease, box-shadow 0.3s ease',
+      }}
+    >
+      <span className="absolute bg-white rounded-full shadow-sm flex items-center justify-center"
+        style={{
+          width: 17, height: 17, top: 2, left: 2,
+          transform: enabled ? 'translateX(17px)' : 'translateX(0)',
+          transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        }}
+      >
+        {enabled ? (
+          <svg className="text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 10, height: 10 }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"
+              style={{ strokeDasharray: 24, strokeDashoffset: 0, animation: 'stCheck 0.25s ease-out' }} />
+          </svg>
+        ) : (
+          <svg className="text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 9, height: 9 }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )}
+      </span>
+    </button>
+  );
+}
+
+// ============================================================================
+// ANIMATED SELECT — same as Step4
+// ============================================================================
+
+function AnimatedSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  const [focused, setFocused] = React.useState(false);
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      className="rounded-lg px-2.5 py-1.5 text-sm text-gray-700 outline-none transition-all duration-300 appearance-none cursor-pointer"
+      style={{
+        background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(4px)',
+        border: focused ? '1.5px solid #a855f7' : '1.5px solid rgba(0,0,0,0.06)',
+        boxShadow: focused ? '0 0 0 3px rgba(168,85,247,0.1)' : '0 1px 2px rgba(0,0,0,0.04)',
+      }}
+    >
+      {options.map(t => <option key={t} value={t}>{t}</option>)}
+    </select>
+  );
+}
+
+// ============================================================================
+// SECTION — onboarding card style with gradient icon
+// ============================================================================
+
+function Section({ title, description, icon: Icon, iconSvg, children, delay = 0, compact = false }: {
+  title: string; description?: string; icon?: LucideIcon; iconSvg?: React.ReactNode; children: React.ReactNode; delay?: number; compact?: boolean;
+}) {
+  return (
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-xl shadow-purple-100/20 overflow-hidden flex flex-col"
+      style={{ animation: `stFadeUp 0.5s ease-out ${delay}ms both` }}>
+      <div className={compact ? 'pt-4 pb-1 px-5' : 'pt-5 pb-2 px-6'}>
+        <div className="flex items-center gap-3">
+          {(iconSvg || Icon) && (
+            <div className={`${compact ? 'w-9 h-9' : 'w-10 h-10'} rounded-xl flex items-center justify-center flex-shrink-0`}
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 6px 20px rgba(124,58,237,0.25)' }}>
+              {iconSvg || (Icon && <Icon className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-white`} />)}
+            </div>
+          )}
+          <div>
+            <h3 className={`${compact ? 'text-base' : 'text-lg'} font-bold text-gray-900`}>{title}</h3>
+            {description && <p className="text-gray-500 text-sm mt-0.5">{description}</p>}
+          </div>
+        </div>
+      </div>
+      <div className={`flex-1 ${compact ? 'px-5 pb-4 pt-3' : 'px-6 pb-5 pt-3'}`}>{children}</div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SAVE BUTTON — gradient purple with shimmer + ripple (exact onboarding Continua)
+// ============================================================================
+
+function SaveBtn({ saving, saved, onClick, disabled }: {
+  saving: boolean; saved: boolean; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; disabled?: boolean;
+}) {
+  const [ripple, setRipple] = React.useState<{ x: number; y: number; id: number } | null>(null);
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top, id: Date.now() });
+    setTimeout(() => setRipple(null), 600);
+    onClick(e);
+  };
+  const bg = saved ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #7c3aed, #a855f7)';
+  const shadow = saved ? '0 6px 20px rgba(16,185,129,0.3)' : '0 6px 20px rgba(124,58,237,0.3)';
+  const shadowHover = saved ? '0 8px 28px rgba(16,185,129,0.4)' : '0 8px 28px rgba(124,58,237,0.4)';
+  return (
+    <button onClick={handleClick} disabled={disabled || saving}
+      className="relative h-11 px-6 rounded-xl font-semibold text-white text-sm transition-all duration-300 outline-none overflow-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      style={{ background: bg, boxShadow: disabled ? 'none' : shadow }}
+      onMouseEnter={(e) => { if (!disabled && !saving) { e.currentTarget.style.boxShadow = shadowHover; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+      onMouseLeave={(e) => { if (!disabled && !saving) { e.currentTarget.style.boxShadow = shadow; e.currentTarget.style.transform = 'translateY(0)'; } }}
+    >
+      {!saving && !saved && !disabled && (
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)', animation: 'stShimmer 2.5s ease-in-out infinite' }} />
+      )}
+      {ripple && <span key={ripple.id} className="absolute rounded-full pointer-events-none" style={{ left: ripple.x - 50, top: ripple.y - 50, width: 100, height: 100, background: 'rgba(255,255,255,0.35)', animation: 'stRipple 0.6s ease-out forwards' }} />}
+      <span className="relative z-10 flex items-center gap-2">
+        {saving ? (<><RefreshCw className="w-4 h-4 animate-spin" />Salvataggio...</>) : saved ? (<><Check className="w-4 h-4" />Salvato!</>) : (<><Save className="w-4 h-4" />Salva modifiche</>)}
+      </span>
+    </button>
+  );
 }
 
 // ============================================================================
@@ -196,11 +307,8 @@ function GeneralTab({
   form, setForm, baseData, publicUrlBase, businessType,
   onSave, onUploadLogo, onRemoveLogo,
 }: {
-  form: BusinessGeneralData;
-  setForm: React.Dispatch<React.SetStateAction<BusinessGeneralData>>;
-  baseData: BusinessGeneralData;
-  publicUrlBase: string;
-  businessType?: string;
+  form: BusinessGeneralData; setForm: React.Dispatch<React.SetStateAction<BusinessGeneralData>>;
+  baseData: BusinessGeneralData; publicUrlBase: string; businessType?: string;
   onSave: (data: BusinessGeneralData) => Promise<void>;
   onUploadLogo: (file: File) => Promise<string>;
   onRemoveLogo: () => Promise<void>;
@@ -208,143 +316,135 @@ function GeneralTab({
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
-  const [copied, setCopied] = React.useState(false);
   const [dragOver, setDragOver] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
-
-  const label = getBusinessLabel(businessType);
+  const label = getBizLabel(businessType);
   const hasChanges = JSON.stringify(form) !== JSON.stringify(baseData);
+  const publicUrl = `${publicUrlBase}/${form.slug}`;
 
-  const handleSave = async () => {
+  const handleSave = async (e: React.MouseEvent<HTMLButtonElement>) => {
     setSaving(true);
-    try {
-      await onSave(form);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (err) {
-      console.error('Error saving:', err);
-    } finally {
-      setSaving(false);
-    }
+    try { await onSave(form); setSaved(true); setTimeout(() => setSaved(false), 2000); }
+    finally { setSaving(false); }
   };
-
   const processFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    if (file.size > 2 * 1024 * 1024) { alert('Il file deve essere massimo 2MB'); return; }
+    if (!file.type.startsWith('image/') || file.size > 2 * 1024 * 1024) return;
     setUploading(true);
     try {
       const url = await onUploadLogo(file);
-      setForm(prev => ({ ...prev, logoUrl: url }));
-    } catch (err) {
-      console.error('Error uploading logo:', err);
-    } finally {
-      setUploading(false);
-    }
+      if (url) setForm(p => ({ ...p, logoUrl: url }));
+    } catch (err) { console.error('Logo upload failed:', err); }
+    finally { setUploading(false); }
   };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault(); setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) await processFile(file);
-  };
-
-  const handleRemoveLogo = async () => {
-    try { await onRemoveLogo(); setForm(prev => ({ ...prev, logoUrl: '' })); }
-    catch (err) { console.error('Error removing logo:', err); }
-  };
-
-  const publicUrl = `${publicUrlBase}/${form.slug}`;
-  const copyLink = () => { navigator.clipboard.writeText(publicUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const handleRemoveLogo = async (e: React.MouseEvent) => { e.stopPropagation(); await onRemoveLogo(); setForm(p => ({ ...p, logoUrl: '' })); };
+  const handleCopy = () => { navigator.clipboard.writeText(publicUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   return (
-    <div className="space-y-6">
-      <Section title="Link pubblico" description={`Il link del tuo ${label} per i clienti`}>
-        <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-          <Link2 className="w-4 h-4 text-accent-500 flex-shrink-0" />
-          <span className="text-sm text-gray-700 truncate flex-1 font-mono">{publicUrl}</span>
-          <button onClick={copyLink} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent-600 bg-accent-50 rounded-lg hover:bg-accent-100 transition-colors flex-shrink-0">
-            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? 'Copiato!' : 'Copia'}
+    <div className="space-y-5">
+      {/* Link pubblico — compact */}
+      <Section title="Link pubblico" description="Il link per i tuoi clienti" delay={0} compact iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>}>
+        <div className="flex items-center gap-2 p-2.5 rounded-lg transition-all duration-200 cursor-pointer" style={{ background: 'rgba(168,85,247,0.04)', border: '1.5px solid rgba(168,85,247,0.12)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(124,58,237,0.08)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.04)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
+        >
+          <span className="flex-1 text-sm text-purple-700 font-medium truncate">{publicUrl}</span>
+          <button onClick={handleCopy} className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex-shrink-0" style={{
+            background: copied ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #7c3aed, #a855f7)',
+            color: 'white', boxShadow: '0 2px 8px rgba(124,58,237,0.2)',
+          }}>
+            {copied ? '✓ Copiato' : 'Copia'}
           </button>
         </div>
-        <Hint>Lo slug &quot;{form.slug}&quot; non può essere modificato</Hint>
+        <span className="flex items-center gap-1.5 text-xs text-gray-400 mt-1.5"><Info className="w-3 h-3 flex-shrink-0" />Lo slug &quot;{form.slug}&quot; non può essere modificato</span>
       </Section>
 
-      <Section title="Logo" description={`Il logo del tuo ${label}`}>
-        <div className="flex items-start gap-4">
-          {form.logoUrl && (
-            <div className="relative">
-              <img src={form.logoUrl} alt="Logo" className="w-20 h-20 rounded-xl object-cover border border-gray-200" />
-              <button onClick={handleRemoveLogo} className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
-                <X className="w-3.5 h-3.5" />
-              </button>
+      {/* Logo — compact + info cards */}
+      <Section title={`Logo del ${label}`} description="Personalizza la tua app" delay={80} compact iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}>
+        <div className="flex items-start gap-5" style={{ animation: 'stFadeUp 0.4s ease-out both' }}>
+          {/* Left: preview + upload */}
+          <div className="flex flex-col items-center flex-shrink-0">
+            {form.logoUrl && (
+              <div className="relative group mb-2">
+                <div className="w-28 h-28 rounded-2xl overflow-hidden cursor-pointer" style={{ border: '3px solid #a855f7', boxShadow: '0 8px 30px rgba(168,85,247,0.2)' }}
+                  onClick={() => fileRef.current?.click()}>
+                  <img src={form.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                </div>
+                <button onClick={(e) => handleRemoveLogo(e)}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg opacity-0 group-hover:opacity-100">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
+              onClick={() => fileRef.current?.click()}
+              className={`${form.logoUrl ? 'w-28' : 'w-40'} cursor-pointer transition-all duration-300`}
+            >
+              <div className={`flex flex-col items-center justify-center ${form.logoUrl ? 'py-2.5' : 'py-6'} rounded-xl`} style={{
+                border: dragOver ? '2px solid #a855f7' : '2px dashed rgba(168,85,247,0.3)',
+                background: dragOver ? 'rgba(168,85,247,0.05)' : 'rgba(255,255,255,0.5)',
+                boxShadow: dragOver ? '0 0 0 4px rgba(168,85,247,0.1)' : 'none', transition: 'all 0.3s ease',
+              }}>
+                {uploading ? <RefreshCw className="w-5 h-5 animate-spin text-purple-500" /> : (
+                  <svg className="w-5 h-5" style={{ color: dragOver ? '#7c3aed' : '#a855f7', transition: 'color 0.3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                )}
+                <p className="text-xs font-medium text-gray-600 mt-1">{form.logoUrl ? 'Cambia' : 'Carica logo'}</p>
+              </div>
             </div>
-          )}
-          <div
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileRef.current?.click()}
-            className={`flex-1 flex flex-col items-center justify-center py-6 px-4 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
-              dragOver ? 'border-accent-400 bg-accent-50' : 'border-gray-300 hover:border-purple-300 hover:bg-accent-50/30'
-            }`}
-          >
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f); }} className="hidden" />
-            {uploading ? <RefreshCw className="w-8 h-8 animate-spin text-accent-500 mb-2" /> : <Upload className="w-8 h-8 text-gray-400 mb-2" />}
-            <p className="text-sm font-medium text-gray-700">{form.logoUrl ? 'Trascina per cambiare' : 'Trascina o clicca per caricare'}</p>
-            <Hint>PNG, JPG o WebP. Max 2MB.</Hint>
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f); e.target.value = ''; }} className="hidden" />
+          </div>
+          {/* Right: info cards */}
+          <div className="flex-1 space-y-2" style={{ animation: 'stFadeUp 0.35s ease-out 0.1s both' }}>
+            <div className="p-3 rounded-xl transition-all duration-200 cursor-default" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.08)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(124,58,237,0.06)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.04)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span className="text-xs font-semibold text-purple-700">Formato</span>
+              </div>
+              <p className="text-xs text-gray-600">PNG, JPG o WebP. Massimo 2MB.</p>
+            </div>
+            <div className="p-3 rounded-xl transition-all duration-200 cursor-default" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.08)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(124,58,237,0.06)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.04)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span className="text-xs font-semibold text-purple-700">Dimensione consigliata</span>
+              </div>
+              <p className="text-xs text-gray-600">Quadrato, almeno 200×200px. Verrà mostrato ai clienti.</p>
+            </div>
           </div>
         </div>
       </Section>
 
-      <Section title="Informazioni" description={`I dati principali del tuo ${label}`}>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-              <input type="text" value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
-              <input type="tel" value={form.phone} onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-            </div>
+      {/* Informazioni — from Step2 GlassInput */}
+      <Section title={`Informazioni ${label}`} description={`I dati principali del tuo ${label}`} delay={160} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 22, height: 22 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}>
+        <div className="space-y-3" style={{ animation: 'stFadeUp 0.35s ease-out both' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <GlassInput label={`Nome ${label}`} value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
+            <GlassInput label="Telefono" type="tel" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} hint="Per i clienti — visibile solo se vuoi" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={form.email} onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sito web</label>
-              <input type="url" value={form.website} onChange={(e) => setForm(prev => ({ ...prev, website: e.target.value }))} placeholder="https://" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <GlassInput label="Email" type="email" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} hint="Per comunicazioni e aggiornamenti" />
+            <GlassInput label="Sito web" type="url" placeholder="https://..." value={form.website} onChange={(e) => setForm(p => ({ ...p, website: e.target.value }))} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Indirizzo</label>
-            <input type="text" value={form.addressStreet} onChange={(e) => setForm(prev => ({ ...prev, addressStreet: e.target.value }))} placeholder="Via/Piazza" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
+          <GlassInput label="Indirizzo" placeholder="Via e numero civico" value={form.addressStreet} onChange={(e) => setForm(p => ({ ...p, addressStreet: e.target.value }))} />
+          <div className="grid grid-cols-3 gap-3">
+            <GlassInput label="Città" value={form.addressCity} onChange={(e) => setForm(p => ({ ...p, addressCity: e.target.value }))} />
+            <GlassInput label="Provincia" placeholder="TO" maxLength={2} value={form.addressProvince} onChange={(e) => setForm(p => ({ ...p, addressProvince: e.target.value }))} />
+            <GlassInput label="CAP" placeholder="10100" maxLength={5} value={form.addressPostalCode} onChange={(e) => setForm(p => ({ ...p, addressPostalCode: e.target.value }))} />
           </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Città</label>
-              <input type="text" value={form.addressCity} onChange={(e) => setForm(prev => ({ ...prev, addressCity: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Provincia</label>
-              <input type="text" value={form.addressProvince} onChange={(e) => setForm(prev => ({ ...prev, addressProvince: e.target.value }))} maxLength={2} placeholder="TO" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">CAP</label>
-              <input type="text" value={form.addressPostalCode} onChange={(e) => setForm(prev => ({ ...prev, addressPostalCode: e.target.value }))} maxLength={5} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
-            <textarea value={form.description} onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))} placeholder={`Descrivi brevemente il tuo ${label}...`} rows={3} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-            <Hint>Questa descrizione sarà visibile ai tuoi clienti</Hint>
-          </div>
+          <GlassTextarea label="Descrizione" placeholder={`Descrivi brevemente il tuo ${label}...`} value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} hint="Questa descrizione sarà visibile ai tuoi clienti" />
         </div>
-        <div className="flex justify-end mt-4">
-          <SaveButton saving={saving} saved={saved} onClick={handleSave} disabled={!hasChanges} />
+        <div className="flex justify-end mt-5">
+          <SaveBtn saving={saving} saved={saved} onClick={handleSave} disabled={!hasChanges} />
         </div>
       </Section>
     </div>
@@ -352,7 +452,106 @@ function GeneralTab({
 }
 
 // ============================================================================
-// TAB: HOURS
+// MINI DATE PICKER — like AppointmentModal calendar but smaller, inline
+// ============================================================================
+
+const MONTHS_IT_S = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const DAYS_S = ['Lu','Ma','Me','Gi','Ve','Sa','Do'];
+
+function MiniDatePicker({ value, onChange, label }: { value: string; onChange: (d: string) => void; label: string }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const today = new Date();
+  const sel = value ? new Date(value + 'T00:00:00') : null;
+  const [vm, setVm] = React.useState(sel ? sel.getMonth() : today.getMonth());
+  const [vy, setVy] = React.useState(sel ? sel.getFullYear() : today.getFullYear());
+
+  React.useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+
+  const first = new Date(vy, vm, 1);
+  const startDay = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(vy, vm + 1, 0).getDate();
+  const prevDays = new Date(vy, vm, 0).getDate();
+  const cells: { day: number; month: number; year: number; cur: boolean }[] = [];
+  for (let i = startDay - 1; i >= 0; i--) cells.push({ day: prevDays - i, month: vm - 1, year: vy, cur: false });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ day: d, month: vm, year: vy, cur: true });
+  while (cells.length < 42) cells.push({ day: cells.length - startDay - daysInMonth + 1, month: vm + 1, year: vy, cur: false });
+
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const fmtDisplay = (v: string) => { const p = v.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">{label}</label>
+      <button type="button" onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
+        style={{
+          background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)',
+          border: open ? '1.5px solid rgba(168,85,247,0.4)' : '1.5px solid rgba(0,0,0,0.1)',
+          boxShadow: open ? '0 0 0 3px rgba(168,85,247,0.08)' : 'none',
+        }}
+      >
+        <span style={{ color: value ? '#1f2937' : '#9ca3af', fontWeight: value ? 500 : 400 }}>
+          {value ? fmtDisplay(value) : 'Seleziona data'}
+        </span>
+        <Calendar className="w-3.5 h-3.5" style={{ color: open ? '#9333ea' : '#9ca3af', transition: 'color 0.15s' }} />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1.5 left-0 right-0" style={{
+          background: 'rgba(255,255,255,0.98)', backdropFilter: 'blur(20px)',
+          border: '1.5px solid rgba(168,85,247,0.12)', borderRadius: 12,
+          boxShadow: '0 8px 30px rgba(124,58,237,0.12), 0 4px 12px rgba(0,0,0,0.06)',
+          padding: 10, animation: 'stFadeUp 0.15s ease-out',
+        }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <button type="button" onClick={() => { if (vm === 0) { setVm(11); setVy(y => y - 1); } else setVm(m => m - 1); }}
+              className="p-1 rounded-lg hover:bg-gray-100 transition-colors"><ChevronLeft className="w-3.5 h-3.5 text-gray-500" /></button>
+            <span className="text-xs font-semibold text-gray-800">{MONTHS_IT_S[vm]} {vy}</span>
+            <button type="button" onClick={() => { if (vm === 11) { setVm(0); setVy(y => y + 1); } else setVm(m => m + 1); }}
+              className="p-1 rounded-lg hover:bg-gray-100 transition-colors"><ChevronRight className="w-3.5 h-3.5 text-gray-500" /></button>
+          </div>
+          <div className="grid grid-cols-7 mb-0.5">
+            {DAYS_S.map(d => <div key={d} className="text-center" style={{ fontSize: 8, fontWeight: 600, color: '#9ca3af', padding: '2px 0' }}>{d}</div>)}
+          </div>
+          <div className="grid grid-cols-7">
+            {cells.map((c, i) => {
+              const cd = new Date(c.year, c.month, c.day);
+              const ds = fmt(cd);
+              const isSel = value === ds;
+              const isToday = fmt(today) === ds;
+              return (
+                <button key={i} type="button" onClick={() => { onChange(ds); setOpen(false); }}
+                  className="flex items-center justify-center relative"
+                  style={{
+                    width: '100%', height: 26, borderRadius: 6, fontSize: 11,
+                    fontWeight: isSel ? 700 : isToday ? 600 : 400,
+                    color: !c.cur ? '#d1d5db' : isSel ? '#fff' : isToday ? '#7c3aed' : '#374151',
+                    background: isSel ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'transparent',
+                    boxShadow: isSel ? '0 2px 6px rgba(147,51,234,0.3)' : 'none',
+                    cursor: 'pointer', transition: 'all 0.12s ease',
+                  }}
+                  onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; }}
+                  onMouseLeave={(e) => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  {c.day}
+                  {isToday && !isSel && <div style={{ position:'absolute', bottom:1, left:'50%', transform:'translateX(-50%)', width:3, height:3, borderRadius:'50%', background:'#7c3aed' }} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// TAB: HOURS — from Step4 + Step5
 // ============================================================================
 
 function HoursTab({
@@ -360,174 +559,224 @@ function HoursTab({
   closures, workstations, setWorkstations, baseWorkstations,
   businessType, onSaveHours, onSaveWorkstations, onAddClosure, onDeleteClosure,
 }: {
-  hours: BusinessHoursRow[];
-  setHours: React.Dispatch<React.SetStateAction<BusinessHoursRow[]>>;
-  baseHours: BusinessHoursRow[];
-  closures: ClosureItem[];
-  workstations: number;
-  setWorkstations: React.Dispatch<React.SetStateAction<number>>;
-  baseWorkstations: number;
-  businessType?: string;
-  onSaveHours: (hours: BusinessHoursRow[]) => Promise<void>;
-  onSaveWorkstations: (count: number) => Promise<void>;
-  onAddClosure: (closure: Omit<ClosureItem, 'id'>) => Promise<void>;
+  hours: BusinessHoursRow[]; setHours: React.Dispatch<React.SetStateAction<BusinessHoursRow[]>>;
+  baseHours: BusinessHoursRow[]; closures: ClosureItem[];
+  workstations: number; setWorkstations: React.Dispatch<React.SetStateAction<number>>;
+  baseWorkstations: number; businessType?: string;
+  onSaveHours: (h: BusinessHoursRow[]) => Promise<void>;
+  onSaveWorkstations: (c: number) => Promise<void>;
+  onAddClosure: (c: Omit<ClosureItem, 'id'>) => Promise<void>;
   onDeleteClosure: (id: string) => Promise<void>;
 }) {
-  const [savingHours, setSavingHours] = React.useState(false);
-  const [savedHours, setSavedHours] = React.useState(false);
-  const [savingStations, setSavingStations] = React.useState(false);
-  const [savedStations, setSavedStations] = React.useState(false);
-  const [newClosure, setNewClosure] = React.useState({ title: '', startDate: '', endDate: '', isRecurringYearly: false });
-  const [addingClosure, setAddingClosure] = React.useState(false);
-  const [showClosureForm, setShowClosureForm] = React.useState(false);
+  const [savingH, setSavingH] = React.useState(false);
+  const [savedH, setSavedH] = React.useState(false);
+  const [savingW, setSavingW] = React.useState(false);
+  const [savedW, setSavedW] = React.useState(false);
+  const [newCl, setNewCl] = React.useState({ title: '', startDate: '', endDate: '', isRecurringYearly: false });
+  const [addingCl, setAddingCl] = React.useState(false);
+  const [showClForm, setShowClForm] = React.useState(false);
+  const [bounceDir, setBounceDir] = React.useState<'up' | 'down' | null>(null);
+  const [pulseBtn, setPulseBtn] = React.useState<'plus' | 'minus' | null>(null);
 
-  const label = getBusinessLabel(businessType);
-  const stationsLabel = getWorkstationLabel(businessType);
+  const label = getBizLabel(businessType);
+  const ws = getWsLabel(businessType);
   const hoursChanged = JSON.stringify(hours) !== JSON.stringify(baseHours);
-  const stationsChanged = workstations !== baseWorkstations;
+  const wsChanged = workstations !== baseWorkstations;
 
-  const updateHour = (idx: number, field: keyof BusinessHoursRow, value: string | boolean) => {
+  const updateH = (idx: number, field: keyof BusinessHoursRow, value: string | boolean) => {
     setHours(prev => prev.map((h, i) => i === idx ? { ...h, [field]: value } : h));
   };
-
-  const handleSaveHours = async () => {
-    setSavingHours(true);
-    try { await onSaveHours(hours); setSavedHours(true); setTimeout(() => setSavedHours(false), 2000); }
-    finally { setSavingHours(false); }
+  const handleSaveH = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    setSavingH(true);
+    try { await onSaveHours(hours); setSavedH(true); setTimeout(() => setSavedH(false), 2000); }
+    finally { setSavingH(false); }
   };
-
-  const handleSaveStations = async () => {
-    setSavingStations(true);
-    try {
-      await onSaveWorkstations(workstations);
-      setSavedStations(true);
-      setTimeout(() => setSavedStations(false), 2000);
-    } finally {
-      setSavingStations(false);
-    }
+  const handleSaveW = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    setSavingW(true);
+    try { await onSaveWorkstations(workstations); setSavedW(true); setTimeout(() => setSavedW(false), 2000); }
+    finally { setSavingW(false); }
   };
-
-  const handleAddClosure = async () => {
-    if (!newClosure.title || !newClosure.startDate) return;
-    setAddingClosure(true);
-    try {
-      await onAddClosure({ title: newClosure.title, startDate: newClosure.startDate, endDate: newClosure.endDate || newClosure.startDate, isRecurringYearly: newClosure.isRecurringYearly });
-      setNewClosure({ title: '', startDate: '', endDate: '', isRecurringYearly: false });
-      setShowClosureForm(false);
-    } finally { setAddingClosure(false); }
+  const handleInc = () => { if (workstations < 20) { setWorkstations(w => w + 1); setBounceDir('up'); setPulseBtn('plus'); setTimeout(() => setBounceDir(null), 300); setTimeout(() => setPulseBtn(null), 500); } };
+  const handleDec = () => { if (workstations > 1) { setWorkstations(w => w - 1); setBounceDir('down'); setPulseBtn('minus'); setTimeout(() => setBounceDir(null), 300); setTimeout(() => setPulseBtn(null), 500); } };
+  const handleAddCl = async () => {
+    if (!newCl.title || !newCl.startDate) return;
+    setAddingCl(true);
+    try { await onAddClosure({ title: newCl.title, startDate: newCl.startDate, endDate: newCl.endDate || newCl.startDate, isRecurringYearly: newCl.isRecurringYearly }); setNewCl({ title: '', startDate: '', endDate: '', isRecurringYearly: false }); setShowClForm(false); }
+    finally { setAddingCl(false); }
   };
 
   return (
     <div className="space-y-6">
-      <Section title="Orari di apertura" description={`Gli orari settimanali del tuo ${label}`}>
-        <div className="space-y-2">
+      {/* Orari — Step4 style rows */}
+      <Section title="Orari di apertura" description={`Gli orari settimanali del tuo ${label}`} delay={0} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 22, height: 22 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
+        <div className="space-y-1.5">
           {hours.map((h, idx) => (
-            <div key={h.dayOfWeek} className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${h.isOpen ? 'bg-white border border-gray-200' : 'bg-gray-50 border border-gray-100'}`}>
-              <button onClick={() => updateHour(idx, 'isOpen', !h.isOpen)} className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 ${h.isOpen ? 'bg-accent-600' : 'bg-gray-300'}`}>
-                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${h.isOpen ? 'translate-x-5' : ''}`} />
-              </button>
-              <span className={`text-sm font-medium w-24 ${h.isOpen ? 'text-gray-900' : 'text-gray-400'}`}>{h.dayLabel}</span>
-              {h.isOpen ? (
-                <div className="flex items-center gap-2 flex-wrap flex-1">
-                  <select value={h.openTime1} onChange={(e) => updateHour(idx, 'openTime1', e.target.value)} className="px-2 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">
-                    {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <span className="text-gray-400 text-sm">–</span>
-                  <select value={h.closeTime1} onChange={(e) => updateHour(idx, 'closeTime1', e.target.value)} className="px-2 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">
-                    {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  {h.openTime2 || h.closeTime2 ? (
-                    <>
-                      <span className="text-gray-300 text-sm mx-1">|</span>
-                      <select value={h.openTime2} onChange={(e) => updateHour(idx, 'openTime2', e.target.value)} className="px-2 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">
-                        <option value="">—</option>
-                        {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <span className="text-gray-400 text-sm">–</span>
-                      <select value={h.closeTime2} onChange={(e) => updateHour(idx, 'closeTime2', e.target.value)} className="px-2 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">
-                        <option value="">—</option>
-                        {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <button onClick={() => { updateHour(idx, 'openTime2', ''); updateHour(idx, 'closeTime2', ''); }} className="p-1 text-gray-400 hover:text-red-500 transition-colors"><X className="w-3.5 h-3.5" /></button>
-                    </>
-                  ) : (
-                    <button onClick={() => { updateHour(idx, 'openTime2', '14:00'); updateHour(idx, 'closeTime2', '15:00'); }} className="text-xs text-accent-600 hover:underline ml-1">+ Pausa pranzo</button>
-                  )}
-                </div>
-              ) : (
-                <span className="text-sm text-gray-400 italic">Chiuso</span>
-              )}
+            <div key={h.dayOfWeek} className="rounded-xl overflow-hidden" style={{ animation: `stFadeUp 0.3s ease-out ${idx * 40}ms both` }}>
+              <div className="flex items-center gap-2.5 px-3 py-2.5 transition-all duration-200" style={{
+                background: h.isOpen ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.015)',
+                borderLeft: h.isOpen ? '3px solid #a855f7' : '3px solid #e5e7eb',
+                backdropFilter: 'blur(4px)',
+              }}
+                onMouseEnter={(e) => { if (h.isOpen) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(124,58,237,0.06)'; } }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <AnimatedToggle enabled={h.isOpen} onToggle={() => updateH(idx, 'isOpen', !h.isOpen)} />
+                <span className={`w-10 text-sm font-semibold transition-colors duration-200 ${h.isOpen ? 'text-gray-900' : 'text-gray-400'}`}>{h.dayLabel.slice(0, 3)}</span>
+                {h.isOpen ? (
+                  <div className="flex items-center gap-1.5 flex-1 flex-wrap">
+                    <AnimatedSelect value={h.openTime1} onChange={(v) => updateH(idx, 'openTime1', v)} options={TIME_OPTIONS} />
+                    <span className="text-purple-300 text-xs">→</span>
+                    <AnimatedSelect value={h.closeTime1} onChange={(v) => updateH(idx, 'closeTime1', v)} options={TIME_OPTIONS} />
+                    {h.openTime2 || h.closeTime2 ? (
+                      <>
+                        <span className="text-purple-200 mx-0.5 text-xs">|</span>
+                        <AnimatedSelect value={h.openTime2} onChange={(v) => updateH(idx, 'openTime2', v)} options={TIME_OPTIONS} />
+                        <span className="text-purple-300 text-xs">→</span>
+                        <AnimatedSelect value={h.closeTime2} onChange={(v) => updateH(idx, 'closeTime2', v)} options={TIME_OPTIONS} />
+                        <button onClick={() => { updateH(idx, 'openTime2', ''); updateH(idx, 'closeTime2', ''); }}
+                          className="p-1 text-gray-400 hover:text-red-500 transition-colors"><X className="w-3.5 h-3.5" /></button>
+                      </>
+                    ) : (
+                      <button onClick={() => { updateH(idx, 'openTime2', '14:00'); updateH(idx, 'closeTime2', '15:00'); }}
+                        className="ml-auto text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200"
+                        style={{ background: 'rgba(0,0,0,0.04)', color: '#9ca3af', border: '1px solid transparent' }}>
+                        + Pausa
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-400 italic">Chiuso</span>
+                )}
+              </div>
             </div>
           ))}
         </div>
-        <div className="flex justify-end mt-4">
-          <SaveButton saving={savingHours} saved={savedHours} onClick={handleSaveHours} disabled={!hoursChanged} />
+        <div className="flex justify-end mt-5">
+          <SaveBtn saving={savingH} saved={savedH} onClick={handleSaveH} disabled={!hoursChanged} />
         </div>
       </Section>
 
-      <Section title={stationsLabel.charAt(0).toUpperCase() + stationsLabel.slice(1)} description={`Numero di ${stationsLabel} disponibili nel tuo ${label}`}>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
-            <button onClick={() => setWorkstations(prev => Math.max(1, prev - 1))} className="px-3 py-2 text-gray-500 hover:bg-gray-50 transition-colors">−</button>
-            <span className="w-12 text-center text-sm font-semibold text-gray-900">{workstations}</span>
-            <button onClick={() => setWorkstations(prev => prev + 1)} className="px-3 py-2 text-gray-500 hover:bg-gray-50 transition-colors">+</button>
+      {/* Postazioni + Chiusure — side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Postazioni — compact */}
+        <Section title={`${ws.p.charAt(0).toUpperCase() + ws.p.slice(1)}`} description={`Quante ${ws.p} hai?`} delay={80} compact iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}>
+          <div className="flex flex-col items-center justify-center flex-1 py-2" style={{ animation: 'stFadeUp 0.4s ease-out both' }}>
+            <div className="flex items-center gap-6">
+              <button type="button" onClick={handleDec} disabled={workstations <= 1}
+                className="relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 outline-none disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                onMouseEnter={(e) => { if (workstations > 1) e.currentTarget.style.border = '1.5px solid #a855f7'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.border = '1.5px solid rgba(0,0,0,0.08)'; }}
+              >
+                {pulseBtn === 'minus' && <span className="absolute inset-0 rounded-2xl pointer-events-none" style={{ animation: 'stPulse 0.5s ease-out forwards' }} />}
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
+              </button>
+              <div className="text-center" style={{ minWidth: 60 }}>
+                <span className="text-5xl font-bold bg-clip-text text-transparent" style={{
+                  backgroundImage: 'linear-gradient(135deg, #7c3aed, #a855f7)', display: 'inline-block',
+                  animation: bounceDir === 'up' ? 'stBounceUp 0.3s ease-out' : bounceDir === 'down' ? 'stBounceDown 0.3s ease-out' : 'stBreath 3s ease-in-out infinite',
+                }}>{workstations}</span>
+                <p className="text-gray-500 text-xs mt-1">{workstations === 1 ? ws.s : ws.p}</p>
+              </div>
+              <button type="button" onClick={handleInc} disabled={workstations >= 20}
+                className="relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 outline-none disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                onMouseEnter={(e) => { if (workstations < 20) e.currentTarget.style.border = '1.5px solid #a855f7'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.border = '1.5px solid rgba(0,0,0,0.08)'; }}
+              >
+                {pulseBtn === 'plus' && <span className="absolute inset-0 rounded-2xl pointer-events-none" style={{ animation: 'stPulse 0.5s ease-out forwards' }} />}
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              </button>
+            </div>
+            <div className="flex flex-wrap justify-center gap-1.5 mt-4 max-w-[180px]">
+              {Array.from({ length: Math.min(workstations, 20) }).map((_, i) => (
+                <div key={i} className="w-3.5 h-3.5 rounded-full" style={{
+                  background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 2px 6px rgba(168,85,247,0.3)',
+                  animation: `stDotIn 0.3s ease-out ${i * 30}ms both`,
+                }} />
+              ))}
+            </div>
+            {wsChanged && <div className="mt-4"><SaveBtn saving={savingW} saved={savedW} onClick={handleSaveW} /></div>}
           </div>
-          {stationsChanged && !savedStations && (
-            <SaveButton saving={savingStations} saved={savedStations} onClick={handleSaveStations} />
-          )}
-        </div>
-      </Section>
+        </Section>
 
-      <Section title="Chiusure straordinarie" description="Giorni di chiusura extra (ferie, festività)">
-        {closures.length > 0 && (
-          <div className="space-y-2 mb-4">
-            {closures.map(closure => (
-              <div key={closure.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{closure.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-xs text-gray-500">
-                      {new Date(closure.startDate).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      {closure.endDate !== closure.startDate && (<> → {new Date(closure.endDate).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}</>)}
-                    </p>
-                    {closure.isRecurringYearly && (
-                      <span className="inline-flex items-center gap-1 text-xs text-accent-600"><RefreshCw className="w-3 h-3" />Ogni anno</span>
+        {/* Chiusure — compact, red hover, animated trash, onboarding buttons */}
+        <Section title="Chiusure" description="Giorni di chiusura e ferie" delay={160} compact iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}>
+          {closures.length > 0 && (
+            <div className="space-y-1.5 mb-3" style={{ maxHeight: 220, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }}>
+              {closures.map((cl) => (
+                <div key={cl.id} className="flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-200" style={{
+                  background: 'rgba(255,255,255,0.7)', border: '1.5px solid rgba(0,0,0,0.06)', backdropFilter: 'blur(4px)',
+                }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.04)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.15)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.7)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; }}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{cl.title}</p>
+                    <p className="text-[11px] text-gray-500">{cl.startDate}{cl.endDate !== cl.startDate ? ` → ${cl.endDate}` : ''}{cl.isRecurringYearly ? ' · Annuale' : ''}</p>
+                  </div>
+                  <button onClick={() => onDeleteClosure(cl.id)} className="p-1.5 rounded-lg flex-shrink-0" style={{ color: 'rgba(0,0,0,0.2)', transition: 'all 0.15s ease' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.color = '#dc2626'; const icon = e.currentTarget.querySelector('svg'); if (icon) (icon as unknown as HTMLElement).style.transform = 'rotate(12deg) scale(1.15)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.2)'; const icon = e.currentTarget.querySelector('svg'); if (icon) (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; }}
+                  >
+                    <Trash2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {showClForm ? (
+            <div className="space-y-2.5 p-3 rounded-xl" style={{ background: 'rgba(168,85,247,0.04)', border: '1.5px dashed rgba(168,85,247,0.25)', animation: 'stFadeUp 0.3s ease-out' }}>
+              <GlassInput label="Nome chiusura" placeholder="Es. Ferie estive..." value={newCl.title} onChange={(e) => setNewCl(p => ({ ...p, title: e.target.value }))} />
+              <div className="grid grid-cols-2 gap-2">
+                <MiniDatePicker label="Inizio" value={newCl.startDate} onChange={(d) => setNewCl(p => ({ ...p, startDate: d }))} />
+                <MiniDatePicker label="Fine" value={newCl.endDate} onChange={(d) => setNewCl(p => ({ ...p, endDate: d }))} />
+              </div>
+              {/* Purple checkbox like AppointmentModal invite */}
+              <label className="flex items-center gap-2.5 cursor-pointer group/chk">
+                <div className="relative w-5 h-5 flex-shrink-0">
+                  <input type="checkbox" checked={newCl.isRecurringYearly} onChange={(e) => setNewCl(p => ({ ...p, isRecurringYearly: e.target.checked }))} className="peer sr-only" />
+                  <div className="w-5 h-5 rounded-md transition-all duration-300 flex items-center justify-center" style={{
+                    background: newCl.isRecurringYearly ? 'linear-gradient(135deg, #7c3aed, #a855f7)' : 'rgba(255,255,255,0.6)',
+                    border: newCl.isRecurringYearly ? '1.5px solid #7c3aed' : '1.5px solid rgba(0,0,0,0.15)',
+                    boxShadow: newCl.isRecurringYearly ? '0 2px 8px rgba(168,85,247,0.3)' : 'none',
+                  }}>
+                    {newCl.isRecurringYearly && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" style={{ strokeDasharray: 24, strokeDashoffset: 0, animation: 'stCheck 0.25s ease-out' }} /></svg>
                     )}
                   </div>
                 </div>
-                <button onClick={() => onDeleteClosure(closure.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
-              </div>
-            ))}
-          </div>
-        )}
-        {showClosureForm ? (
-          <div className="p-4 border border-accent-200 bg-accent-50/30 rounded-xl space-y-3">
-            <input type="text" value={newClosure.title} onChange={(e) => setNewClosure(prev => ({ ...prev, title: e.target.value }))} placeholder="Nome chiusura (es. Natale, Ferie estive...)" className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent bg-white" />
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Data inizio</label>
-                <input type="date" value={newClosure.startDate} onChange={(e) => setNewClosure(prev => ({ ...prev, startDate: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Data fine</label>
-                <input type="date" value={newClosure.endDate} onChange={(e) => setNewClosure(prev => ({ ...prev, endDate: e.target.value }))} min={newClosure.startDate} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent bg-white" />
+                <span className="text-sm text-gray-700">Ricorrente ogni anno</span>
+              </label>
+              {/* Onboarding-style buttons: gradient Aggiungi + outline Annulla */}
+              <div className="flex items-center gap-2 pt-1">
+                <button onClick={handleAddCl} disabled={addingCl || !newCl.title || !newCl.startDate}
+                  className="relative h-10 px-5 rounded-xl font-semibold text-white text-sm transition-all duration-300 outline-none overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 6px 20px rgba(124,58,237,0.3)' }}
+                  onMouseEnter={(e) => { if (!addingCl) { e.currentTarget.style.boxShadow = '0 8px 28px rgba(124,58,237,0.4)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.3)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)', animation: 'stShimmer 2.5s ease-in-out infinite' }} />
+                  <span className="relative z-10 flex items-center gap-2">{addingCl ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Aggiungi</span>
+                </button>
+                <button onClick={() => setShowClForm(false)}
+                  className="h-10 px-5 rounded-xl font-semibold text-sm transition-all duration-300 outline-none flex items-center justify-center gap-2"
+                  style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#374151' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.border = '1.5px solid #a855f7'; e.currentTarget.style.color = '#7c3aed'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.border = '1.5px solid rgba(0,0,0,0.08)'; e.currentTarget.style.color = '#374151'; }}
+                >Annulla</button>
               </div>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={newClosure.isRecurringYearly} onChange={(e) => setNewClosure(prev => ({ ...prev, isRecurringYearly: e.target.checked }))} className="rounded border-gray-300 text-accent-600 focus:ring-accent-500" />
-              <span className="text-sm text-gray-700">Ricorrente ogni anno</span>
-            </label>
-            <div className="flex items-center gap-2">
-              <Button onClick={handleAddClosure} loading={addingClosure} disabled={!newClosure.title || !newClosure.startDate} className="flex items-center gap-2 text-sm"><Plus className="w-4 h-4" />Aggiungi</Button>
-              <Button variant="outline" onClick={() => setShowClosureForm(false)} className="text-sm">Annulla</Button>
-            </div>
-          </div>
-        ) : (
-          <button onClick={() => setShowClosureForm(true)} className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-accent-600 border border-dashed border-purple-300 rounded-xl hover:bg-accent-50 transition-colors w-full justify-center">
-            <Plus className="w-4 h-4" />Aggiungi chiusura
-          </button>
-        )}
-      </Section>
+          ) : (
+            <button onClick={() => setShowClForm(true)} className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold w-full justify-center rounded-xl transition-all duration-300"
+              style={{ color: '#7c3aed', border: '2px dashed rgba(168,85,247,0.3)', background: 'transparent' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.04)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.5)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)'; }}>
+              <Plus className="w-4 h-4" />Aggiungi chiusura
+            </button>
+          )}
+        </Section>
+      </div>
     </div>
   );
 }
@@ -536,92 +785,63 @@ function HoursTab({
 // TAB: BOOKINGS
 // ============================================================================
 
-function BookingsTab({
-  form, setForm, baseSettings, onSave,
-}: {
-  form: BookingSettings;
-  setForm: React.Dispatch<React.SetStateAction<BookingSettings>>;
-  baseSettings: BookingSettings;
-  onSave: (settings: BookingSettings) => Promise<void>;
+function BookingsTab({ form, setForm, baseSettings, onSave }: {
+  form: BookingSettings; setForm: React.Dispatch<React.SetStateAction<BookingSettings>>;
+  baseSettings: BookingSettings; onSave: (s: BookingSettings) => Promise<void>;
 }) {
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [savingToggle, setSavingToggle] = React.useState<string | null>(null);
+  const rulesChanged = form.bookingAdvanceMin !== baseSettings.bookingAdvanceMin || form.bookingAdvanceMax !== baseSettings.bookingAdvanceMax || form.cancellationPolicyHours !== baseSettings.cancellationPolicyHours || form.bufferMinutes !== baseSettings.bufferMinutes;
 
-  const rulesChanged =
-    form.bookingAdvanceMin !== baseSettings.bookingAdvanceMin ||
-    form.bookingAdvanceMax !== baseSettings.bookingAdvanceMax ||
-    form.cancellationPolicyHours !== baseSettings.cancellationPolicyHours ||
-    form.bufferMinutes !== baseSettings.bufferMinutes;
-
-  const handleSaveRules = async () => {
+  const handleSaveRules = async (e: React.MouseEvent<HTMLButtonElement>) => {
     setSaving(true);
     try { await onSave(form); setSaved(true); setTimeout(() => setSaved(false), 2000); }
     finally { setSaving(false); }
   };
-
   const handleToggle = async (key: 'allowNoStaffPreference' | 'allowMultipleServices') => {
-    const newValue = !form[key];
-    const newForm = { ...form, [key]: newValue };
-    setForm(newForm);
-    setSavingToggle(key);
-    try { await onSave(newForm); }
-    catch (err) { setForm(prev => ({ ...prev, [key]: !newValue })); console.error('Error saving toggle:', err); }
+    const nv = !form[key]; setForm(p => ({ ...p, [key]: nv })); setSavingToggle(key);
+    try { await onSave({ ...form, [key]: nv }); }
+    catch { setForm(p => ({ ...p, [key]: !nv })); }
     finally { setSavingToggle(null); }
   };
-
-  const toggleOptions = [
-    { key: 'allowNoStaffPreference' as const, icon: Users, label: 'Consenti prenotazioni senza preferenza staff', desc: 'I clienti possono prenotare senza scegliere un operatore specifico' },
-    { key: 'allowMultipleServices' as const, icon: Layers, label: 'Consenti prenotazione di più servizi insieme', desc: 'I clienti possono combinare più servizi in un\'unica prenotazione (es. taglio + colore)' },
+  const opts = [
+    { key: 'allowNoStaffPreference' as const, icon: Users, label: 'Nessuna preferenza staff', desc: 'I clienti possono prenotare senza scegliere un operatore specifico' },
+    { key: 'allowMultipleServices' as const, icon: Layers, label: 'Più servizi insieme', desc: 'I clienti possono combinare più servizi in un\'unica prenotazione' },
   ];
 
   return (
     <div className="space-y-6">
-      <Section title="Regole prenotazione" description="Configura limiti e tempi per le prenotazioni">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Anticipo minimo (min)</label>
-              <input type="number" min={0} value={form.bookingAdvanceMin} onChange={(e) => setForm(prev => ({ ...prev, bookingAdvanceMin: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-              <Hint>Quanti minuti prima si può prenotare al minimo</Hint>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Anticipo massimo (giorni)</label>
-              <input type="number" min={1} value={form.bookingAdvanceMax} onChange={(e) => setForm(prev => ({ ...prev, bookingAdvanceMax: parseInt(e.target.value) || 1 }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-              <Hint>Con quanti giorni di anticipo massimo</Hint>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cancellazione minima (ore)</label>
-              <input type="number" min={0} value={form.cancellationPolicyHours} onChange={(e) => setForm(prev => ({ ...prev, cancellationPolicyHours: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-              <Hint>Ore minime prima per cancellare</Hint>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Buffer tra appuntamenti (min)</label>
-              <input type="number" min={0} step={5} value={form.bufferMinutes} onChange={(e) => setForm(prev => ({ ...prev, bufferMinutes: parseInt(e.target.value) || 0 }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-              <Hint>Tempo di pausa tra un appuntamento e l&apos;altro</Hint>
-            </div>
-          </div>
+      <Section title="Regole prenotazione" description="Configura tempistiche e policy" delay={0} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 22, height: 22 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ animation: 'stFadeUp 0.35s ease-out both' }}>
+          <GlassInput label="Anticipo minimo (ore)" type="number" value={String(form.bookingAdvanceMin)} onChange={(e) => setForm(p => ({ ...p, bookingAdvanceMin: parseInt(e.target.value) || 0 }))} hint="Quanto prima un cliente deve prenotare" />
+          <GlassInput label="Anticipo massimo (giorni)" type="number" value={String(form.bookingAdvanceMax)} onChange={(e) => setForm(p => ({ ...p, bookingAdvanceMax: parseInt(e.target.value) || 30 }))} hint="Fino a quanti giorni in anticipo" />
+          <GlassInput label="Policy cancellazione (ore)" type="number" value={String(form.cancellationPolicyHours)} onChange={(e) => setForm(p => ({ ...p, cancellationPolicyHours: parseInt(e.target.value) || 0 }))} hint="Entro quante ore si può cancellare" />
+          <GlassInput label="Buffer tra appuntamenti (min)" type="number" value={String(form.bufferMinutes)} onChange={(e) => setForm(p => ({ ...p, bufferMinutes: parseInt(e.target.value) || 0 }))} hint="Pausa tra un appuntamento e l'altro" />
         </div>
-        <div className="flex justify-end mt-4">
-          <SaveButton saving={saving} saved={saved} onClick={handleSaveRules} disabled={!rulesChanged} />
+        <div className="flex justify-end mt-5">
+          <SaveBtn saving={saving} saved={saved} onClick={handleSaveRules} disabled={!rulesChanged} />
         </div>
       </Section>
 
-      <Section title="Opzioni" description="Personalizza il comportamento delle prenotazioni">
+      <Section title="Opzioni" description="Personalizza il comportamento" delay={80} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 22, height: 22 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>}>
         <div className="space-y-1">
-          {toggleOptions.map(option => {
-            const Icon = option.icon;
-            const isToggling = savingToggle === option.key;
+          {opts.map(opt => {
+            const Icon = opt.icon;
             return (
-              <div key={option.key} className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                <button onClick={() => handleToggle(option.key)} disabled={isToggling} className={`relative w-10 h-5 rounded-full transition-colors flex-shrink-0 mt-0.5 ${form[option.key] ? 'bg-accent-600' : 'bg-gray-300'} ${isToggling ? 'opacity-50' : ''}`}>
-                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${form[option.key] ? 'translate-x-5' : ''}`} />
-                </button>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2"><Icon className="w-4 h-4 text-gray-500" /><p className="text-sm font-medium text-gray-900">{option.label}</p></div>
-                  <p className="text-xs text-gray-500 mt-0.5 ml-6">{option.desc}</p>
+              <div key={opt.key} className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200" style={{
+                background: form[opt.key] ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.015)',
+                borderLeft: form[opt.key] ? '3px solid #a855f7' : '3px solid #e5e7eb',
+                backdropFilter: 'blur(4px)',
+              }}>
+                <AnimatedToggle enabled={form[opt.key]} onToggle={() => handleToggle(opt.key)} disabled={savingToggle === opt.key} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                    <span className="text-sm font-semibold text-gray-900">{opt.label}</span>
+                    {savingToggle === opt.key && <RefreshCw className="w-3.5 h-3.5 text-purple-400 animate-spin" />}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 ml-6">{opt.desc}</p>
                 </div>
               </div>
             );
@@ -636,90 +856,88 @@ function BookingsTab({
 // TAB: ACCOUNT
 // ============================================================================
 
-function AccountTab({
-  form, setForm, baseData, onSave, onChangePassword,
-}: {
+function AccountTab({ form, setForm, baseData, onSave, onChangePassword }: {
   form: { fullName: string; phone: string };
   setForm: React.Dispatch<React.SetStateAction<{ fullName: string; phone: string }>>;
   baseData: AccountData;
   onSave: (data: { fullName: string; phone: string }) => Promise<void>;
-  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  onChangePassword: (current: string, newPw: string) => Promise<void>;
 }) {
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
-  const [currentPw, setCurrentPw] = React.useState('');
+  const [curPw, setCurPw] = React.useState('');
   const [newPw, setNewPw] = React.useState('');
-  const [confirmPw, setConfirmPw] = React.useState('');
-  const [showCurrentPw, setShowCurrentPw] = React.useState(false);
-  const [showNewPw, setShowNewPw] = React.useState(false);
+  const [confPw, setConfPw] = React.useState('');
+  const [showCur, setShowCur] = React.useState(false);
+  const [showNew, setShowNew] = React.useState(false);
   const [changingPw, setChangingPw] = React.useState(false);
-  const [pwSuccess, setPwSuccess] = React.useState(false);
-  const [pwError, setPwError] = React.useState('');
+  const [pwErr, setPwErr] = React.useState('');
+  const [pwOk, setPwOk] = React.useState(false);
+  const [shake, setShake] = React.useState(false);
+  const hasChanges = form.fullName !== baseData.fullName || form.phone !== baseData.phone;
 
-  const hasChanges = form.fullName !== baseData.fullName || form.phone !== (baseData.phone || '');
-
-  const handleSave = async () => {
+  const handleSave = async (e: React.MouseEvent<HTMLButtonElement>) => {
     setSaving(true);
     try { await onSave(form); setSaved(true); setTimeout(() => setSaved(false), 2000); }
     finally { setSaving(false); }
   };
-
-  const handleChangePassword = async () => {
-    setPwError('');
-    if (newPw.length < 6) { setPwError('La password deve essere di almeno 6 caratteri'); return; }
-    if (newPw !== confirmPw) { setPwError('Le password non corrispondono'); return; }
+  const handleChangePw = async () => {
+    setPwErr(''); setPwOk(false);
+    if (newPw.length < 6) { setPwErr('La password deve avere almeno 6 caratteri'); setShake(true); setTimeout(() => setShake(false), 500); return; }
+    if (newPw !== confPw) { setPwErr('Le password non corrispondono'); setShake(true); setTimeout(() => setShake(false), 500); return; }
     setChangingPw(true);
-    try { await onChangePassword(currentPw, newPw); setPwSuccess(true); setCurrentPw(''); setNewPw(''); setConfirmPw(''); setTimeout(() => setPwSuccess(false), 3000); }
-    catch (err) { setPwError(err instanceof Error ? err.message : 'Errore nel cambio password'); }
+    try { await onChangePassword(curPw, newPw); setPwOk(true); setCurPw(''); setNewPw(''); setConfPw(''); setTimeout(() => setPwOk(false), 3000); }
+    catch (err) { setPwErr(err instanceof Error ? err.message : 'Errore nel cambio password'); setShake(true); setTimeout(() => setShake(false), 500); }
     finally { setChangingPw(false); }
   };
 
   return (
-    <div className="space-y-6">
-      <Section title="Dati personali" description="Le tue informazioni di account">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
-            <input type="text" value={form.fullName} onChange={(e) => setForm(prev => ({ ...prev, fullName: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input type="email" value={baseData.email} disabled className="w-full px-3 py-2.5 border border-gray-100 rounded-xl text-sm bg-gray-50 text-gray-500 cursor-not-allowed" />
-            <Hint>L&apos;email non può essere modificata</Hint>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
-            <input type="tel" value={form.phone} onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-          </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+      {/* Left: Dati personali */}
+      <Section title="Dati personali" description="Le tue informazioni account" delay={0} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 20, height: 20 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
+        <div className="space-y-3" style={{ animation: 'stFadeUp 0.35s ease-out both' }}>
+          <GlassInput label="Nome completo" value={form.fullName} onChange={(e) => setForm(p => ({ ...p, fullName: e.target.value }))} />
+          <GlassInput label="Email" type="email" value={baseData.email} disabled onChange={() => {}} hint="L'email non può essere modificata" />
+          <GlassInput label="Telefono" type="tel" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} />
         </div>
         <div className="flex justify-end mt-4">
-          <SaveButton saving={saving} saved={saved} onClick={handleSave} disabled={!hasChanges} />
+          <SaveBtn saving={saving} saved={saved} onClick={handleSave} disabled={!hasChanges} />
         </div>
       </Section>
 
-      <Section title="Cambia password">
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password attuale</label>
+      {/* Right: Sicurezza */}
+      <Section title="Sicurezza" description="Cambia la tua password" delay={80} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 20, height: 20 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}>
+        <div className="space-y-3" style={{ animation: shake ? 'stShake 0.4s ease-out' : 'stFadeUp 0.35s ease-out both' }}>
+          <div className="w-full">
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">Password attuale</label>
             <div className="relative">
-              <input type={showCurrentPw ? 'text' : 'password'} value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} className="w-full px-3 py-2.5 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-              <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+              <PasswordInput value={curPw} onChange={(e) => { setCurPw(e.target.value); setPwErr(''); }} show={showCur} onToggle={() => setShowCur(!showCur)} />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nuova password</label>
+          <div className="w-full">
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">Nuova password</label>
             <div className="relative">
-              <input type={showNewPw ? 'text' : 'password'} value={newPw} onChange={(e) => setNewPw(e.target.value)} className="w-full px-3 py-2.5 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-              <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+              <PasswordInput value={newPw} onChange={(e) => { setNewPw(e.target.value); setPwErr(''); }} show={showNew} onToggle={() => setShowNew(!showNew)} />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Conferma nuova password</label>
-            <input type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent" />
-          </div>
-          {pwError && <p className="text-sm text-red-600">{pwError}</p>}
-          {pwSuccess && <p className="text-sm text-green-600">Password modificata con successo!</p>}
-          <Button onClick={handleChangePassword} loading={changingPw} disabled={!currentPw || !newPw || !confirmPw} variant="outline" className="flex items-center gap-2">Cambia password</Button>
+          <GlassInput label="Conferma nuova password" type="password" value={confPw} onChange={(e) => { setConfPw(e.target.value); setPwErr(''); }} />
+          {pwErr && <p className="text-sm text-red-600 flex items-center gap-1.5" style={{ animation: 'stFadeUp 0.3s ease-out' }}>⚠ {pwErr}</p>}
+          {pwOk && <p className="text-sm text-emerald-600 flex items-center gap-1.5" style={{ animation: 'stFadeUp 0.3s ease-out' }}>✓ Password modificata con successo!</p>}
+          {/* Gradient button like SaveBtn */}
+          <button onClick={handleChangePw} disabled={changingPw || !curPw || !newPw || !confPw}
+            className="relative h-11 px-6 rounded-xl font-semibold text-white text-sm transition-all duration-300 outline-none overflow-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: changingPw || (!curPw || !newPw || !confPw) ? 'none' : '0 6px 20px rgba(124,58,237,0.3)' }}
+            onMouseEnter={(e) => { if (!changingPw && curPw && newPw && confPw) { e.currentTarget.style.boxShadow = '0 8px 28px rgba(124,58,237,0.4)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.3)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+          >
+            {!changingPw && curPw && newPw && confPw && (
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)', animation: 'stShimmer 2.5s ease-in-out infinite' }} />
+            )}
+            <span className="relative z-10 flex items-center gap-2">
+              {changingPw ? <RefreshCw className="w-4 h-4 animate-spin" /> : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
+              Cambia password
+            </span>
+          </button>
         </div>
       </Section>
     </div>
@@ -727,96 +945,77 @@ function AccountTab({
 }
 
 // ============================================================================
-// MAIN COMPONENT — STATE LIVES HERE
+// MAIN COMPONENT
 // ============================================================================
 
+const DEFAULT_TABS: SettingsTab[] = [
+  { id: 'general', label: 'Generale', icon: Store },
+  { id: 'hours', label: 'Orari', icon: Clock },
+  { id: 'bookings', label: 'Prenotazioni', icon: CalendarCheck },
+  { id: 'account', label: 'Account', icon: UserCog },
+];
+
 export function SettingsPage({
-  generalData,
-  businessHours,
-  closures,
-  bookingSettings,
-  accountData,
-  publicUrlBase,
-  businessType,
-  onSaveGeneral,
-  onUploadLogo,
-  onRemoveLogo,
-  onSaveHours,
-  onSaveWorkstations,
-  onAddClosure,
-  onDeleteClosure,
-  onSaveBookings,
-  onSaveAccount,
-  onChangePassword,
+  generalData, businessHours, closures, bookingSettings, accountData,
+  publicUrlBase, businessType,
+  onSaveGeneral, onUploadLogo, onRemoveLogo, onSaveHours, onSaveWorkstations,
+  onAddClosure, onDeleteClosure, onSaveBookings, onSaveAccount, onChangePassword,
   className = '',
 }: SettingsPageProps) {
   const [activeTab, setActiveTab] = React.useState('general');
-
-  // ========== CENTRALIZED STATE ==========
-  // All form state lives here so it persists across tab switches
-
   const [generalForm, setGeneralForm] = React.useState(generalData);
   const [generalBase, setGeneralBase] = React.useState(generalData);
-
   const [hoursForm, setHoursForm] = React.useState(businessHours);
   const [hoursBase, setHoursBase] = React.useState(businessHours);
+  const [wsForm, setWsForm] = React.useState(generalData.workstations);
+  const [wsBase, setWsBase] = React.useState(generalData.workstations);
+  const [bookForm, setBookForm] = React.useState(bookingSettings);
+  const [bookBase, setBookBase] = React.useState(bookingSettings);
+  const [acctForm, setAcctForm] = React.useState({ fullName: accountData.fullName, phone: accountData.phone });
 
-  const [workstationsForm, setWorkstationsForm] = React.useState(generalData.workstations);
-  const [workstationsBase, setWorkstationsBase] = React.useState(generalData.workstations);
-
-  const [bookingsForm, setBookingsForm] = React.useState(bookingSettings);
-  const [bookingsBase, setBookingsBase] = React.useState(bookingSettings);
-
-  const [accountForm, setAccountForm] = React.useState({ fullName: accountData.fullName, phone: accountData.phone });
-
-  // ========== WRAPPED HANDLERS that update base after save ==========
-
-  const handleSaveGeneral = async (data: BusinessGeneralData) => {
-    await onSaveGeneral(data);
-    setGeneralBase(data);
-  };
-
-  const handleSaveHours = async (hours: BusinessHoursRow[]) => {
-    await onSaveHours(hours);
-    setHoursBase(hours);
-  };
-
-  const handleSaveWorkstations = async (count: number) => {
-    await onSaveWorkstations(count);
-    setWorkstationsBase(count);
-  };
-
-  const handleSaveBookings = async (settings: BookingSettings) => {
-    await onSaveBookings(settings);
-    setBookingsBase(settings);
-  };
+  const wGen = async (d: BusinessGeneralData) => { await onSaveGeneral(d); setGeneralBase(d); };
+  const wHrs = async (h: BusinessHoursRow[]) => { await onSaveHours(h); setHoursBase(h); };
+  const wWs = async (c: number) => { await onSaveWorkstations(c); setWsBase(c); };
+  const wBk = async (s: BookingSettings) => { await onSaveBookings(s); setBookBase(s); };
 
   return (
     <div className={className}>
-      <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-6">
-        {DEFAULT_TABS.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-              <Icon className="w-4 h-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          );
-        })}
+      <style>{KEYFRAMES}</style>
+
+      {/* Header + Tabs — title left, tabs right, no card wrapper */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6" style={{ animation: 'stFadeUp 0.35s ease-out both' }}>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Impostazioni</h1>
+          <p className="text-gray-500 mt-1">Gestisci le impostazioni della tua attività</p>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {DEFAULT_TABS.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className="px-3.5 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
+                style={{
+                  background: isActive ? 'rgba(168,85,247,0.08)' : 'rgba(0,0,0,0.03)',
+                  color: isActive ? '#7c3aed' : '#6b7280',
+                  border: isActive ? '1px solid rgba(168,85,247,0.15)' : '1px solid transparent',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = 'rgba(0,0,0,0.05)'; e.currentTarget.style.color = '#374151'; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; e.currentTarget.style.color = '#6b7280'; } }}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {activeTab === 'general' && (
-        <GeneralTab form={generalForm} setForm={setGeneralForm} baseData={generalBase} publicUrlBase={publicUrlBase} businessType={businessType} onSave={handleSaveGeneral} onUploadLogo={onUploadLogo} onRemoveLogo={onRemoveLogo} />
-      )}
-      {activeTab === 'hours' && (
-        <HoursTab hours={hoursForm} setHours={setHoursForm} baseHours={hoursBase} closures={closures} workstations={workstationsForm} setWorkstations={setWorkstationsForm} baseWorkstations={workstationsBase} businessType={businessType} onSaveHours={handleSaveHours} onSaveWorkstations={handleSaveWorkstations} onAddClosure={onAddClosure} onDeleteClosure={onDeleteClosure} />
-      )}
-      {activeTab === 'bookings' && (
-        <BookingsTab form={bookingsForm} setForm={setBookingsForm} baseSettings={bookingsBase} onSave={handleSaveBookings} />
-      )}
-      {activeTab === 'account' && (
-        <AccountTab form={accountForm} setForm={setAccountForm} baseData={accountData} onSave={onSaveAccount} onChangePassword={onChangePassword} />
-      )}
+      {activeTab === 'general' && <GeneralTab form={generalForm} setForm={setGeneralForm} baseData={generalBase} publicUrlBase={publicUrlBase} businessType={businessType} onSave={wGen} onUploadLogo={onUploadLogo} onRemoveLogo={onRemoveLogo} />}
+      {activeTab === 'hours' && <HoursTab hours={hoursForm} setHours={setHoursForm} baseHours={hoursBase} closures={closures} workstations={wsForm} setWorkstations={setWsForm} baseWorkstations={wsBase} businessType={businessType} onSaveHours={wHrs} onSaveWorkstations={wWs} onAddClosure={onAddClosure} onDeleteClosure={onDeleteClosure} />}
+      {activeTab === 'bookings' && <BookingsTab form={bookForm} setForm={setBookForm} baseSettings={bookBase} onSave={wBk} />}
+      {activeTab === 'account' && <AccountTab form={acctForm} setForm={setAcctForm} baseData={accountData} onSave={onSaveAccount} onChangePassword={onChangePassword} />}
     </div>
   );
 }

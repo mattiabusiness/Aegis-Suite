@@ -252,6 +252,9 @@ export type {
   StaffPerformance,
   InsightItem,
   ROIStats,
+  RetentionData,
+  DayRevenueData,
+  HeatmapCell,
 } from './components/dashboard/StatsPage';
 export type {
   OverviewPageProps,

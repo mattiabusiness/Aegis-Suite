@@ -33,12 +33,12 @@ export default async function StatistichePage() {
     .eq('id', businessId)
     .single() as { data: { roi_data: Record<string, unknown> | null; business_type: string | null } | null };
 
-  // Fetch staff
+  // Fetch staff — FIXED: column is full_name, not display_name
   const { data: staffData } = await supabase
     .from('staff')
-    .select('id, display_name, color')
+    .select('id, full_name, color')
     .eq('business_id', businessId)
-    .eq('is_active', true) as { data: Array<{ id: string; display_name: string; color: string }> | null };
+    .eq('is_active', true) as { data: Array<{ id: string; full_name: string; color: string }> | null };
 
   // Fetch services
   const { data: servicesData } = await supabase
@@ -50,7 +50,7 @@ export default async function StatistichePage() {
     <StatisticheContent
       businessId={businessId}
       businessType={business?.business_type || 'mixed'}
-      staff={staffData || []}
+      staff={(staffData || []).map(s => ({ id: s.id, display_name: s.full_name, color: s.color }))}
       services={servicesData || []}
       roiData={business?.roi_data || null}
     />

@@ -1,5 +1,5 @@
 // ============================================================================
-// AEGIS BEAUTY - STATISTICHE CONTENT
+// AEGIS BEAUTY - STATISTICHE CONTENT (FUTURISTIC EDITION)
 // File: apps/aegis-beauty/app/(dashboard)/dashboard/statistiche/StatisticheContent.tsx
 // ============================================================================
 
@@ -7,7 +7,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  PageHeader,
   StatsPage,
   type KPICard,
   type ChartDataPoint,
@@ -17,6 +16,9 @@ import {
   type InsightItem,
   type PeriodFilter,
   type ROIStats,
+  type RetentionData,
+  type DayRevenueData,
+  type HeatmapCell,
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
 import {
@@ -115,84 +117,174 @@ function getMonthLabel(date: string): string {
   return new Date(date).toLocaleDateString('it-IT', { month: 'short' });
 }
 
+const DAY_LABELS_FULL = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+const DAY_LABELS_RADAR = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
 // ============================================================================
-// INSIGHTS GENERATOR
+// ENHANCED INSIGHTS GENERATOR
 // ============================================================================
 
 function generateInsights(
   appointments: AppointmentRow[],
   appointmentServices: AppointmentServiceRow[],
   staff: Array<{ id: string; display_name: string }>,
+  prevAppointments: AppointmentRow[],
+  prevServices: AppointmentServiceRow[],
 ): InsightItem[] {
   const insights: InsightItem[] = [];
   const completed = appointments.filter(a => a.status === 'completed');
   const noShows = appointments.filter(a => a.status === 'no_show');
   const cancelled = appointments.filter(a => a.status === 'cancelled');
+  const prevCompleted = prevAppointments.filter(a => a.status === 'completed');
 
-  if (completed.length === 0) return [{ text: 'Quando ci saranno dati sufficienti, Aegis AI genererà insights predittivi sulla tua attività.', type: 'neutral' as const }];
+  if (completed.length === 0 && appointments.length === 0) {
+    return [{ text: 'Quando ci saranno dati sufficienti, Aegis AI genererà insights predittivi sulla tua attività.', type: 'neutral' as const }];
+  }
 
-  const dayLabels = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+  // ===== 1. Revenue forecast (moving average 3 months) =====
+  const curRevenue = appointmentServices
+    .filter(s => completed.some(a => a.id === s.appointment_id))
+    .reduce((sum, s) => sum + s.price, 0);
+  const prevRevenue = prevServices
+    .filter(s => prevCompleted.some(a => a.id === s.appointment_id))
+    .reduce((sum, s) => sum + s.price, 0);
 
-  // Best day of week
-  const dayRevenue: Record<number, number> = {};
-  completed.forEach(a => {
-    const day = new Date(a.start_time).getDay();
-    const services = appointmentServices.filter(s => s.appointment_id === a.id);
-    dayRevenue[day] = (dayRevenue[day] || 0) + services.reduce((sum, s) => sum + s.price, 0);
+  if (curRevenue > 0 && prevRevenue > 0) {
+    const avgRevenue = Math.round((curRevenue + prevRevenue) / 2);
+    const trend = curRevenue > prevRevenue ? 'in crescita' : 'stabile';
+    insights.push({
+      text: `Previsione entrate prossimo mese: ~€${avgRevenue.toLocaleString('it-IT')} (trend ${trend} basato sulla media mobile).`,
+      type: curRevenue >= prevRevenue ? 'positive' : 'neutral',
+    });
+  }
+
+  // ===== 2. Clients at risk (no booking >30 days) =====
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const recentCustomerIds = new Set(
+    appointments
+      .filter(a => a.customer_id && new Date(a.start_time) >= thirtyDaysAgo)
+      .map(a => a.customer_id)
+  );
+  const allCustomerIds = new Set(
+    appointments.filter(a => a.customer_id).map(a => a.customer_id)
+  );
+  const atRiskCount = [...allCustomerIds].filter(id => !recentCustomerIds.has(id)).length;
+  if (atRiskCount > 0) {
+    insights.push({
+      text: `${atRiskCount} client${atRiskCount === 1 ? 'e' : 'i'} a rischio abbandono (nessuna prenotazione negli ultimi 30 giorni). Valuta un messaggio di riattivazione.`,
+      type: 'warning',
+    });
+  }
+
+  // ===== 3. Underutilized time slot =====
+  const hourCount: Record<number, number> = {};
+  appointments.forEach(a => {
+    const h = new Date(a.start_time).getHours();
+    hourCount[h] = (hourCount[h] || 0) + 1;
   });
-  const totalRevenue = Object.values(dayRevenue).reduce((a, b) => a + b, 0);
-  const bestDay = Object.entries(dayRevenue).sort(([, a], [, b]) => b - a)[0];
-  if (bestDay && totalRevenue > 0) {
-    const pct = Math.round((bestDay[1] / totalRevenue) * 100);
-    insights.push({ text: `${dayLabels[parseInt(bestDay[0])]} genera il ${pct}% delle entrate del periodo.`, type: 'positive' });
-  }
-
-  // Top service
-  const serviceCount: Record<string, number> = {};
-  appointmentServices.forEach(s => { serviceCount[s.service_name] = (serviceCount[s.service_name] || 0) + 1; });
-  const topService = Object.entries(serviceCount).sort(([, a], [, b]) => b - a)[0];
-  if (topService) {
-    insights.push({ text: `"${topService[0]}" è il servizio più richiesto con ${topService[1]} prenotazioni.`, type: 'positive' });
-  }
-
-  // No-show rate
-  if (noShows.length > 0 && appointments.length > 0) {
-    const noShowRate = Math.round((noShows.length / appointments.length) * 100);
-    const noShowByDay: Record<number, number> = {};
-    noShows.forEach(a => { const d = new Date(a.start_time).getDay(); noShowByDay[d] = (noShowByDay[d] || 0) + 1; });
-    const worstDay = Object.entries(noShowByDay).sort(([, a], [, b]) => b - a)[0];
-    if (worstDay && noShowRate > 5) {
-      insights.push({ text: `${noShowRate}% di no-show, concentrati di ${dayLabels[parseInt(worstDay[0])].toLowerCase()}.`, type: 'warning' });
-    } else if (noShowRate <= 5) {
-      insights.push({ text: `Tasso di no-show al ${noShowRate}%, ottimo risultato!`, type: 'positive' });
+  const hours = Object.entries(hourCount).sort(([, a], [, b]) => a - b);
+  const peakHours = Object.entries(hourCount).sort(([, a], [, b]) => b - a);
+  if (hours.length >= 3) {
+    const leastUsed = hours[0];
+    const mostUsed = peakHours[0];
+    if (parseInt(leastUsed[0]) >= 8 && parseInt(leastUsed[0]) <= 19) {
+      insights.push({
+        text: `La fascia ${leastUsed[0]}:00 è sotto-utilizzata (${leastUsed[1]} app.) vs il picco delle ${mostUsed[0]}:00 (${mostUsed[1]}). Ideale per promozioni mirate.`,
+        type: 'neutral',
+      });
     }
   }
 
-  // Best staff
+  // ===== 4. Average ticket comparison =====
+  if (completed.length > 0) {
+    const avgTicket = curRevenue / completed.length;
+    const prevAvgTicket = prevCompleted.length > 0 ? prevRevenue / prevCompleted.length : 0;
+    if (prevAvgTicket > 0) {
+      const change = ((avgTicket - prevAvgTicket) / prevAvgTicket) * 100;
+      if (change > 5) {
+        insights.push({
+          text: `Ticket medio a €${avgTicket.toFixed(0)} (+${change.toFixed(0)}% vs periodo precedente). Ottimo lavoro sull'upselling!`,
+          type: 'positive',
+        });
+      } else if (change < -5) {
+        insights.push({
+          text: `Ticket medio in calo a €${avgTicket.toFixed(0)} (${change.toFixed(0)}%). Valuta servizi aggiuntivi o ritocco prezzi.`,
+          type: 'warning',
+        });
+      } else {
+        insights.push({
+          text: `Ticket medio stabile a €${avgTicket.toFixed(0)}. Potrebbe essere il momento di proporre servizi premium.`,
+          type: 'neutral',
+        });
+      }
+    }
+  }
+
+  // ===== 5. Weak day suggestion =====
+  const dayRevenue: Record<number, number> = {};
+  completed.forEach(a => {
+    const day = new Date(a.start_time).getDay();
+    const rev = appointmentServices
+      .filter(s => s.appointment_id === a.id)
+      .reduce((sum, s) => sum + s.price, 0);
+    dayRevenue[day] = (dayRevenue[day] || 0) + rev;
+  });
+  const dayEntries = Object.entries(dayRevenue).sort(([, a], [, b]) => a - b);
+  if (dayEntries.length >= 3) {
+    const weakDay = dayEntries[0];
+    const strongDay = dayEntries[dayEntries.length - 1];
+    const weakDayName = DAY_LABELS_FULL[parseInt(weakDay[0])];
+    const strongDayName = DAY_LABELS_FULL[parseInt(strongDay[0])];
+    insights.push({
+      text: `${weakDayName} è il giorno più debole (€${parseInt(weakDay[1] as unknown as string).toLocaleString('it-IT')}). Prova promozioni dedicate, come "${weakDayName} Special" per riempire l'agenda.`,
+      type: 'warning',
+    });
+  }
+
+  // ===== 6. Best staff (keep original) =====
   if (staff.length > 1) {
     const staffRev: Record<string, number> = {};
     completed.forEach(a => {
       if (!a.staff_id) return;
-      staffRev[a.staff_id] = (staffRev[a.staff_id] || 0) + appointmentServices.filter(s => s.appointment_id === a.id).reduce((sum, s) => sum + s.price, 0);
+      staffRev[a.staff_id] = (staffRev[a.staff_id] || 0) +
+        appointmentServices.filter(s => s.appointment_id === a.id).reduce((sum, s) => sum + s.price, 0);
     });
     const bestId = Object.entries(staffRev).sort(([, a], [, b]) => b - a)[0]?.[0];
     const bestMember = staff.find(s => s.id === bestId);
-    if (bestMember) insights.push({ text: `${bestMember.display_name} è l'operatore con le entrate più alte nel periodo.`, type: 'neutral' });
+    if (bestMember) {
+      insights.push({ text: `${bestMember.display_name} è l'operatore con le entrate più alte nel periodo.`, type: 'neutral' });
+    }
   }
 
-  // Peak hour
-  const hourCount: Record<number, number> = {};
-  completed.forEach(a => { const h = new Date(a.start_time).getHours(); hourCount[h] = (hourCount[h] || 0) + 1; });
-  const peakHour = Object.entries(hourCount).sort(([, a], [, b]) => b - a)[0];
-  if (peakHour) insights.push({ text: `La fascia oraria più attiva è alle ${peakHour[0]}:00 con ${peakHour[1]} appuntamenti.`, type: 'neutral' });
+  // ===== 7. No-show rate =====
+  if (noShows.length > 0 && appointments.length > 0) {
+    const noShowRate = Math.round((noShows.length / appointments.length) * 100);
+    if (noShowRate > 5) {
+      insights.push({
+        text: `Tasso di no-show al ${noShowRate}%. Considera di richiedere un anticipo o conferma obbligatoria.`,
+        type: 'warning',
+      });
+    } else {
+      insights.push({
+        text: `Tasso di no-show solo al ${noShowRate}%, ottimo risultato!`,
+        type: 'positive',
+      });
+    }
+  }
 
-  // Cancellation
-  if (cancelled.length > 0) {
+  // ===== 8. Cancellation rate =====
+  if (cancelled.length > 0 && appointments.length > 0) {
     const cancelRate = Math.round((cancelled.length / appointments.length) * 100);
-    if (cancelRate > 10) insights.push({ text: `${cancelRate}% di cancellazioni. Considera di richiedere un anticipo o conferma.`, type: 'warning' });
+    if (cancelRate > 10) {
+      insights.push({
+        text: `${cancelRate}% di cancellazioni nel periodo. Una policy di cancellazione più strutturata potrebbe aiutare.`,
+        type: 'warning',
+      });
+    }
   }
 
-  return insights.slice(0, 5);
+  return insights.slice(0, 8);
 }
 
 // ============================================================================
@@ -229,6 +321,10 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
   const [popularHoursData, setPopularHoursData] = useState<PopularHour[]>([]);
   const [staffPerfData, setStaffPerfData] = useState<StaffPerformance[]>([]);
   const [insights, setInsights] = useState<InsightItem[]>([]);
+  // NEW state
+  const [retention, setRetention] = useState<RetentionData | null>(null);
+  const [dayRevenue, setDayRevenue] = useState<DayRevenueData[]>([]);
+  const [heatmapData, setHeatmapData] = useState<HeatmapCell[]>([]);
 
   const supabase = createClient();
   const roi = useMemo(() => parseROI(roiData), [roiData]);
@@ -332,7 +428,7 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
     });
     setTopServicesData(Object.entries(serviceStats).sort(([, a], [, b]) => b.revenue - a.revenue).slice(0, 5).map(([name, data]) => ({ name, count: data.count, revenue: data.revenue })));
 
-    // Popular Hours
+    // Popular Hours (kept as fallback)
     const hourStats: Record<number, number> = {};
     current.forEach(a => { const h = new Date(a.start_time).getHours(); hourStats[h] = (hourStats[h] || 0) + 1; });
     setPopularHoursData(Object.entries(hourStats).sort(([a], [b]) => parseInt(a) - parseInt(b)).map(([hour, count]) => ({ hour: `${hour}:00`, count })));
@@ -345,10 +441,67 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       staffStats[a.staff_id].appointments++;
       staffStats[a.staff_id].revenue += currentServices.filter(s => s.appointment_id === a.id).reduce((sum, s) => sum + s.price, 0);
     });
-    setStaffPerfData(staff.filter(s => staffStats[s.id]).map(s => ({ name: s.display_name, color: s.color, appointments: staffStats[s.id]?.appointments || 0, revenue: staffStats[s.id]?.revenue || 0 })).sort((a, b) => b.revenue - a.revenue));
+    setStaffPerfData(staff.map(s => ({ name: s.display_name, color: s.color, appointments: staffStats[s.id]?.appointments || 0, revenue: staffStats[s.id]?.revenue || 0 })).sort((a, b) => b.revenue - a.revenue));
 
-    // Insights
-    setInsights(generateInsights(current, currentServices, staff));
+    // ===== NEW: Retention Data =====
+    const allCustomerIds = current.filter(a => a.customer_id).map(a => a.customer_id!);
+    const uniqueCustomerIds = [...new Set(allCustomerIds)];
+    // Count how many had previous appointments (before this period)
+    const prevCustomerIds = new Set(prev.filter(a => a.customer_id).map(a => a.customer_id!));
+    // A "returning" customer is one who also appeared in previous period
+    const returningCount = uniqueCustomerIds.filter(id => prevCustomerIds.has(id)).length;
+    const newCount = uniqueCustomerIds.length - returningCount;
+    const returningPct = uniqueCustomerIds.length > 0 ? (returningCount / uniqueCustomerIds.length) * 100 : 0;
+    setRetention({ returning: returningCount, new: newCount, returningPct });
+
+    // ===== NEW: Day Revenue for Radar =====
+    // Use JS getDay() but remap to Mon=0...Sun=6 for Italian week
+    const dayRevenueMap: Record<number, { revenue: number; appointments: number }> = {};
+    for (let i = 0; i < 7; i++) dayRevenueMap[i] = { revenue: 0, appointments: 0 };
+
+    completed.forEach(a => {
+      const jsDay = new Date(a.start_time).getDay(); // 0=Sun
+      const mappedDay = jsDay === 0 ? 6 : jsDay - 1; // 0=Mon...6=Sun
+      dayRevenueMap[mappedDay].appointments++;
+      dayRevenueMap[mappedDay].revenue += currentServices
+        .filter(s => s.appointment_id === a.id)
+        .reduce((sum, s) => sum + s.price, 0);
+    });
+
+    setDayRevenue(
+      DAY_LABELS_RADAR.map((label, idx) => ({
+        day: label,
+        revenue: Math.round(dayRevenueMap[idx].revenue),
+        appointments: dayRevenueMap[idx].appointments,
+      }))
+    );
+
+    // ===== NEW: Heatmap Data (day × hour) =====
+    const heatmap: HeatmapCell[] = [];
+    current.forEach(a => {
+      const jsDay = new Date(a.start_time).getDay();
+      const mappedDay = jsDay === 0 ? 6 : jsDay - 1;
+      const hour = new Date(a.start_time).getHours();
+      const existing = heatmap.find(c => c.day === mappedDay && c.hour === hour);
+      if (existing) {
+        existing.count++;
+      } else {
+        heatmap.push({ day: mappedDay, hour, count: 1 });
+      }
+    });
+    // Fill missing cells with 0
+    const allHours = [...new Set(heatmap.map(h => h.hour))].sort((a, b) => a - b);
+    for (let d = 0; d < 7; d++) {
+      for (const h of allHours) {
+        if (!heatmap.find(c => c.day === d && c.hour === h)) {
+          heatmap.push({ day: d, hour: h, count: 0 });
+        }
+      }
+    }
+    setHeatmapData(heatmap);
+
+    // Enhanced Insights (now with prev data)
+    setInsights(generateInsights(current, currentServices, staff, prev, prevServices));
     setLoading(false);
   }, [businessId, staff, supabase]);
 
@@ -362,6 +515,8 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       ...topServicesData.map(s => [s.name, s.count.toString(), `€${s.revenue}`]),
       [], ['Staff', 'Appuntamenti', 'Entrate'],
       ...staffPerfData.map(s => [s.name, s.appointments.toString(), `€${s.revenue}`]),
+      [], ['Tasso ritorno clienti'],
+      ...(retention ? [['Ricorrenti', String(retention.returning)], ['Nuovi', String(retention.new)], ['% Ritorno', `${retention.returningPct.toFixed(1)}%`]] : []),
     ];
     const csv = '\uFEFF' + rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -375,11 +530,7 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
 
   return (
     <div className="min-h-[calc(100vh-7rem)]">
-      <PageHeader
-        title="Statistiche"
-        description="Analisi completa delle performance del tuo salone"
-      />
-      <div className="mt-6 pb-8">
+      <div className="pb-8">
         <StatsPage
           kpis={kpis}
           revenueChart={revenueChart}
@@ -394,6 +545,9 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
           onPeriodChange={setPeriod}
           onExport={handleExport}
           loading={loading}
+          retention={retention}
+          dayRevenue={dayRevenue}
+          heatmapData={heatmapData}
         />
       </div>
     </div>
