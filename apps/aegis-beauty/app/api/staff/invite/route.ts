@@ -7,21 +7,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // ============================================================================
-// SUPABASE ADMIN CLIENT
-// ============================================================================
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
-
-// ============================================================================
 // POST - SEND STAFF INVITE
 // ============================================================================
 
 export async function POST(request: NextRequest) {
   try {
+    // Instantiate inside the handler so env vars are read at runtime, not build time
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
     const body = await request.json();
     const { staffId, email, fullName, phone, businessId, businessSlug, role } = body;
 
