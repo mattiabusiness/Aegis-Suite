@@ -33,12 +33,12 @@ export default async function StatistichePage() {
     .eq('id', businessId)
     .single() as { data: { roi_data: Record<string, unknown> | null; business_type: string | null } | null };
 
-  // Fetch staff — FIXED: column is full_name, not display_name
+  // Fetch staff — include email to detect incomplete profiles (no email = incompleto)
   const { data: staffData } = await supabase
     .from('staff')
-    .select('id, full_name, color')
+    .select('id, full_name, color, email')
     .eq('business_id', businessId)
-    .eq('is_active', true) as { data: Array<{ id: string; full_name: string; color: string }> | null };
+    .eq('is_active', true) as { data: Array<{ id: string; full_name: string; color: string; email: string | null }> | null };
 
   // Fetch services
   const { data: servicesData } = await supabase
@@ -50,7 +50,7 @@ export default async function StatistichePage() {
     <StatisticheContent
       businessId={businessId}
       businessType={business?.business_type || 'mixed'}
-      staff={(staffData || []).map(s => ({ id: s.id, display_name: s.full_name, color: s.color }))}
+      staff={(staffData || []).map(s => ({ id: s.id, display_name: s.full_name, color: s.color, hasEmail: !!s.email }))}
       services={servicesData || []}
       roiData={business?.roi_data || null}
     />

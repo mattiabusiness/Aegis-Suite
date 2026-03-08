@@ -37,11 +37,11 @@ import { useContentTheme } from './ContentTheme';
 
 export type PeriodFilter = 'today' | 'week' | 'month' | '3months' | 'year' | 'custom';
 
-export interface KPICard { label: string; value: string; change?: number; icon: LucideIcon; color: string; }
+export interface KPICard { label: string; value: string; change?: number; icon: LucideIcon; color: string; gradient?: string; }
 export interface ChartDataPoint { label: string; value: number; value2?: number; }
 export interface TopService { name: string; count: number; revenue: number; }
 export interface PopularHour { hour: string; count: number; }
-export interface StaffPerformance { name: string; color: string; appointments: number; revenue: number; }
+export interface StaffPerformance { name: string; color: string; appointments: number; revenue: number; isIncomplete?: boolean; }
 export interface InsightItem { text: string; type: 'positive' | 'neutral' | 'warning'; }
 export interface ROIStats { hoursSavedMonthly: number; noShowsAvoided: number; monthlySavings: number; annualSavings: number; dailyPhoneTime?: number; monthlyNoShows?: number; }
 export interface RetentionData { returning: number; new: number; returningPct: number; }
@@ -162,31 +162,67 @@ function HoloChartWrap({ children }: { children: React.ReactNode }) {
 // ============================================================================
 
 function KPICardComponent({ card, comparisonLabel }: { card: KPICard; comparisonLabel: string }) {
-  const Icon = card.icon;
   const isPos = (card.change ?? 0) >= 0;
   const [tip, setTip] = React.useState(false);
-  const [m, setM] = React.useState(false);
-  React.useEffect(() => { const t = setTimeout(() => setM(true), 50); return () => clearTimeout(t); }, []);
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl p-4 bg-white/80 backdrop-blur-sm border border-gray-200/60 hover:shadow-[0_8px_30px_-5px_rgba(147,51,234,0.15)] hover:border-purple-200/60 hover:-translate-y-1 transition-all duration-500 ease-out transform ${m ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}`} style={{ transitionDelay: '50ms' }}>
-      <div className="flex items-start justify-between">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${card.color} shadow-sm`}><Icon className="w-5 h-5" /></div>
-        {card.change !== undefined && (
+    <div
+      className="relative overflow-hidden cursor-default"
+      style={{
+        background: '#fff',
+        border: '1px solid rgba(0,0,0,0.04)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.02)',
+        borderRadius: 16,
+        padding: '1.25rem',
+        transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-6px)';
+        e.currentTarget.style.boxShadow = '0 16px 40px rgba(0,0,0,0.08), 0 8px 24px rgba(147,51,234,0.15)';
+        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.02)';
+        e.currentTarget.style.borderColor = 'rgba(0,0,0,0.04)';
+      }}
+    >
+      {/* Blob colorato top-right */}
+      <div
+        className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-[0.07]"
+        style={{ background: card.gradient || 'linear-gradient(135deg, #9333ea, #7c3aed)' }}
+      />
+
+      {/* Top row: badge % sinistra + colored box destra */}
+      <div className="relative flex items-start justify-between mb-3">
+        {card.change !== undefined ? (
           <div className="flex items-center gap-1.5">
-            <div className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${isPos ? 'bg-emerald-50/90 text-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.15)]' : 'bg-red-50/90 text-red-600 shadow-[0_0_8px_rgba(239,68,68,0.15)]'}`}>
+            <div className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${isPos ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
               {isPos ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
               {Math.abs(card.change).toFixed(1)}%
             </div>
             <div className="relative" onMouseEnter={() => setTip(true)} onMouseLeave={() => setTip(false)}>
               <Info className="w-3.5 h-3.5 text-gray-300 hover:text-gray-500 cursor-help transition-colors" />
-              {tip && <div className="absolute right-0 top-full mt-1.5 z-50 whitespace-nowrap"><div className="bg-gradient-to-br from-purple-600 to-violet-600 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-[0_4px_15px_rgba(147,51,234,0.3)]">{comparisonLabel}</div></div>}
+              {tip && (
+                <div className="absolute left-0 top-full mt-1.5 z-50 whitespace-nowrap">
+                  <div className="bg-gradient-to-br from-purple-600 to-violet-600 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-[0_4px_15px_rgba(147,51,234,0.3)]">
+                    {comparisonLabel}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        ) : <div />}
+        {/* Colored box — identico a GlassStat */}
+        <div
+          className="w-11 h-11 rounded-xl flex-shrink-0"
+          style={{ background: card.gradient || 'linear-gradient(135deg, #9333ea, #7c3aed)', opacity: 0.12, borderRadius: 14 }}
+        />
       </div>
-      <p className="text-2xl font-bold text-gray-900 mt-3 tracking-tight">{card.value}</p>
-      <p className="text-sm text-gray-500 mt-0.5">{card.label}</p>
+
+      {/* Value + label */}
+      <p className="relative text-3xl font-bold text-gray-900 tracking-tight">{card.value}</p>
+      <p className="relative text-sm font-medium text-gray-500 mt-1">{card.label}</p>
     </div>
   );
 }
@@ -609,22 +645,50 @@ function StaffPerformanceSection({ staff, currency }: { staff: StaffPerformance[
       {staff.length === 0 ? (
         <div className="text-sm text-gray-400 text-center py-4">Nessun membro dello staff configurato</div>
       ) : (
-        <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-          {staff.map((s, idx) => (
-            <div key={s.name} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 backdrop-blur-sm border border-gray-200/50 hover:bg-white hover:border-purple-300 hover:-translate-y-0.5 transition-all duration-300 cursor-default">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: `linear-gradient(135deg, ${s.color || '#9333ea'}, ${s.color || '#9333ea'}aa)` }}>
-                {s.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900 truncate">{s.name}</p>
-                <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-xs text-gray-500">{s.appointments} app.</span>
-                  <span className="text-xs font-bold text-purple-600">{formatCurrency(s.revenue, currency)}</span>
+        <div
+          className="space-y-2 max-h-[320px] overflow-y-auto pt-1 pb-1 -mx-1 px-1"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.2) transparent' }}
+        >
+          {staff.map((s, idx) => {
+            const barColor = s.isIncomplete ? '#f59e0b' : '#22c55e';
+            return (
+              <div
+                key={s.name}
+                className="flex items-center gap-3 p-3 rounded-lg cursor-default"
+                style={{
+                  background: 'rgba(249,250,251,1)',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  transition: 'all 0.25s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(147,51,234,0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(147,51,234,0.2)';
+                  e.currentTarget.style.boxShadow = '0 0 0 1px rgba(168,85,247,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(249,250,251,1)';
+                  e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div className="w-0.5 h-8 rounded-full flex-shrink-0" style={{ background: barColor }} />
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                  style={{ background: `linear-gradient(135deg, ${s.color || '#9333ea'}, ${s.color || '#9333ea'}aa)` }}
+                >
+                  {s.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{s.name}</p>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <span className="text-xs text-gray-500">{s.appointments} app.</span>
+                    <span className="text-xs font-bold text-purple-600">{formatCurrency(s.revenue, currency)}</span>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-gray-300 flex-shrink-0">#{idx + 1}</span>
               </div>
-              <span className="text-xs font-bold text-gray-300 flex-shrink-0">#{idx + 1}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </HoloCard>
@@ -632,39 +696,116 @@ function StaffPerformanceSection({ staff, currency }: { staff: StaffPerformance[
 }
 
 // ============================================================================
-// AEGIS AI INSIGHTS — hover lift + glow per card
+// AEGIS AI INSIGHTS — redesign coinvolgente con header gradient + numbered
 // ============================================================================
 
 function AegisAIInsights({ insights }: { insights: InsightItem[] }) {
   return (
-    <HoloCard glowColor="#9333ea">
-      <div className="flex items-center gap-2.5 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-violet-600 flex items-center justify-center shadow-[0_0_12px_rgba(147,51,234,0.3)]"><Sparkles className="w-4 h-4 text-white" /></div>
-        <div><h3 className="text-base font-semibold text-gray-900">Aegis AI</h3><p className="text-xs text-gray-500">Insights predittivi sulla tua attività</p></div>
-      </div>
-      {insights.length === 0 ? (
-        <div className="text-center py-6"><Sparkles className="w-8 h-8 text-purple-200 mx-auto mb-2" /><p className="text-sm text-gray-400">I dati sono in analisi. Gli insights appariranno presto.</p></div>
-      ) : (
-        <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-          {insights.map((ins, i) => {
-            const isP = ins.type === 'positive', isW = ins.type === 'warning';
-            const gradientBg = isP
-              ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200/60 hover:shadow-[0_4px_15px_rgba(16,185,129,0.18)] hover:border-emerald-300/60'
-              : isW
-                ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200/60 hover:shadow-[0_4px_15px_rgba(245,158,11,0.18)] hover:border-amber-300/60'
-                : 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200/40 hover:shadow-[0_4px_15px_rgba(147,51,234,0.15)] hover:border-purple-300/50';
-            const Ic = isP ? TrendingUp : isW ? AlertTriangle : Lightbulb;
-            const ic = isP ? 'text-emerald-500' : isW ? 'text-amber-500' : 'text-purple-500';
-            return (
-              <div key={i} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all duration-300 cursor-default hover:-translate-y-0.5 ${gradientBg}`}>
-                <div className="mt-0.5 flex-shrink-0"><Ic className={`w-4 h-4 ${ic}`} /></div>
-                <p className="text-sm text-gray-700 leading-relaxed">{ins.text}</p>
+    <div
+      className="relative overflow-hidden rounded-2xl"
+      style={{
+        border: '1px solid rgba(147,51,234,0.12)',
+        background: '#fff',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.02)',
+      }}
+    >
+      {/* Header gradiente */}
+      <div
+        className="px-5 py-4"
+        style={{
+          background: 'linear-gradient(145deg, #3b0764 0%, #581c87 30%, #6b21a8 60%, #7c3aed 100%)',
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-white/15 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-4.5 h-4.5 text-white animate-pulse" style={{ width: 18, height: 18 }} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-white">Aegis AI</h3>
+                <span
+                  className="text-[10px] font-bold text-white px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.2)' }}
+                >
+                  BETA
+                </span>
               </div>
-            );
-          })}
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(216,180,254,0.8)' }}>
+                Insights predittivi sulla tua attività
+              </p>
+            </div>
+          </div>
+          {insights.length > 0 && (
+            <span
+              className="text-xs font-semibold px-2 py-1 rounded-lg"
+              style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.9)' }}
+            >
+              {insights.length} insight{insights.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
-      )}
-    </HoloCard>
+      </div>
+
+      {/* Body */}
+      <div className="px-4 pt-4 pb-3">
+        {insights.length === 0 ? (
+          <div className="text-center py-8">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
+              style={{ background: 'rgba(147,51,234,0.06)' }}
+            >
+              <Sparkles className="w-7 h-7" style={{ color: '#9333ea' }} />
+            </div>
+            <p className="text-sm font-medium text-gray-700">Analisi in corso</p>
+            <p className="text-xs text-gray-400 mt-1">Gli insights appariranno quando ci saranno dati sufficienti.</p>
+          </div>
+        ) : (
+          <div
+            className="space-y-2 max-h-[300px] overflow-y-auto pr-1"
+            style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.2) transparent' }}
+          >
+            {insights.map((ins, i) => {
+              const isP = ins.type === 'positive', isW = ins.type === 'warning';
+              const Ic = isP ? TrendingUp : isW ? AlertTriangle : Lightbulb;
+              const barColor = isP ? '#10b981' : isW ? '#f59e0b' : '#9333ea';
+              const bgColor = isP ? 'rgba(16,185,129,0.04)' : isW ? 'rgba(245,158,11,0.04)' : 'rgba(147,51,234,0.03)';
+              const borderColor = isP ? 'rgba(16,185,129,0.12)' : isW ? 'rgba(245,158,11,0.12)' : 'rgba(147,51,234,0.1)';
+              return (
+                <div
+                  key={i}
+                  className="flex items-start gap-3 p-3 rounded-xl cursor-default"
+                  style={{
+                    borderLeft: `2px solid ${barColor}`,
+                    background: bgColor,
+                    border: `1px solid ${borderColor}`,
+                    borderLeftColor: barColor,
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = barColor;
+                    e.currentTarget.style.boxShadow = `0 0 0 1px ${barColor}40`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = borderColor;
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <span
+                    className="text-[11px] font-bold flex-shrink-0 mt-0.5"
+                    style={{ color: barColor, minWidth: 20 }}
+                  >
+                    #{i + 1}
+                  </span>
+                  <Ic className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: barColor }} />
+                  <p className="text-sm text-gray-700 leading-relaxed">{ins.text}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -696,9 +837,29 @@ function ROISection({ roi, currency }: { roi: ROIStats; currency: string }) {
           ...(roi.dailyPhoneTime !== undefined ? [{ label: 'Tempo telefono/giorno (prima)', value: `${roi.dailyPhoneTime} min`, icon: CalendarClock }] : []),
           ...(roi.monthlyNoShows !== undefined ? [{ label: 'No-show/mese (prima)', value: String(roi.monthlyNoShows), icon: UserX }] : []),
         ].map((item, i) => (
-          <div key={i} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100/60 border border-transparent hover:border-gray-200/50 hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300 cursor-default">
-            <div className="flex items-center gap-2.5"><item.icon className="w-4 h-4 text-gray-400" /><span className="text-sm text-gray-600">{item.label}</span></div>
-            <span className="text-sm font-semibold text-gray-900">{item.value}</span>
+          <div
+            key={i}
+            className="flex items-center justify-between py-2.5 px-3 rounded-lg cursor-default"
+            style={{
+              background: 'rgba(249,250,251,1)',
+              border: '1px solid rgba(0,0,0,0.06)',
+              transition: 'all 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(147,51,234,0.04)';
+              e.currentTarget.style.borderColor = 'rgba(147,51,234,0.2)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(147,51,234,0.1)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(249,250,251,1)';
+              e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <div className="flex items-center gap-2.5"><item.icon className="w-4 h-4 text-gray-400" /><span className="text-sm text-gray-700">{item.label}</span></div>
+            <span className="text-sm font-bold text-purple-700">{item.value}</span>
           </div>
         ))}
       </div>

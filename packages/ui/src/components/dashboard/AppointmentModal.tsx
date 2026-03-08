@@ -872,9 +872,9 @@ export function AppointmentModal({
 
   // === DYNAMIC SLOT FETCHING ===
   React.useEffect(() => {
-    if (!isDynamicMode) return;
-    if (!formData.date || !formData.serviceId || !formData.staffId) return;
-    onSlotsNeeded(formData.date, formData.serviceId, formData.staffId);
+   if (!isDynamicMode) return;
+    if (!formData.date || !formData.serviceId) return;
+    onSlotsNeeded(formData.date, formData.serviceId, formData.staffId || null);
   }, [isDynamicMode, formData.date, formData.serviceId, formData.staffId, onSlotsNeeded]);
 
   React.useEffect(() => {

@@ -161,7 +161,7 @@ function CustomerRow({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100" style={{ transition: 'opacity 0.15s ease' }}>
+      <div className="flex items-center gap-1" style={{ transition: 'opacity 0.15s ease' }}>
         <button
           onClick={(e) => { e.stopPropagation(); onView(); }}
           className="p-2 rounded-lg"
@@ -244,19 +244,17 @@ export function CustomerList({
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none"
               style={{
-                background: 'rgba(255,255,255,0.7)',
+                background: 'rgba(0,0,0,0.02)',
                 border: '1px solid rgba(0,0,0,0.06)',
                 transition: 'all 0.15s ease',
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
                 e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.06)';
-                e.currentTarget.style.background = '#fff';
               }}
               onBlur={(e) => {
                 e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
                 e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
               }}
             />
           </div>

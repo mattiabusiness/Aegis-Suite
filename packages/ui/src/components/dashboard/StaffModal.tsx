@@ -588,7 +588,7 @@ export function StaffServicesModal({
                 placeholder="Cerca servizi..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none"
                 style={{
-                  background: 'rgba(255,255,255,0.7)',
+                  background: 'rgba(0,0,0,0.02)',
                   border: '1px solid rgba(0,0,0,0.06)',
                   borderRadius: 12,
                   transition: 'all 0.15s ease',
@@ -596,12 +596,10 @@ export function StaffServicesModal({
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
                   e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.06)';
-                  e.currentTarget.style.background = '#fff';
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
                   e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
                 }}
               />
             </div>

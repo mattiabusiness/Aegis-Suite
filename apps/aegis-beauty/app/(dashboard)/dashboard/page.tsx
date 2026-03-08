@@ -161,13 +161,66 @@ export default async function DashboardOverviewPage() {
       appointment_services: Array<{ service_name: string }>;
     }> | null };
 
+  // ============================================================================
+  // FETCH DATA FOR APPOINTMENT MODAL
+  // ============================================================================
+
+  // Fetch staff
+  const { data: staffList } = await supabase
+    .from('staff')
+    .select('id, full_name, color')
+    .eq('business_id', businessId)
+    .eq('is_active', true) as { data: Array<{ id: string; full_name: string; color: string | null }> | null };
+
+  // Fetch services
+  const { data: servicesList } = await supabase
+    .from('services')
+    .select('id, name, duration_minutes, price, category:service_categories(id, name)')
+    .eq('business_id', businessId)
+    .eq('is_active', true)
+    .order('name') as { data: Array<{ id: string; name: string; duration_minutes: number; price: number; category: { id: string; name: string } | null }> | null };
+
+  // Fetch staff_services
+  const { data: staffServices } = await supabase
+    .from('staff_services')
+    .select('staff_id, service_id')
+    .in('staff_id', (staffList || []).map(s => s.id)) as { data: Array<{ staff_id: string; service_id: string }> | null };
+
+  // Fetch business hours
+  const { data: businessHoursData } = await supabase
+    .from('business_hours')
+    .select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
+    .eq('business_id', businessId) as { data: Array<{ day_of_week: string; is_open: boolean; open_time_1: string | null; close_time_1: string | null; open_time_2: string | null; close_time_2: string | null }> | null };
+
+  // Fetch closures (single-date format for AppointmentModal)
+  const { data: closuresData } = await supabase
+    .from('business_closures')
+    .select('start_date, title')
+    .eq('business_id', businessId) as { data: Array<{ start_date: string; title: string }> | null };
+
+  // Fetch customers for appointment modal
+  const { data: customersList } = await supabase
+    .from('customers')
+    .select('id, full_name, email, phone')
+    .eq('business_id', businessId)
+    .order('full_name') as { data: Array<{ id: string; full_name: string; email: string | null; phone: string | null }> | null };
+
+  // Fetch categories for service modal
+  const { data: categoriesList } = await supabase
+    .from('service_categories')
+    .select('id, name')
+    .eq('business_id', businessId)
+    .eq('is_active', true)
+    .order('name') as { data: Array<{ id: string; name: string }> | null };
+
   return (
-    <OverviewContent 
-      stats={stats} 
+    <OverviewContent
+      stats={stats}
       roiData={null}
       businessName={(business as any)?.name || 'Il tuo salone'}
       businessSlug={(business as any)?.slug || ''}
       businessType={(business as any)?.business_type || 'mixed'}
+      businessId={businessId}
       todayAppointments={(todayAppointments || []).map(apt => ({
         id: apt.id,
         time: new Date(apt.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
@@ -178,6 +231,20 @@ export default async function DashboardOverviewPage() {
         serviceName: apt.appointment_services?.[0]?.service_name || 'Appuntamento',
         status: apt.status,
       }))}
+      customers={customersList || []}
+      services={(servicesList || []).map(s => ({
+        id: s.id,
+        name: s.name,
+        duration: s.duration_minutes,
+        price: s.price,
+        categoryId: s.category?.id,
+        categoryName: s.category?.name,
+      }))}
+      staff={staffList || []}
+      staffServices={staffServices || []}
+      businessHours={businessHoursData || []}
+      closures={(closuresData || []).map(c => ({ date: c.start_date, reason: c.title }))}
+      categories={categoriesList || []}
     />
   );
 }

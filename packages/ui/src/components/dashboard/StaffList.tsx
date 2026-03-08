@@ -250,10 +250,10 @@ function StaffCard({
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100"
-          style={{ color: 'rgba(0,0,0,0.3)', transition: 'all 0.15s ease' }}
+          className="p-1.5 rounded-lg"
+          style={{ color: 'rgba(0,0,0,0.25)', transition: 'all 0.15s ease' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = 'rgba(0,0,0,0.5)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.3)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.25)'; }}
         >
           <MoreVertical className="w-4 h-4" />
         </button>
@@ -365,19 +365,17 @@ export function StaffList({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none"
             style={{
-              background: 'rgba(255,255,255,0.7)',
+              background: 'rgba(0,0,0,0.02)',
               border: '1px solid rgba(0,0,0,0.06)',
               transition: 'all 0.15s ease',
             }}
             onFocus={(e) => {
               e.currentTarget.style.borderColor = 'rgba(168,85,247,0.3)';
               e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.06)';
-              e.currentTarget.style.background = '#fff';
             }}
             onBlur={(e) => {
               e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
               e.currentTarget.style.boxShadow = 'none';
-              e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
             }}
           />
         </div>

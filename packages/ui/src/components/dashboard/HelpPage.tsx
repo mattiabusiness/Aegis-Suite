@@ -123,6 +123,22 @@ function FAQAccordionItem({ item, isOpen, onToggle, delay }: {
         boxShadow: isOpen ? '0 8px 32px rgba(124,58,237,0.08), 0 2px 8px rgba(0,0,0,0.04)' : '0 1px 3px rgba(0,0,0,0.02)',
         animation: `hp-fadeUp 0.4s ease-out ${delay}ms both`,
       }}
+      onMouseEnter={(e) => {
+        if (!isOpen) {
+          e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)';
+          e.currentTarget.style.boxShadow = '0 8px 32px rgba(124,58,237,0.12), 0 4px 16px rgba(147,51,234,0.08)';
+          e.currentTarget.style.transform = 'translateY(-3px)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isOpen) {
+          e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)';
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
+        }
+      }}
     >
       <button onClick={onToggle} className="w-full flex items-center gap-3 px-4 py-3.5 text-left outline-none">
         <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300" style={{
@@ -160,14 +176,16 @@ function GuideCard({ guide, onClick, delay }: { guide: GuideItem; onClick: () =>
         border: '1.5px solid rgba(0,0,0,0.06)', animation: `hp-fadeUp 0.4s ease-out ${delay}ms both`,
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)';
-        e.currentTarget.style.boxShadow = '0 8px 32px rgba(124,58,237,0.08)';
-        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)';
+        e.currentTarget.style.boxShadow = '0 8px 32px rgba(124,58,237,0.12), 0 4px 16px rgba(147,51,234,0.08)';
+        e.currentTarget.style.transform = 'translateY(-3px)';
+        e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
-        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)';
         e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
       }}
     >
       <div className="flex items-start gap-3">
@@ -292,6 +310,51 @@ function GuideModal({ guide, isOpen, onClose }: {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Button */}
+        <div className="px-6 pb-6">
+          <button
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              const container = e.currentTarget.querySelector('[data-ripple-guide]');
+              if (container) {
+                const span = document.createElement('span');
+                Object.assign(span.style, {
+                  position: 'absolute', left: `${x - 50}px`, top: `${y - 50}px`,
+                  width: '100px', height: '100px', borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.35)',
+                  animation: 'hp-ripple 0.6s ease-out forwards', pointerEvents: 'none',
+                });
+                container.appendChild(span);
+                setTimeout(() => span.remove(), 600);
+              }
+              handleClose();
+            }}
+            className="relative w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+              boxShadow: '0 2px 8px rgba(147,51,234,0.25)',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.25)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+              animation: 'hp-shimmer 2.5s ease-in-out infinite',
+            }} />
+            <div data-ripple-guide="" className="absolute inset-0 pointer-events-none" />
+            <span className="relative z-10">Ho capito, grazie!</span>
+          </button>
         </div>
 
         {/* Bottom line */}
@@ -611,10 +674,11 @@ export function HelpPage({
 
         {/* Right: Support */}
         <div className="lg:col-span-1">
-          <div className="sticky top-6">
-            <div className="rounded-2xl overflow-hidden" style={{
+          <div className="sticky" style={{ top: '4.5rem', maxHeight: 'calc(100vh - 6rem)', display: 'flex', flexDirection: 'column' }}>
+            <div className="rounded-2xl overflow-hidden flex-1" style={{
               background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)',
               border: '1.5px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
+              overflowY: 'auto', scrollbarWidth: 'none',
               animation: 'hp-fadeUp 0.4s ease-out 100ms both',
             }}>
               <div className="px-5 pt-5 pb-3">

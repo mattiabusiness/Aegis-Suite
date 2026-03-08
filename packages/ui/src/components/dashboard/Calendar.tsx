@@ -343,20 +343,18 @@ function EventBlock({ event, style: posStyle, onClick, showTime = true }: {
       className="absolute z-30 overflow-visible rounded-lg cursor-pointer"
       style={{
         ...posStyle,
-        transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+        transition: 'box-shadow 0.15s ease',
       }}
       onClick={(e) => { e.stopPropagation(); onClick?.(event); }}
       onMouseEnter={(e) => {
         updateTipPos();
         setHovered(true);
-        e.currentTarget.style.boxShadow = `0 4px 16px ${colors.border}`;
-        e.currentTarget.style.transform = 'scale(1.03)';
+        e.currentTarget.style.boxShadow = `0 2px 8px ${colors.border}`;
         e.currentTarget.style.zIndex = '50';
       }}
       onMouseLeave={(e) => {
         setHovered(false);
         e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.transform = 'scale(1)';
         e.currentTarget.style.zIndex = '30';
       }}
     >
@@ -388,7 +386,7 @@ function EventBlock({ event, style: posStyle, onClick, showTime = true }: {
             <p className="opacity-90">{formatTimeShort(new Date(event.startTime))} - {formatTimeShort(new Date(event.endTime))}</p>
             {event.staffName && <p className="opacity-80">{event.staffName}</p>}
             <p className="mt-0.5 text-[9px] font-semibold opacity-90">{getStatusLabel(event.status)}</p>
-            <div style={{ width: 6, height: 6, background: colors.tooltipBg.includes('#059669') ? '#059669' : colors.tooltipBg.includes('#6b7280') ? '#6b7280' : '#7c3aed', position: 'absolute', bottom: -3, left: '50%', marginLeft: -3, transform: 'rotate(45deg)' }} />
+            <div style={{ width: 6, height: 6, background: colors.tooltipBg.includes('#059669') ? '#059669' : colors.tooltipBg.includes('#6b7280') ? '#6b7280' : '#7c3aed', position: 'absolute', bottom: -2, left: '50%', marginLeft: -3, transform: 'rotate(45deg)' }} />
           </div>
         </div>,
         document.body
@@ -887,7 +885,7 @@ function MonthEventPill({ event, onClick }: { event: CalendarEventData; onClick?
             {event.customerName && <p className="opacity-85">{event.customerName}</p>}
             {event.staffName && <p className="opacity-80">{event.staffName}</p>}
             <p className="text-[8px] font-semibold opacity-90 mt-0.5">{getStatusLabel(event.status)}</p>
-            <div style={{ width: 5, height: 5, background: arrowColor, position: 'absolute', bottom: -2.5, left: '50%', marginLeft: -2.5, transform: 'rotate(45deg)' }} />
+            <div style={{ width: 5, height: 5, background: arrowColor, position: 'absolute', bottom: -1.5, left: '50%', marginLeft: -2.5, transform: 'rotate(45deg)' }} />
           </div>
         </div>,
         document.body
@@ -1052,7 +1050,7 @@ export function Calendar({
         backdropFilter: 'blur(8px)',
         borderRadius: 16,
         border: '1.5px solid rgba(168,85,247,0.15)',
-        boxShadow: '0 4px 32px rgba(0,0,0,0.04), 0 0 24px rgba(147,51,234,0.08), 0 0 0 1px rgba(168,85,247,0.06)',
+        boxShadow: 'none',
         overflow: 'hidden',
       }}
     >

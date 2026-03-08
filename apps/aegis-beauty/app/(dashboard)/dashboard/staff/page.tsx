@@ -92,15 +92,9 @@ export default async function StaffPage() {
       }> | null;
     };
 
-  // Map staff with empty services count
-  const staffWithServices = (staff || []).map(s => ({
-    ...s,
-    staff_services: [] as { service_id: string }[],
-  }));
-
   return (
     <StaffContent
-      initialStaff={staffWithServices}
+      initialStaff={staff || []}
       initialServices={services || []}
       initialBusinessHours={businessHours || []}
       businessId={businessId}

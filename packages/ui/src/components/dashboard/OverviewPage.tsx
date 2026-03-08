@@ -85,9 +85,9 @@ function GlassStat({ stat, delay }: { stat: OverviewStat; delay: number }) {
         transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-3px)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.06), 0 12px 40px rgba(147,51,234,0.08)';
-        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)';
+        e.currentTarget.style.transform = 'translateY(-6px)';
+        e.currentTarget.style.boxShadow = '0 16px 40px rgba(0,0,0,0.08), 0 8px 24px rgba(147,51,234,0.15)';
+        e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
@@ -247,7 +247,7 @@ function QuickLinkCard({ slug, onQrClick }: { slug: string; onQrClick: () => voi
       <div
         className="px-5 py-4"
         style={{
-          background: 'linear-gradient(135deg, rgba(59,7,100,0.95), rgba(107,33,168,0.95))',
+          background: 'linear-gradient(145deg, #3b0764 0%, #581c87 30%, #6b21a8 60%, #7c3aed 100%)',
         }}
       >
         <div className="flex items-center gap-2">
@@ -326,7 +326,7 @@ export function OverviewPage({
   const fullUrl = businessUrl || (businessSlug ? `https://aegisbeauty.aegis.app/${businessSlug}` : '');
 
   return (
-    <div className={`max-w-6xl ${className}`}>
+    <div className={`w-full ${className}`}>
       {/* ═══ Greeting ═══ */}
       <div
         className="mb-8"
@@ -400,12 +400,12 @@ export function OverviewPage({
       {/* ═══ Keyframes ═══ */}
       <style>{`
         @keyframes ov-fade-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         @keyframes ov-card-in {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
     </div>

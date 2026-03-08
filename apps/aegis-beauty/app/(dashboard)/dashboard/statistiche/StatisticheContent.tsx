@@ -35,7 +35,7 @@ import {
 interface StatisticheContentProps {
   businessId: string;
   businessType: string;
-  staff: Array<{ id: string; display_name: string; color: string }>;
+  staff: Array<{ id: string; display_name: string; color: string; hasEmail?: boolean }>;
   services: Array<{ id: string; name: string; price: number }>;
   roiData: Record<string, unknown> | null;
 }
@@ -389,10 +389,10 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
     const calcChange = (cur: number, prv: number) => prv > 0 ? ((cur - prv) / prv) * 100 : cur > 0 ? 100 : 0;
 
     setKpis([
-      { label: 'Entrate totali', value: `€ ${curRevenue.toLocaleString('it-IT')}`, change: calcChange(curRevenue, prevRevenue), icon: Euro, color: 'bg-purple-100 text-purple-600' },
-      { label: 'Appuntamenti', value: current.length.toString(), change: calcChange(current.length, prev.length), icon: Calendar, color: 'bg-blue-100 text-blue-600' },
-      { label: 'Clienti unici', value: curCustomers.toString(), change: calcChange(curCustomers, prevCustomers), icon: Users, color: 'bg-emerald-100 text-emerald-600' },
-      { label: 'No-show', value: `${noShowRate.toFixed(1)}%`, change: prevNoShowRate > 0 ? -(calcChange(noShowRate, prevNoShowRate)) : undefined, icon: UserX, color: 'bg-red-100 text-red-600' },
+      { label: 'Entrate totali', value: `€ ${curRevenue.toLocaleString('it-IT')}`, change: calcChange(curRevenue, prevRevenue), icon: Euro, color: 'bg-purple-100 text-purple-600', gradient: 'linear-gradient(135deg, #9333ea, #7c3aed)' },
+      { label: 'Appuntamenti', value: current.length.toString(), change: calcChange(current.length, prev.length), icon: Calendar, color: 'bg-blue-100 text-blue-600', gradient: 'linear-gradient(135deg, #1e3a8a, #1e40af)' },
+      { label: 'Clienti unici', value: curCustomers.toString(), change: calcChange(curCustomers, prevCustomers), icon: Users, color: 'bg-emerald-100 text-emerald-600', gradient: 'linear-gradient(135deg, #10b981, #059669)' },
+      { label: 'No-show', value: `${noShowRate.toFixed(1)}%`, change: prevNoShowRate > 0 ? -(calcChange(noShowRate, prevNoShowRate)) : undefined, icon: UserX, color: 'bg-red-100 text-red-600', gradient: 'linear-gradient(135deg, #b91c1c, #7f1d1d)' },
     ]);
 
     // Charts
@@ -441,7 +441,7 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       staffStats[a.staff_id].appointments++;
       staffStats[a.staff_id].revenue += currentServices.filter(s => s.appointment_id === a.id).reduce((sum, s) => sum + s.price, 0);
     });
-    setStaffPerfData(staff.map(s => ({ name: s.display_name, color: s.color, appointments: staffStats[s.id]?.appointments || 0, revenue: staffStats[s.id]?.revenue || 0 })).sort((a, b) => b.revenue - a.revenue));
+    setStaffPerfData(staff.map(s => ({ name: s.display_name, color: s.color, appointments: staffStats[s.id]?.appointments || 0, revenue: staffStats[s.id]?.revenue || 0, isIncomplete: !s.hasEmail })).sort((a, b) => b.revenue - a.revenue));
 
     // ===== NEW: Retention Data =====
     const allCustomerIds = current.filter(a => a.customer_id).map(a => a.customer_id!);

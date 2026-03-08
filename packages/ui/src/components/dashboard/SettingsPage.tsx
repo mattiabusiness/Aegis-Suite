@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '../ui/button';
+import { AnimatedSelect } from '../ui/AnimatedList';
 
 // ============================================================================
 // TYPES (unchanged)
@@ -80,6 +81,7 @@ const KEYFRAMES = `
 @keyframes stPulse { 0% { box-shadow: 0 0 0 0 rgba(168,85,247,0.18); } 100% { box-shadow: 0 0 0 14px rgba(168,85,247,0); } }
 @keyframes stBreath { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 @keyframes stShake { 0%,100%{transform:translateX(0)} 15%{transform:translateX(-6px)} 30%{transform:translateX(5px)} 45%{transform:translateX(-4px)} 60%{transform:translateX(3px)} 75%{transform:translateX(-2px)} }
+@keyframes stFadeDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
 `;
 
 // ============================================================================
@@ -215,36 +217,15 @@ function AnimatedToggle({ enabled, onToggle, disabled }: { enabled: boolean; onT
 }
 
 // ============================================================================
-// ANIMATED SELECT — same as Step4
-// ============================================================================
-
-function AnimatedSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
-  const [focused, setFocused] = React.useState(false);
-  return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}
-      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-      className="rounded-lg px-2.5 py-1.5 text-sm text-gray-700 outline-none transition-all duration-300 appearance-none cursor-pointer"
-      style={{
-        background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(4px)',
-        border: focused ? '1.5px solid #a855f7' : '1.5px solid rgba(0,0,0,0.06)',
-        boxShadow: focused ? '0 0 0 3px rgba(168,85,247,0.1)' : '0 1px 2px rgba(0,0,0,0.04)',
-      }}
-    >
-      {options.map(t => <option key={t} value={t}>{t}</option>)}
-    </select>
-  );
-}
-
-// ============================================================================
 // SECTION — onboarding card style with gradient icon
 // ============================================================================
 
-function Section({ title, description, icon: Icon, iconSvg, children, delay = 0, compact = false }: {
-  title: string; description?: string; icon?: LucideIcon; iconSvg?: React.ReactNode; children: React.ReactNode; delay?: number; compact?: boolean;
+function Section({ title, description, icon: Icon, iconSvg, children, delay = 0, compact = false, stretch = false }: {
+  title: string; description?: string; icon?: LucideIcon; iconSvg?: React.ReactNode; children: React.ReactNode; delay?: number; compact?: boolean; stretch?: boolean;
 }) {
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-xl shadow-purple-100/20 overflow-hidden flex flex-col"
-      style={{ animation: `stFadeUp 0.5s ease-out ${delay}ms both` }}>
+   <div className={`bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-xl shadow-purple-100/20 overflow-hidden${stretch ? ' flex flex-col' : ''}`}
+      style={{ animation: `stFadeUp 0.5s ease-out ${delay}ms both`, ...(stretch ? { height: '100%' } : {}) }}>
       <div className={compact ? 'pt-4 pb-1 px-5' : 'pt-5 pb-2 px-6'}>
         <div className="flex items-center gap-3">
           {(iconSvg || Icon) && (
@@ -259,7 +240,7 @@ function Section({ title, description, icon: Icon, iconSvg, children, delay = 0,
           </div>
         </div>
       </div>
-      <div className={`flex-1 ${compact ? 'px-5 pb-4 pt-3' : 'px-6 pb-5 pt-3'}`}>{children}</div>
+      <div className={`${compact ? 'px-5 pb-4 pt-3' : 'px-6 pb-5 pt-3'}${stretch ? ' flex flex-col flex-1' : ''}`}>{children}</div>
     </div>
   );
 }
@@ -316,6 +297,7 @@ function GeneralTab({
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
+  const [uploadErr, setUploadErr] = React.useState('');
   const [dragOver, setDragOver] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
@@ -329,16 +311,33 @@ function GeneralTab({
     finally { setSaving(false); }
   };
   const processFile = async (file: File) => {
-    if (!file.type.startsWith('image/') || file.size > 2 * 1024 * 1024) return;
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    const validExt = ['png', 'jpg', 'jpeg', 'webp'].includes(ext);
+    const validType = file.type.startsWith('image/') || validExt;
+    if (!validType) { setUploadErr('Formato non supportato. Usa PNG, JPG o WebP.'); return; }
+    if (file.size > 2 * 1024 * 1024) { setUploadErr('File troppo grande. Massimo 2MB.'); return; }
+    setUploadErr('');
     setUploading(true);
     try {
       const url = await onUploadLogo(file);
       if (url) setForm(p => ({ ...p, logoUrl: url }));
-    } catch (err) { console.error('Logo upload failed:', err); }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Errore durante il caricamento';
+      setUploadErr(msg);
+    }
     finally { setUploading(false); }
   };
   const handleRemoveLogo = async (e: React.MouseEvent) => { e.stopPropagation(); await onRemoveLogo(); setForm(p => ({ ...p, logoUrl: '' })); };
   const handleCopy = () => { navigator.clipboard.writeText(publicUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+
+  // FIX: Handler dedicato per evitare doppio click che annulla il file picker
+  const triggerFileInput = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (fileRef.current) {
+      fileRef.current.value = '';
+      fileRef.current.click();
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -367,7 +366,8 @@ function GeneralTab({
             {form.logoUrl && (
               <div className="relative group mb-2">
                 <div className="w-28 h-28 rounded-2xl overflow-hidden cursor-pointer" style={{ border: '3px solid #a855f7', boxShadow: '0 8px 30px rgba(168,85,247,0.2)' }}
-                  onClick={() => fileRef.current?.click()}>
+                 
+onClick={triggerFileInput}>
                   <img src={form.logoUrl} alt="Logo" className="w-full h-full object-cover" />
                 </div>
                 <button onClick={(e) => handleRemoveLogo(e)}
@@ -376,27 +376,47 @@ function GeneralTab({
                 </button>
               </div>
             )}
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
-              onClick={() => fileRef.current?.click()}
-              className={`${form.logoUrl ? 'w-28' : 'w-40'} cursor-pointer transition-all duration-300`}
-            >
-              <div className={`flex flex-col items-center justify-center ${form.logoUrl ? 'py-2.5' : 'py-6'} rounded-xl`} style={{
-                border: dragOver ? '2px solid #a855f7' : '2px dashed rgba(168,85,247,0.3)',
-                background: dragOver ? 'rgba(168,85,247,0.05)' : 'rgba(255,255,255,0.5)',
-                boxShadow: dragOver ? '0 0 0 4px rgba(168,85,247,0.1)' : 'none', transition: 'all 0.3s ease',
-              }}>
-                {uploading ? <RefreshCw className="w-5 h-5 animate-spin text-purple-500" /> : (
-                  <svg className="w-5 h-5" style={{ color: dragOver ? '#7c3aed' : '#a855f7', transition: 'color 0.3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                )}
-                <p className="text-xs font-medium text-gray-600 mt-1">{form.logoUrl ? 'Cambia' : 'Carica logo'}</p>
+            {form.logoUrl ? (
+              <button onClick={triggerFileInput} disabled={uploading}
+                className="relative w-28 h-9 rounded-xl font-semibold text-white text-xs overflow-hidden outline-none flex items-center justify-center gap-1.5 transition-all duration-300 disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}
+                onMouseEnter={(e) => { if (!uploading) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.4)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(124,58,237,0.3)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)', animation: 'stShimmer 2.5s ease-in-out infinite' }} />
+                <span className="relative z-10 flex items-center gap-1.5">
+                  {uploading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>}
+                  {uploading ? 'Caricamento...' : 'Cambia logo'}
+                </span>
+              </button>
+            ) : (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) processFile(f); }}
+                onClick={triggerFileInput}
+                className="w-40 cursor-pointer transition-all duration-300"
+              >
+                <div className="flex flex-col items-center justify-center py-6 rounded-xl" style={{
+                  border: dragOver ? '2px solid #a855f7' : '2px dashed rgba(168,85,247,0.3)',
+                  background: dragOver ? 'rgba(168,85,247,0.05)' : 'rgba(255,255,255,0.5)',
+                  boxShadow: dragOver ? '0 0 0 4px rgba(168,85,247,0.1)' : 'none', transition: 'all 0.3s ease',
+                }}>
+                  {uploading ? <RefreshCw className="w-5 h-5 animate-spin text-purple-500" /> : (
+                    <svg className="w-5 h-5" style={{ color: dragOver ? '#7c3aed' : '#a855f7', transition: 'color 0.3s' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                  )}
+                  <p className="text-xs font-medium text-gray-600 mt-1">Carica logo</p>
+                </div>
               </div>
-            </div>
+            )}
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f); e.target.value = ''; }} className="hidden" />
+            {uploadErr && (
+              <p className="text-[11px] text-red-500 mt-1.5 flex items-center gap-1 max-w-[140px] text-center leading-tight">
+                <X className="w-3 h-3 flex-shrink-0" />{uploadErr}
+              </p>
+            )}
           </div>
           {/* Right: info cards */}
           <div className="flex-1 space-y-2" style={{ animation: 'stFadeUp 0.35s ease-out 0.1s both' }}>
@@ -502,11 +522,11 @@ function MiniDatePicker({ value, onChange, label }: { value: string; onChange: (
         <Calendar className="w-3.5 h-3.5" style={{ color: open ? '#9333ea' : '#9ca3af', transition: 'color 0.15s' }} />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1.5 left-0 right-0" style={{
+         <div className="absolute z-50 bottom-full mb-1.5 left-0 right-0" style={{
           background: 'rgba(255,255,255,0.98)', backdropFilter: 'blur(20px)',
           border: '1.5px solid rgba(168,85,247,0.12)', borderRadius: 12,
-          boxShadow: '0 8px 30px rgba(124,58,237,0.12), 0 4px 12px rgba(0,0,0,0.06)',
-          padding: 10, animation: 'stFadeUp 0.15s ease-out',
+          boxShadow: '0 -8px 30px rgba(124,58,237,0.12), 0 4px 12px rgba(0,0,0,0.06)',
+          padding: 10, animation: 'stFadeDown 0.15s ease-out',
         }}>
           <div className="flex items-center justify-between mb-1.5">
             <button type="button" onClick={() => { if (vm === 0) { setVm(11); setVy(y => y - 1); } else setVm(m => m - 1); }}
@@ -624,15 +644,15 @@ function HoursTab({
                 <span className={`w-10 text-sm font-semibold transition-colors duration-200 ${h.isOpen ? 'text-gray-900' : 'text-gray-400'}`}>{h.dayLabel.slice(0, 3)}</span>
                 {h.isOpen ? (
                   <div className="flex items-center gap-1.5 flex-1 flex-wrap">
-                    <AnimatedSelect value={h.openTime1} onChange={(v) => updateH(idx, 'openTime1', v)} options={TIME_OPTIONS} />
+                    <AnimatedSelect value={h.openTime1} onChange={(v) => updateH(idx, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                     <span className="text-purple-300 text-xs">→</span>
-                    <AnimatedSelect value={h.closeTime1} onChange={(v) => updateH(idx, 'closeTime1', v)} options={TIME_OPTIONS} />
+                    <AnimatedSelect value={h.closeTime1} onChange={(v) => updateH(idx, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                     {h.openTime2 || h.closeTime2 ? (
                       <>
                         <span className="text-purple-200 mx-0.5 text-xs">|</span>
-                        <AnimatedSelect value={h.openTime2} onChange={(v) => updateH(idx, 'openTime2', v)} options={TIME_OPTIONS} />
+                        <AnimatedSelect value={h.openTime2} onChange={(v) => updateH(idx, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                         <span className="text-purple-300 text-xs">→</span>
-                        <AnimatedSelect value={h.closeTime2} onChange={(v) => updateH(idx, 'closeTime2', v)} options={TIME_OPTIONS} />
+                        <AnimatedSelect value={h.closeTime2} onChange={(v) => updateH(idx, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                         <button onClick={() => { updateH(idx, 'openTime2', ''); updateH(idx, 'closeTime2', ''); }}
                           className="p-1 text-gray-400 hover:text-red-500 transition-colors"><X className="w-3.5 h-3.5" /></button>
                       </>
@@ -656,49 +676,66 @@ function HoursTab({
         </div>
       </Section>
 
-      {/* Postazioni + Chiusure — side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {/* Postazioni + Chiusure — side by side */}<div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
         {/* Postazioni — compact */}
-        <Section title={`${ws.p.charAt(0).toUpperCase() + ws.p.slice(1)}`} description={`Quante ${ws.p} hai?`} delay={80} compact iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}>
-          <div className="flex flex-col items-center justify-center flex-1 py-2" style={{ animation: 'stFadeUp 0.4s ease-out both' }}>
-            <div className="flex items-center gap-6">
-              <button type="button" onClick={handleDec} disabled={workstations <= 1}
-                className="relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 outline-none disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-                onMouseEnter={(e) => { if (workstations > 1) e.currentTarget.style.border = '1.5px solid #a855f7'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.border = '1.5px solid rgba(0,0,0,0.08)'; }}
-              >
-                {pulseBtn === 'minus' && <span className="absolute inset-0 rounded-2xl pointer-events-none" style={{ animation: 'stPulse 0.5s ease-out forwards' }} />}
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-              </button>
-              <div className="text-center" style={{ minWidth: 60 }}>
-                <span className="text-5xl font-bold bg-clip-text text-transparent" style={{
-                  backgroundImage: 'linear-gradient(135deg, #7c3aed, #a855f7)', display: 'inline-block',
-                  animation: bounceDir === 'up' ? 'stBounceUp 0.3s ease-out' : bounceDir === 'down' ? 'stBounceDown 0.3s ease-out' : 'stBreath 3s ease-in-out infinite',
-                }}>{workstations}</span>
-                <p className="text-gray-500 text-xs mt-1">{workstations === 1 ? ws.s : ws.p}</p>
+        
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-xl shadow-purple-100/20 overflow-hidden flex flex-col" style={{ animation: 'stFadeUp 0.5s ease-out 80ms both' }}>
+          <div className="pt-4 pb-1 px-5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 6px 20px rgba(124,58,237,0.25)' }}>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
               </div>
-              <button type="button" onClick={handleInc} disabled={workstations >= 20}
-                className="relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 outline-none disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-                onMouseEnter={(e) => { if (workstations < 20) e.currentTarget.style.border = '1.5px solid #a855f7'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.border = '1.5px solid rgba(0,0,0,0.08)'; }}
-              >
-                {pulseBtn === 'plus' && <span className="absolute inset-0 rounded-2xl pointer-events-none" style={{ animation: 'stPulse 0.5s ease-out forwards' }} />}
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-              </button>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">{ws.p.charAt(0).toUpperCase() + ws.p.slice(1)}</h3>
+                <p className="text-gray-500 text-sm mt-0.5">Quante {ws.p} hai?</p>
+              </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-1.5 mt-4 max-w-[180px]">
-              {Array.from({ length: Math.min(workstations, 20) }).map((_, i) => (
-                <div key={i} className="w-3.5 h-3.5 rounded-full" style={{
-                  background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 2px 6px rgba(168,85,247,0.3)',
-                  animation: `stDotIn 0.3s ease-out ${i * 30}ms both`,
-                }} />
-              ))}
-            </div>
-            {wsChanged && <div className="mt-4"><SaveBtn saving={savingW} saved={savedW} onClick={handleSaveW} /></div>}
           </div>
-        </Section>
+          <div className="flex flex-col" style={{ animation: 'stFadeUp 0.4s ease-out both', flex: '1 1 auto', minHeight: 200 }}>
+            {/* Counter — sempre centrato */}
+            <div className="flex flex-col items-center justify-center flex-1 px-5 pt-3">
+              <div className="flex items-center gap-6">
+                <button type="button" onClick={handleDec} disabled={workstations <= 1}
+                  className="relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 outline-none disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                  onMouseEnter={(e) => { if (workstations > 1) e.currentTarget.style.border = '1.5px solid #a855f7'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.border = '1.5px solid rgba(0,0,0,0.08)'; }}
+                >
+                  {pulseBtn === 'minus' && <span className="absolute inset-0 rounded-2xl pointer-events-none" style={{ animation: 'stPulse 0.5s ease-out forwards' }} />}
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
+                </button>
+                <div className="text-center" style={{ minWidth: 60 }}>
+                  <span className="text-5xl font-bold bg-clip-text text-transparent" style={{
+                    backgroundImage: 'linear-gradient(135deg, #7c3aed, #a855f7)', display: 'inline-block',
+                    animation: bounceDir === 'up' ? 'stBounceUp 0.3s ease-out' : bounceDir === 'down' ? 'stBounceDown 0.3s ease-out' : 'stBreath 3s ease-in-out infinite',
+                  }}>{workstations}</span>
+                  <p className="text-gray-500 text-xs mt-1">{workstations === 1 ? ws.s : ws.p}</p>
+                </div>
+                <button type="button" onClick={handleInc} disabled={workstations >= 20}
+                  className="relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 outline-none disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                  onMouseEnter={(e) => { if (workstations < 20) e.currentTarget.style.border = '1.5px solid #a855f7'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.border = '1.5px solid rgba(0,0,0,0.08)'; }}
+                >
+                  {pulseBtn === 'plus' && <span className="absolute inset-0 rounded-2xl pointer-events-none" style={{ animation: 'stPulse 0.5s ease-out forwards' }} />}
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                </button>
+              </div>
+              <div className="flex flex-wrap justify-center gap-1.5 mt-4 max-w-[180px]">
+                {Array.from({ length: Math.min(workstations, 20) }).map((_, i) => (
+                  <div key={i} className="w-3.5 h-3.5 rounded-full" style={{
+                    background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 2px 6px rgba(168,85,247,0.3)',
+                    animation: `stDotIn 0.3s ease-out ${i * 30}ms both`,
+                  }} />
+                ))}
+              </div>
+            </div>
+            {/* Footer fisso — SaveBtn appare senza spostare il counter */}
+            <div className="flex justify-center pb-4 px-5" style={{ minHeight: 52 }}>
+              {wsChanged && <SaveBtn saving={savingW} saved={savedW} onClick={handleSaveW} />}
+            </div>
+          </div>
+        </div>
 
         {/* Chiusure — compact, red hover, animated trash, onboarding buttons */}
         <Section title="Chiusure" description="Giorni di chiusura e ferie" delay={160} compact iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}>
@@ -741,9 +778,7 @@ function HoursTab({
                     border: newCl.isRecurringYearly ? '1.5px solid #7c3aed' : '1.5px solid rgba(0,0,0,0.15)',
                     boxShadow: newCl.isRecurringYearly ? '0 2px 8px rgba(168,85,247,0.3)' : 'none',
                   }}>
-                    {newCl.isRecurringYearly && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" style={{ strokeDasharray: 24, strokeDashoffset: 0, animation: 'stCheck 0.25s ease-out' }} /></svg>
-                    )}
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ opacity: newCl.isRecurringYearly ? 1 : 0, transition: 'opacity 0.2s ease' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" style={{ strokeDasharray: 24, strokeDashoffset: newCl.isRecurringYearly ? 0 : 24, transition: 'stroke-dashoffset 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }} /></svg>
                   </div>
                 </div>
                 <span className="text-sm text-gray-700">Ricorrente ogni anno</span>
@@ -891,11 +926,10 @@ function AccountTab({ form, setForm, baseData, onSave, onChangePassword }: {
     finally { setChangingPw(false); }
   };
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+  return (<div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch" style={{ minHeight: 'calc(100vh - 13rem)' }}>
       {/* Left: Dati personali */}
-      <Section title="Dati personali" description="Le tue informazioni account" delay={0} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 20, height: 20 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
-        <div className="space-y-3" style={{ animation: 'stFadeUp 0.35s ease-out both' }}>
+      <Section title="Dati personali" description="Le tue informazioni account" delay={0} stretch iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 20, height: 20 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}>
+        <div className="flex-1 space-y-3" style={{ animation: 'stFadeUp 0.35s ease-out both' }}>
           <GlassInput label="Nome completo" value={form.fullName} onChange={(e) => setForm(p => ({ ...p, fullName: e.target.value }))} />
           <GlassInput label="Email" type="email" value={baseData.email} disabled onChange={() => {}} hint="L'email non può essere modificata" />
           <GlassInput label="Telefono" type="tel" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} />
@@ -906,8 +940,8 @@ function AccountTab({ form, setForm, baseData, onSave, onChangePassword }: {
       </Section>
 
       {/* Right: Sicurezza */}
-      <Section title="Sicurezza" description="Cambia la tua password" delay={80} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 20, height: 20 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}>
-        <div className="space-y-3" style={{ animation: shake ? 'stShake 0.4s ease-out' : 'stFadeUp 0.35s ease-out both' }}>
+       <Section title="Sicurezza" description="Cambia la tua password" delay={80} stretch iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 20, height: 20 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}>
+        <div className="flex flex-col flex-1 gap-3" style={{ animation: shake ? 'stShake 0.4s ease-out' : 'stFadeUp 0.35s ease-out both' }}>
           <div className="w-full">
             <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">Password attuale</label>
             <div className="relative">
@@ -925,7 +959,7 @@ function AccountTab({ form, setForm, baseData, onSave, onChangePassword }: {
           {pwOk && <p className="text-sm text-emerald-600 flex items-center gap-1.5" style={{ animation: 'stFadeUp 0.3s ease-out' }}>✓ Password modificata con successo!</p>}
           {/* Gradient button like SaveBtn */}
           <button onClick={handleChangePw} disabled={changingPw || !curPw || !newPw || !confPw}
-            className="relative h-11 px-6 rounded-xl font-semibold text-white text-sm transition-all duration-300 outline-none overflow-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="relative mt-auto h-11 px-6 rounded-xl font-semibold text-white text-sm transition-all duration-300 outline-none overflow-hidden focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 self-end"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: changingPw || (!curPw || !newPw || !confPw) ? 'none' : '0 6px 20px rgba(124,58,237,0.3)' }}
             onMouseEnter={(e) => { if (!changingPw && curPw && newPw && confPw) { e.currentTarget.style.boxShadow = '0 8px 28px rgba(124,58,237,0.4)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
             onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.3)'; e.currentTarget.style.transform = 'translateY(0)'; }}

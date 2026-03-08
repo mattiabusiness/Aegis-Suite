@@ -45,10 +45,17 @@ export function SettingsContent({
 
   const handleUploadLogo = async (file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop() || 'png';
-    const fileName = `${businessId}/logo.${fileExt}`;
-    const { error: uploadError } = await supabase.storage.from('business-logos').upload(fileName, file, { upsert: true });
+    const fileName = `${businessId}/logo-${Date.now()}.${fileExt}`;
+    // Rimuovi il vecchio logo se presente (ignora errori di rimozione)
+    const { data: currentBusiness } = await supabase
+      .from('businesses').select('logo_url').eq('id', businessId).single() as { data: { logo_url: string | null } | null };
+    if (currentBusiness?.logo_url) {
+      const oldPath = currentBusiness.logo_url.split('/Logos/')[1]?.split('?')[0];
+      if (oldPath) await supabase.storage.from('Logos').remove([oldPath]);
+    }
+    const { error: uploadError } = await supabase.storage.from('Logos').upload(fileName, file);
     if (uploadError) throw uploadError;
-    const { data: { publicUrl } } = supabase.storage.from('business-logos').getPublicUrl(fileName);
+    const { data: { publicUrl } } = supabase.storage.from('Logos').getPublicUrl(fileName);
     const logoUrl = `${publicUrl}?v=${Date.now()}`;
     await supabase.from('businesses').update({ logo_url: logoUrl } as never).eq('id', businessId);
     router.refresh();
@@ -116,28 +123,24 @@ export function SettingsContent({
   };
 
   return (
-    <div className="min-h-[calc(100vh-7rem)]">
-      <div className="pb-8">
-        <SettingsPage
-          generalData={generalData}
-          businessHours={businessHours}
-          closures={initialClosures}
-          bookingSettings={bookingSettings}
-          accountData={accountData}
-          publicUrlBase="aegisbeauty.aegis.app"
-          businessType={businessType}
-          onSaveGeneral={handleSaveGeneral}
-          onUploadLogo={handleUploadLogo}
-          onRemoveLogo={handleRemoveLogo}
-          onSaveHours={handleSaveHours}
-          onSaveWorkstations={handleSaveWorkstations}
-          onAddClosure={handleAddClosure}
-          onDeleteClosure={handleDeleteClosure}
-          onSaveBookings={handleSaveBookings}
-          onSaveAccount={handleSaveAccount}
-          onChangePassword={handleChangePassword}
-        />
-      </div>
-    </div>
+    <SettingsPage
+      generalData={generalData}
+      businessHours={businessHours}
+      closures={initialClosures}
+      bookingSettings={bookingSettings}
+      accountData={accountData}
+      publicUrlBase="aegisbeauty.aegis.app"
+      businessType={businessType}
+      onSaveGeneral={handleSaveGeneral}
+      onUploadLogo={handleUploadLogo}
+      onRemoveLogo={handleRemoveLogo}
+      onSaveHours={handleSaveHours}
+      onSaveWorkstations={handleSaveWorkstations}
+      onAddClosure={handleAddClosure}
+      onDeleteClosure={handleDeleteClosure}
+      onSaveBookings={handleSaveBookings}
+      onSaveAccount={handleSaveAccount}
+      onChangePassword={handleChangePassword}
+    />
   );
 }

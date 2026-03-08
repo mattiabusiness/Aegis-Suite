@@ -253,30 +253,37 @@ function UserDropdown({
       {/* Menu items */}
       <div className="py-1">
         {items.map((item, i) => (
-          <div
+          <button
             key={i}
-            className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-sm"
+            type="button"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm"
             style={{
               color: item.danger ? '#dc2626' : '#4b5563',
-              transition: 'background 0.15s ease, color 0.15s ease',
+              transition: 'all 0.15s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = item.danger ? 'rgba(239,68,68,0.05)' : 'rgba(168,85,247,0.04)';
-              if (!item.danger) e.currentTarget.style.color = '#1f2937';
+              e.currentTarget.style.background = item.danger ? 'rgba(239,68,68,0.06)' : 'rgba(168,85,247,0.06)';
+              e.currentTarget.style.paddingLeft = '20px';
               const icon = e.currentTarget.querySelector('svg');
-              if (icon) (icon as unknown as HTMLElement).style.transform = 'translateX(2px)';
+              if (icon) {
+                (icon as unknown as HTMLElement).style.transform = item.danger ? 'rotate(12deg) scale(1.15)' : 'rotate(-12deg) scale(1.15)';
+                (icon as unknown as HTMLElement).style.color = item.danger ? '#dc2626' : '#9333ea';
+              }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = item.danger ? '#dc2626' : '#4b5563';
+              e.currentTarget.style.paddingLeft = '16px';
               const icon = e.currentTarget.querySelector('svg');
-              if (icon) (icon as unknown as HTMLElement).style.transform = 'translateX(0)';
+              if (icon) {
+                (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)';
+                (icon as unknown as HTMLElement).style.color = '';
+              }
             }}
             onClick={() => handleClick(item.onClick)}
           >
-            <item.icon className="w-4 h-4" />
+            <item.icon className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
             {item.label}
-          </div>
+          </button>
         ))}
       </div>
 
@@ -285,24 +292,33 @@ function UserDropdown({
 
       {/* Logout */}
       <div className="py-1">
-        <div
-          className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-sm"
-          style={{ color: '#dc2626', transition: 'background 0.15s' }}
+        <button
+          type="button"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm"
+          style={{ color: '#dc2626', transition: 'all 0.15s ease' }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(239,68,68,0.05)';
+            e.currentTarget.style.background = 'rgba(239,68,68,0.06)';
+            e.currentTarget.style.paddingLeft = '20px';
             const icon = e.currentTarget.querySelector('svg');
-            if (icon) (icon as unknown as HTMLElement).style.transform = 'translateX(2px)';
+            if (icon) {
+              (icon as unknown as HTMLElement).style.transform = 'rotate(12deg) scale(1.15)';
+              (icon as unknown as HTMLElement).style.color = '#dc2626';
+            }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.paddingLeft = '16px';
             const icon = e.currentTarget.querySelector('svg');
-            if (icon) (icon as unknown as HTMLElement).style.transform = 'translateX(0)';
+            if (icon) {
+              (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)';
+              (icon as unknown as HTMLElement).style.color = '';
+            }
           }}
           onClick={() => handleClick(onLogout)}
         >
-          <LogOut className="w-4 h-4" style={{ transition: 'transform 0.15s ease' }} />
+          <LogOut className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
           Esci
-        </div>
+        </button>
       </div>
     </div>
   );

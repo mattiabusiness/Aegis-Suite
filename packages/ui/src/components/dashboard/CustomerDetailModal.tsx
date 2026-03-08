@@ -343,8 +343,8 @@ export function CustomerDetailModal({
             <div
               className="w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0"
               style={{
-                background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
-                boxShadow: '0 4px 12px rgba(147,51,234,0.25)',
+                background: `hsl(${customer.fullName.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360}, 65%, 55%)`,
+                boxShadow: `0 4px 12px hsla(${customer.fullName.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360}, 65%, 55%, 0.25)`,
               }}
             >
               {getInitials(customer.fullName)}
@@ -413,53 +413,8 @@ export function CustomerDetailModal({
                 {customer.phone && (
                   <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{customer.phone}</span>
                 )}
-          </div>
+           </div>
         </div>
-
-            {onBookAppointment && (
-              <button
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = e.clientX - rect.left;
-                  const y = e.clientY - rect.top;
-                  const container = e.currentTarget.querySelector('[data-ripple-book]');
-                  if (container) {
-                    const span = document.createElement('span');
-                    Object.assign(span.style, {
-                      position: 'absolute', left: `${x - 50}px`, top: `${y - 50}px`,
-                      width: '100px', height: '100px', borderRadius: '50%',
-                      background: 'rgba(255,255,255,0.35)',
-                      animation: 'cdm-ripple 0.6s ease-out forwards', pointerEvents: 'none',
-                    });
-                    container.appendChild(span);
-                    setTimeout(() => span.remove(), 600);
-                  }
-                  onBookAppointment(customer.id);
-                }}
-                className="relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden flex-shrink-0"
-                style={{
-                  background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
-                  boxShadow: '0 2px 8px rgba(147,51,234,0.25)',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.25)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                <div className="absolute inset-0 pointer-events-none" style={{
-                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
-                  animation: 'cdm-shimmer 2.5s ease-in-out infinite',
-                }} />
-                <div data-ripple-book="" className="absolute inset-0 pointer-events-none" />
-                <Plus className="w-3.5 h-3.5 relative z-10" />
-                <span className="relative z-10">Prenota</span>
-              </button>
-            )}
           </div>
         </div>
 

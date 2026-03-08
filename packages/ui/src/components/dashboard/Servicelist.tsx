@@ -176,13 +176,13 @@ function ServiceCard({
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100"
+            className="p-1.5 rounded-lg"
             style={{
-              color: 'rgba(0,0,0,0.3)',
+              color: 'rgba(0,0,0,0.25)',
               transition: 'all 0.15s ease',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = 'rgba(0,0,0,0.5)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.3)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.25)'; }}
           >
             <MoreVertical className="w-4 h-4" />
           </button>

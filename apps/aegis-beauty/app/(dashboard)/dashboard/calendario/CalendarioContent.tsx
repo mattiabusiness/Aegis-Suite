@@ -245,9 +245,10 @@ export function CalendarioContent({
 
       setAvailableSlots(() => {
         const slots: SlotInfo[] = data.slots || [];
-        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         if (date === todayStr) {
-          const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+          const nowMinutes = now.getHours() * 60 + now.getMinutes();
           return slots.filter(s => {
             const [h, m] = s.time.split(':').map(Number);
             return h * 60 + m > nowMinutes;
@@ -454,8 +455,8 @@ export function CalendarioContent({
             style={{
               background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.3)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
           >
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%)', animation: 'calC-shimmer 2.5s ease-in-out infinite' }} />
             {btnRipple && (
@@ -581,8 +582,8 @@ export function CalendarioContent({
                       className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-all duration-150"
                       style={{ background: 'rgba(0,0,0,0.015)', border: '1px solid rgba(0,0,0,0.03)', animation: 'calC-listItem 0.2s ease-out both', animationDelay: `${i * 40}ms`, transition: 'all 0.18s ease' }}
                       onClick={() => handleEventClick(event)}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(147,51,234,0.12)'; e.currentTarget.style.borderColor = 'rgba(147,51,234,0.3)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(147,51,234,0.2)'; e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.015)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.03)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(147,51,234,0.05)'; e.currentTarget.style.borderColor = 'rgba(147,51,234,0.15)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.1)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.015)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.03)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)'; }}
                     >
                       {/* Status color bar */}
                       <div className="w-0.5 h-7 rounded-full flex-shrink-0" style={{ background: statusColor }} />
