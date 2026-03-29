@@ -21,10 +21,10 @@ export default async function AiutoPage() {
 
   const { data: businessMember } = await supabase
     .from('business_members')
-    .select('business_id, businesses(name)')
+    .select('business_id, businesses(name, business_type)')
     .eq('user_id', user.id)
     .eq('is_active', true)
-    .single() as { data: { business_id: string; businesses: { name: string } | null } | null };
+    .single() as { data: { business_id: string; businesses: { name: string; business_type: string | null } | null } | null };
 
   return (
     <AiutoContent
@@ -32,6 +32,7 @@ export default async function AiutoPage() {
       userEmail={user.email || ''}
       businessName={businessMember?.businesses?.name || ''}
       businessId={businessMember?.business_id || ''}
+      businessType={businessMember?.businesses?.business_type || 'hair_salon'}
     />
   );
 }

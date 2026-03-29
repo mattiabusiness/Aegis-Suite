@@ -21,6 +21,7 @@ import type {
   ServiceModalCategory,
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
+import { useStaffPermissions } from '@/lib/staff-permissions-context';
 import {
   Calendar,
   CalendarDays,
@@ -105,6 +106,8 @@ interface OverviewContentProps {
   businessSlug?: string;
   businessType?: string;
   todayAppointments?: TodayAppointment[];
+  allTodayAppointments?: TodayAppointment[];
+  businessStats?: { appointmentsToday: number; appointmentsWeek: number };
   businessId: string;
   customers: CustomerProp[];
   services: ServiceProp[];
@@ -149,11 +152,14 @@ function getBusinessLabel(type?: string): string {
 
 export function OverviewContent({
   stats, businessName, businessSlug, businessType, todayAppointments = [],
+  allTodayAppointments = [], businessStats,
   businessId, customers, services, staff, staffServices, businessHours,
   closures, categories,
 }: OverviewContentProps) {
   const router = useRouter();
   const supabase = createClient();
+  const permissions = useStaffPermissions();
+  const [activeApptTab, setActiveApptTab] = useState<'mine' | 'team'>('mine');
 
   const operativeStaff = stats.totalStaff - stats.incompleteStaff;
 
@@ -292,15 +298,42 @@ export function OverviewContent({
     }
   };
 
-  return (
-    <>
-      <OverviewPage
-        greeting={getGreeting()}
-        businessName={businessName}
-        dateString={getFormattedDate()}
-        stats={[
+  // KPI cards — staff vede solo i propri appuntamenti, senza clienti/servizi/team
+  const statCards = permissions.isStaff
+    ? permissions.canSeeBusinessCalendar
+      ? [
           {
-            title: 'Appuntamenti oggi',
+            title: 'I miei oggi',
+            value: stats.appointmentsToday,
+            icon: Calendar,
+            gradient: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+            iconColor: '#9333ea',
+          },
+          {
+            title: 'I miei questa settimana',
+            value: stats.appointmentsWeek,
+            icon: CalendarDays,
+            gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            iconColor: '#3b82f6',
+          },
+          {
+            title: 'Team oggi',
+            value: businessStats?.appointmentsToday ?? 0,
+            icon: Users,
+            gradient: 'linear-gradient(135deg, #10b981, #059669)',
+            iconColor: '#10b981',
+          },
+          {
+            title: 'Team questa settimana',
+            value: businessStats?.appointmentsWeek ?? 0,
+            icon: BarChart3,
+            gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            iconColor: '#f59e0b',
+          },
+        ]
+      : [
+          {
+            title: 'Miei appuntamenti oggi',
             value: stats.appointmentsToday,
             icon: Calendar,
             gradient: 'linear-gradient(135deg, #9333ea, #7c3aed)',
@@ -313,78 +346,158 @@ export function OverviewContent({
             gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)',
             iconColor: '#3b82f6',
           },
-          {
-            title: 'Clienti totali',
-            value: stats.totalCustomers,
-            icon: Users,
-            gradient: 'linear-gradient(135deg, #10b981, #059669)',
-            iconColor: '#10b981',
-          },
-          {
-            title: 'Servizi attivi',
-            value: stats.totalServices,
-            icon: Scissors,
-            gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
-            iconColor: '#f59e0b',
-          },
-        ]}
-        sections={[
-          {
-            title: 'Oggi',
-            subtitle: `${stats.appointmentsToday} appuntament${stats.appointmentsToday === 1 ? 'o' : 'i'}`,
-            icon: Clock,
-            iconColor: '#9333ea',
-            iconBg: 'rgba(168,85,247,0.06)',
-            linkLabel: '',
-            onLinkClick: () => {},
-            linkColor: '#9333ea',
-            children: todayAppointments.length === 0 ? (
-              <EmptyTodaySection onAdd={() => router.push('/dashboard/calendario')} />
-            ) : (
-              <TodayTimelineSection appointments={todayAppointments} onView={() => router.push('/dashboard/calendario')} />
-            ),
-          },
-          {
-            title: 'Il tuo team',
-            subtitle: `${stats.totalStaff} membr${stats.totalStaff === 1 ? 'o' : 'i'} totali`,
-            icon: UserCheck,
-            iconColor: '#10b981',
-            iconBg: 'rgba(16,185,129,0.06)',
-            linkLabel: 'Gestisci staff',
-            onLinkClick: () => router.push('/dashboard/staff'),
-            linkColor: '#10b981',
-            children: stats.totalStaff === 0 ? (
-              <EmptyTeamSection onAdd={() => router.push('/dashboard/staff')} />
-            ) : (
-              <TeamStatusSection
-                operative={operativeStaff}
-                incomplete={stats.incompleteStaff}
-                total={stats.totalStaff}
-                onManage={() => router.push('/dashboard/staff')}
-              />
-            ),
-          },
-        ]}
-        quickActions={[
-          {
-            label: 'Nuovo appuntamento',
-            description: 'Apri il form di prenotazione',
-            icon: Plus,
-            onClick: () => { setAvailableSlots([]); setIsApptModalOpen(true); },
-          },
-          {
-            label: 'Aggiungi servizio',
-            description: 'Crea un nuovo servizio',
-            icon: Scissors,
-            onClick: () => { setServiceError(''); setIsServiceModalOpen(true); },
-          },
-          {
-            label: 'Vedi statistiche',
-            description: 'Analisi e performance',
-            icon: BarChart3,
-            onClick: () => router.push('/dashboard/statistiche'),
-          },
-        ]}
+        ]
+    : [
+        {
+          title: 'Appuntamenti oggi',
+          value: stats.appointmentsToday,
+          icon: Calendar,
+          gradient: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+          iconColor: '#9333ea',
+        },
+        {
+          title: 'Questa settimana',
+          value: stats.appointmentsWeek,
+          icon: CalendarDays,
+          gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+          iconColor: '#3b82f6',
+        },
+        {
+          title: 'Clienti totali',
+          value: stats.totalCustomers,
+          icon: Users,
+          gradient: 'linear-gradient(135deg, #10b981, #059669)',
+          iconColor: '#10b981',
+        },
+        {
+          title: 'Servizi attivi',
+          value: stats.totalServices,
+          icon: Scissors,
+          gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          iconColor: '#f59e0b',
+        },
+      ];
+
+  // Conta da mostrare nel subtitle della sezione Oggi
+  const todayCount = permissions.isStaff && permissions.canSeeBusinessCalendar
+    ? (activeApptTab === 'mine' ? stats.appointmentsToday : (businessStats?.appointmentsToday ?? 0))
+    : stats.appointmentsToday;
+
+  const todayApptList = permissions.isStaff && permissions.canSeeBusinessCalendar && activeApptTab === 'team'
+    ? allTodayAppointments
+    : todayAppointments;
+
+  // Sezioni — staff non vede "Il tuo team"
+  const sections = [
+    {
+      title: permissions.isStaff && permissions.canSeeBusinessCalendar
+        ? (activeApptTab === 'mine' ? 'I miei appuntamenti' : 'Appuntamenti team')
+        : permissions.isStaff ? 'I miei appuntamenti oggi' : 'Oggi',
+      subtitle: `${todayCount} appuntament${todayCount === 1 ? 'o' : 'i'}`,
+      icon: Clock,
+      iconColor: '#9333ea',
+      iconBg: 'rgba(168,85,247,0.06)',
+      linkLabel: '',
+      onLinkClick: () => {},
+      linkColor: '#9333ea',
+      children: (
+        <>
+          {/* Tab switcher — solo staff con canSeeBusinessCalendar */}
+          {permissions.isStaff && permissions.canSeeBusinessCalendar && (
+            <div className="flex gap-1 mb-4 p-1 rounded-2xl w-fit" style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.1)' }}>
+              {(['mine', 'team'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveApptTab(tab)}
+                  className="px-4 py-1.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                  style={{
+                    background: activeApptTab === tab ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'transparent',
+                    color: activeApptTab === tab ? '#fff' : '#9333ea',
+                    boxShadow: activeApptTab === tab ? '0 2px 8px rgba(147,51,234,0.3)' : 'none',
+                  }}
+                >
+                  {tab === 'mine' ? 'I miei' : 'Team'}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Lista appuntamenti */}
+          {todayApptList.length === 0 ? (
+            <EmptyTodaySection onAdd={() => router.push('/dashboard/calendario')} />
+          ) : (
+            <TodayTimelineSection appointments={todayApptList} onView={() => router.push('/dashboard/calendario')} />
+          )}
+        </>
+      ),
+    },
+    ...(!permissions.isStaff ? [{
+      title: 'Il tuo team',
+      subtitle: `${stats.totalStaff} membr${stats.totalStaff === 1 ? 'o' : 'i'} totali`,
+      icon: UserCheck,
+      iconColor: '#10b981',
+      iconBg: 'rgba(16,185,129,0.06)',
+      linkLabel: 'Gestisci staff',
+      onLinkClick: () => router.push('/dashboard/staff'),
+      linkColor: '#10b981',
+      children: stats.totalStaff === 0 ? (
+        <EmptyTeamSection onAdd={() => router.push('/dashboard/staff')} />
+      ) : (
+        <TeamStatusSection
+          operative={operativeStaff}
+          incomplete={stats.incompleteStaff}
+          total={stats.totalStaff}
+          onManage={() => router.push('/dashboard/staff')}
+        />
+      ),
+    }] : []),
+  ];
+
+  // Quick actions — staff non può aggiungere servizi
+  const quickActions = permissions.isStaff
+    ? [
+        {
+          label: 'Nuovo appuntamento',
+          description: 'Apri il form di prenotazione',
+          icon: Plus,
+          onClick: () => { setAvailableSlots([]); setIsApptModalOpen(true); },
+        },
+        {
+          label: 'Vedi statistiche',
+          description: 'Le mie performance',
+          icon: BarChart3,
+          onClick: () => router.push('/dashboard/statistiche'),
+        },
+      ]
+    : [
+        {
+          label: 'Nuovo appuntamento',
+          description: 'Apri il form di prenotazione',
+          icon: Plus,
+          onClick: () => { setAvailableSlots([]); setIsApptModalOpen(true); },
+        },
+        {
+          label: 'Aggiungi servizio',
+          description: 'Crea un nuovo servizio',
+          icon: Scissors,
+          onClick: () => { setServiceError(''); setIsServiceModalOpen(true); },
+        },
+        {
+          label: 'Vedi statistiche',
+          description: 'Analisi e performance',
+          icon: BarChart3,
+          onClick: () => router.push('/dashboard/statistiche'),
+        },
+      ];
+
+  return (
+    <>
+      <OverviewPage
+        greeting={getGreeting()}
+        businessName={businessName}
+        dateString={getFormattedDate()}
+        stats={statCards}
+        sections={sections}
+        quickActions={quickActions}
         businessSlug={businessSlug}
         qrTitle={`QR Code del tuo ${getBusinessLabel(businessType)}`}
       />
@@ -405,6 +518,8 @@ export function OverviewContent({
         slotsLoading={slotsLoading}
         slotsError={slotsError || undefined}
         onSlotsNeeded={fetchAvailableSlots}
+        lockedStaffId={permissions.isStaff && !permissions.canManageTeamBookings ? (permissions.currentStaffId ?? undefined) : undefined}
+        allowedStaffIds={permissions.isStaff && permissions.canManageTeamBookings && permissions.teamBookingStaffIds.length > 0 ? permissions.teamBookingStaffIds : undefined}
         labels={{
           title: 'Nuovo Appuntamento',
           customer: 'Cliente',
@@ -435,7 +550,7 @@ export function OverviewContent({
 
 function EmptyTodaySection({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="text-center py-10">
+    <div className="flex-1 flex flex-col items-center justify-center text-center">
       <div
         className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
         style={{ background: 'rgba(168,85,247,0.05)' }}

@@ -85,6 +85,72 @@ export const beautyMenuSections: SidebarMenuSection[] = [
   },
 ];
 
+/**
+ * Menu ridotto per staff (dipendenti) — senza la voce Staff
+ */
+export const beautyStaffMenuSections: SidebarMenuSection[] = [
+  {
+    id: 'main',
+    label: 'Menu Principale',
+    items: [
+      {
+        id: 'overview',
+        label: 'Overview',
+        icon: LayoutDashboard,
+        href: '/dashboard',
+      },
+      {
+        id: 'calendario',
+        label: 'Calendario',
+        icon: Calendar,
+        href: '/dashboard/calendario',
+      },
+      {
+        id: 'servizi',
+        label: 'Servizi',
+        icon: Scissors,
+        href: '/dashboard/servizi',
+      },
+      {
+        id: 'clienti',
+        label: 'Clienti',
+        icon: UserCircle,
+        href: '/dashboard/clienti',
+      },
+      {
+        id: 'statistiche',
+        label: 'Statistiche',
+        icon: BarChart3,
+        href: '/dashboard/statistiche',
+      },
+    ],
+  },
+  {
+    id: 'bottom',
+    items: [
+      {
+        id: 'impostazioni',
+        label: 'Impostazioni',
+        icon: Settings,
+        href: '/dashboard/impostazioni',
+      },
+      {
+        id: 'aiuto',
+        label: 'Aiuto',
+        icon: HelpCircle,
+        href: '/dashboard/aiuto',
+      },
+    ],
+  },
+];
+
+/**
+ * Restituisce il menu corretto in base al ruolo dell'utente
+ */
+export function getMenuForRole(isOwnerOrAdmin: boolean): SidebarMenuSection[] {
+  return isOwnerOrAdmin ? beautyMenuSections : beautyStaffMenuSections;
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================

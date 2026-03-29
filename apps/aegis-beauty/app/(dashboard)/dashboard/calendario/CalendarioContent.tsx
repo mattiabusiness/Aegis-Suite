@@ -28,6 +28,7 @@ import {
   type SlotInfo,
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
+import { useStaffPermissions } from '@/lib/staff-permissions-context';
 import { Plus, Calendar as CalendarIcon, Users, Briefcase, ChevronDown } from 'lucide-react';
 
 // ============================================================================
@@ -110,6 +111,7 @@ export function CalendarioContent({
   staffServices: initialStaffServices,
 }: CalendarioContentProps) {
   const supabase = createClient();
+  const permissions = useStaffPermissions();
 
   // ========================================================================
   // STATE
@@ -141,6 +143,9 @@ export function CalendarioContent({
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
 
+  // Business hours — inizializzati dalla prop ma aggiornabili on demand
+  const [liveBusinessHours, setLiveBusinessHours] = useState<BusinessHoursData[]>(businessHours);
+
   // Customers (can grow as new ones are created)
   const [modalCustomers] = useState<Customer[]>(initialCustomers);
   const modalServices: Service[] = initialServices;
@@ -153,6 +158,8 @@ export function CalendarioContent({
 
   // Track last fetched range to avoid redundant fetches
   const lastFetchedRange = useRef<string>('');
+  // AbortController per cancellare fetch slot in volo
+  const slotsAbortRef = useRef<AbortController | null>(null);
 
   // ========================================================================
   // DYNAMIC APPOINTMENT FETCHING
@@ -168,7 +175,7 @@ export function CalendarioContent({
 
     setLoading(true);
     try {
-      const { data: appointments, error } = await supabase
+      const query = supabase
         .from('appointments')
         .select(`
           id, start_time, end_time, status, staff_notes,
@@ -180,6 +187,13 @@ export function CalendarioContent({
         .gte('start_time', range.start)
         .lte('start_time', range.end)
         .order('start_time', { ascending: true });
+
+      // Staff senza visibilità agenda completa: vede solo i propri appuntamenti
+      if (permissions.isStaff && !permissions.canSeeBusinessCalendar && permissions.currentStaffId) {
+        query.eq('staff_id', permissions.currentStaffId);
+      }
+
+      const { data: appointments, error } = await query;
 
       if (error) throw error;
 
@@ -208,7 +222,7 @@ export function CalendarioContent({
     } finally {
       setLoading(false);
     }
-  }, [businessId, supabase]);
+  }, [businessId, supabase, permissions]);
 
   // Fetch when date or view changes
   useEffect(() => {
@@ -224,6 +238,11 @@ export function CalendarioContent({
     serviceId: string,
     staffId?: string | null,
   ) => {
+    // Cancella richieste precedenti in volo
+    slotsAbortRef.current?.abort();
+    const controller = new AbortController();
+    slotsAbortRef.current = controller;
+
     setSlotsLoading(true);
     setSlotsError(null);
     setAvailableSlots([]);
@@ -236,33 +255,48 @@ export function CalendarioContent({
       });
       if (staffId) params.set('staffId', staffId);
 
-      const response = await fetch(`/api/availability?${params}`);
+      const response = await fetch(`/api/availability?${params}`, { signal: controller.signal });
+
+      if (controller.signal.aborted) return;
+
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'Errore nel caricamento');
       }
 
-      setAvailableSlots(() => {
-        const slots: SlotInfo[] = data.slots || [];
-        const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        if (date === todayStr) {
-          const nowMinutes = now.getHours() * 60 + now.getMinutes();
-          return slots.filter(s => {
-            const [h, m] = s.time.split(':').map(Number);
-            return h * 60 + m > nowMinutes;
-          });
-        }
-        return slots;
-      });
+      if (!controller.signal.aborted) {
+        setAvailableSlots(() => {
+          const slots: SlotInfo[] = data.slots || [];
+          const now = new Date();
+          const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          if (date === todayStr) {
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            return slots.filter(s => {
+              const [h, m] = s.time.split(':').map(Number);
+              return h * 60 + m > nowMinutes;
+            });
+          }
+          return slots;
+        });
+      }
     } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
       console.error('Error fetching slots:', err);
       setSlotsError(err instanceof Error ? err.message : 'Errore nel caricamento orari');
     } finally {
-      setSlotsLoading(false);
+      if (!controller.signal.aborted) setSlotsLoading(false);
     }
   }, [businessId]);
+
+  // Ricarica business hours dal DB (usato quando si apre il modal dopo aver modificato gli orari)
+  const refreshBusinessHours = useCallback(async () => {
+    const { data } = await supabase
+      .from('business_hours')
+      .select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
+      .eq('business_id', businessId);
+    if (data) setLiveBusinessHours(data as BusinessHoursData[]);
+  }, [businessId, supabase]);
 
   // ========================================================================
   // HANDLERS
@@ -272,6 +306,7 @@ export function CalendarioContent({
     setModalInitialDate(selectedDate);
     setModalInitialTime(undefined);
     setAvailableSlots([]);
+    refreshBusinessHours();
     setIsModalOpen(true);
   };
 
@@ -279,6 +314,7 @@ export function CalendarioContent({
     setModalInitialDate(date);
     setModalInitialTime(`${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
     setAvailableSlots([]);
+    refreshBusinessHours();
     setIsModalOpen(true);
   };
 
@@ -366,11 +402,20 @@ export function CalendarioContent({
   const handleModalSubmit = async (data: AppointmentFormData) => {
     setIsSubmitting(true);
     try {
+      // Se staffId è vuoto (nessuna preferenza), prendi il primo staff disponibile dallo slot
+      let resolvedStaffId = data.staffId;
+      if (!resolvedStaffId && data.time) {
+        const chosenSlot = availableSlots.find(s => s.time === data.time);
+        const firstAvailable = chosenSlot?.availableStaffIds?.find(id => id !== '__any__');
+        if (firstAvailable) resolvedStaffId = firstAvailable;
+      }
+
       const response = await fetch('/api/appointments/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
+          staffId: resolvedStaffId || null,
           businessId,
         }),
       });
@@ -481,19 +526,21 @@ export function CalendarioContent({
           >
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Filtri</p>
             <div className="flex gap-2">
-              {/* Staff toggle */}
-              <button
-                onClick={() => { setShowStaffFilter(!showStaffFilter); setShowServiceFilter(false); }}
-                className="flex-1 flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
-                style={{
-                  background: selectedStaff || showStaffFilter ? 'rgba(147,51,234,0.08)' : 'rgba(0,0,0,0.02)',
-                  color: selectedStaff || showStaffFilter ? '#7c3aed' : '#6b7280',
-                  border: `1px solid ${selectedStaff || showStaffFilter ? 'rgba(147,51,234,0.15)' : 'rgba(0,0,0,0.04)'}`,
-                }}
-              >
-                <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />{selectedStaffName || 'Staff'}</span>
-                <ChevronDown className="w-3 h-3" style={{ transform: showStaffFilter ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-              </button>
+              {/* Staff toggle — nascosto per staff senza visibilità agenda completa */}
+              {(!permissions.isStaff || permissions.canSeeBusinessCalendar) && (
+                <button
+                  onClick={() => { setShowStaffFilter(!showStaffFilter); setShowServiceFilter(false); }}
+                  className="flex-1 flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
+                  style={{
+                    background: selectedStaff || showStaffFilter ? 'rgba(147,51,234,0.08)' : 'rgba(0,0,0,0.02)',
+                    color: selectedStaff || showStaffFilter ? '#7c3aed' : '#6b7280',
+                    border: `1px solid ${selectedStaff || showStaffFilter ? 'rgba(147,51,234,0.15)' : 'rgba(0,0,0,0.04)'}`,
+                  }}
+                >
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />{selectedStaffName || 'Staff'}</span>
+                  <ChevronDown className="w-3 h-3" style={{ transform: showStaffFilter ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
+              )}
               {/* Service toggle */}
               <button
                 onClick={() => { setShowServiceFilter(!showServiceFilter); setShowStaffFilter(false); }}
@@ -649,7 +696,7 @@ export function CalendarioContent({
             events={filteredEvents}
             onEventClick={handleEventClick}
             onSlotClick={handleSlotClick}
-            businessHours={businessHours}
+            businessHours={liveBusinessHours}
             closures={closures}
             className="h-full"
           />
@@ -684,6 +731,8 @@ export function CalendarioContent({
         slotsLoading={slotsLoading}
         slotsError={slotsError || undefined}
         onSlotsNeeded={fetchAvailableSlots}
+        lockedStaffId={permissions.isStaff && !permissions.canManageTeamBookings ? (permissions.currentStaffId ?? undefined) : undefined}
+        allowedStaffIds={permissions.isStaff && permissions.canManageTeamBookings && permissions.teamBookingStaffIds.length > 0 ? permissions.teamBookingStaffIds : undefined}
         labels={{
           title: 'Nuovo Appuntamento',
           customer: 'Cliente',

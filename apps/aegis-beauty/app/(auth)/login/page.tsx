@@ -47,39 +47,51 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  const [loginError, setLoginError] = useState('');
-  const [loginSuccess, setLoginSuccess] = useState('');
+  const [loginError, setLoginError] = useState(() =>
+    searchParams.get('error') === 'auth_failed' ? 'Autenticazione fallita. Riprova.' : ''
+  );
+  const [loginSuccess, setLoginSuccess] = useState(() =>
+    searchParams.get('success') === 'email_confirmed' ? 'Email confermata! Ora puoi accedere.' : ''
+  );
   const [registerError, setRegisterError] = useState('');
   const [registerSuccess, setRegisterSuccess] = useState('');
   const [processingInvite, setProcessingInvite] = useState(false);
-  const [initialMode, setInitialMode] = useState<'login' | 'register'>('login');
 
-  const [inviteData, setInviteData] = useState({
-    isInvite: false, name: '', email: '', phone: '',
-    businessName: '', businessSlug: '',
-  });
-
-  // Check URL params
-  useEffect(() => {
-    if (searchParams.get('mode') === 'register') setInitialMode('register');
-
+  // Initialise synchronously so AuthFlipCard mounts in the correct mode
+  const [inviteData, setInviteData] = useState(() => {
+    if (searchParams.get('staff_invite') === 'true') {
+      return {
+        isInvite: true, isStaffInvite: true,
+        name: searchParams.get('name') || '',
+        email: searchParams.get('email') || '',
+        phone: searchParams.get('phone') || '',
+        businessName: searchParams.get('business_name') || '',
+        businessSlug: searchParams.get('business_slug') || '',
+        staffId: searchParams.get('staff_id') || '',
+      };
+    }
     if (searchParams.get('invite') === 'true') {
-      setInviteData({
-        isInvite: true,
+      return {
+        isInvite: true, isStaffInvite: false,
         name: searchParams.get('name') || '',
         email: searchParams.get('email') || '',
         phone: searchParams.get('phone') || '',
         businessName: searchParams.get('business') || '',
         businessSlug: searchParams.get('business_slug') || '',
-      });
-      setInitialMode('register');
+        staffId: '',
+      };
     }
+    return { isInvite: false, isStaffInvite: false, name: '', email: '', phone: '', businessName: '', businessSlug: '', staffId: '' };
+  });
 
-    if (searchParams.get('error') === 'auth_failed') setLoginError('Autenticazione fallita. Riprova.');
-    if (searchParams.get('success') === 'email_confirmed') setLoginSuccess('Email confermata! Ora puoi accedere.');
-  }, [searchParams]);
+  const [initialMode, setInitialMode] = useState<'login' | 'register'>(() => {
+    if (searchParams.get('staff_invite') === 'true') return 'register';
+    if (searchParams.get('invite') === 'true') return 'register';
+    if (searchParams.get('mode') === 'register') return 'register';
+    return 'login';
+  });
 
-  // Process invite token from hash
+  // Process invite token from URL hash (Supabase implicit flow for email invites)
   useEffect(() => {
     const process = async () => {
       if (typeof window === 'undefined' || !window.location.hash) return;
@@ -96,7 +108,8 @@ function LoginContent() {
         if (se || !sd.user) { setLoginError('Link invito non valido o scaduto'); setProcessingInvite(false); return; }
         const m = sd.user.user_metadata || {};
         setInviteData({
-          isInvite: true, name: m.full_name || '', email: sd.user.email || '',
+          isInvite: true, isStaffInvite: false, staffId: '',
+          name: m.full_name || '', email: sd.user.email || '',
           phone: m.phone || '', businessName: m.business_name || '', businessSlug: m.business_slug || '',
         });
         setInitialMode('register');
@@ -111,13 +124,74 @@ function LoginContent() {
     setLoginError(''); setLoginSuccess('');
     const result = await signIn(supabase, data);
     if (!result.success) { setLoginError(result.error || 'Errore durante il login'); throw new Error(result.error); }
-    router.push(searchParams.get('redirect') || '/dashboard');
+
+    const redirectParam = searchParams.get('redirect');
+
+    // Singola query per tutti i ruoli — evita due round-trip
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: members } = await supabase
+        .from('business_members')
+        .select('role, businesses(slug)')
+        .eq('user_id', user.id)
+        .eq('is_active', true) as { data: Array<{ role: string; businesses: { slug: string } | null }> | null };
+
+      const isStaff = members?.some((m) => ['owner', 'admin', 'staff'].includes(m.role));
+      if (isStaff) { router.push('/dashboard'); return; }
+
+      if (redirectParam) { router.push(redirectParam); return; }
+
+      const customerMember = members?.find((m) => m.role === 'customer');
+      const slug = (customerMember?.businesses as { slug: string } | null)?.slug;
+      router.push(slug ? `/${slug}` : '/');
+      return;
+    }
+
+    router.push(redirectParam || '/dashboard');
   };
 
   const handleRegister = async (data: { fullName: string; email: string; phone: string; password: string }) => {
     setRegisterError(''); setRegisterSuccess('');
 
     if (inviteData.isInvite) {
+      // QR code staff invite — user is NOT yet authenticated, needs signUp
+      if (inviteData.isStaffInvite) {
+        let specificErrorSet = false;
+        try {
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: inviteData.email,
+            password: data.password,
+            options: {
+              emailRedirectTo: `${appUrl}/auth/callback`,
+              data: { full_name: data.fullName, phone: data.phone, staff_id: inviteData.staffId, invite_type: 'staff' },
+            },
+          });
+          console.log('[SignUp] result:', { userId: signUpData?.user?.id, hasSession: !!signUpData?.session, emailConfirmed: signUpData?.user?.email_confirmed_at });
+          if (signUpError) { setRegisterError(signUpError.message); specificErrorSet = true; throw signUpError; }
+
+          // Email confirmation DISABILITATA: sessione già disponibile → setup diretto
+          if (signUpData?.session) {
+            console.log('[SignUp] sessione immediata, chiamo setup API...');
+            try {
+              const res = await fetch('/api/staff/setup', { method: 'POST' });
+              const json = await res.json();
+              console.log('[SignUp] setup API response:', res.status, json);
+            } catch (setupErr) {
+              console.error('[SignUp] setup API error:', setupErr);
+            }
+            setRegisterSuccess('Registrazione completata! Reindirizzamento...');
+            setTimeout(() => router.push('/dashboard'), 800);
+            return;
+          }
+
+          // Email confirmation ABILITATA: attendi click sulla mail
+          setRegisterSuccess('Controlla la tua email per confermare l\'account e accedere.');
+          return;
+        } catch (err) { if (!specificErrorSet) setRegisterError('Errore durante la registrazione.'); throw err; }
+      }
+
+      // Email invite — user already authenticated via magic link
       try {
         const { error: ue } = await supabase.auth.updateUser({
           password: data.password, data: { full_name: data.fullName, phone: data.phone },
@@ -130,12 +204,20 @@ function LoginContent() {
           } as never);
         }
         setRegisterSuccess('Registrazione completata! Reindirizzamento...');
-        setTimeout(() => { router.push(inviteData.businessSlug ? `/${inviteData.businessSlug}/book` : '/bookings'); }, 1500);
+        setTimeout(() => { router.push(inviteData.businessSlug ? `/${inviteData.businessSlug}` : '/'); }, 1500);
         return;
-      } catch (err) { if (!registerError) setRegisterError('Errore durante la registrazione.'); throw err; }
+      } catch (err) { setRegisterError('Errore durante la registrazione.'); throw err; }
     }
 
-    const result = await signUp(supabase, { email: data.email, password: data.password, fullName: data.fullName, phone: data.phone });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    const redirectPath = searchParams.get('redirect') || '/';
+    const result = await signUp(supabase, {
+      email: data.email,
+      password: data.password,
+      fullName: data.fullName,
+      phone: data.phone,
+      redirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+    });
     if (!result.success) { setRegisterError(result.error || 'Errore'); throw new Error(result.error); }
     setRegisterSuccess("Registrazione completata! Controlla la tua email per confermare l'account.");
   };
@@ -173,7 +255,9 @@ function LoginContent() {
       loginWelcomeSubtitle="Accedi per gestire i tuoi appuntamenti"
       registerWelcomeTitle="Benvenuto!"
       registerWelcomeSubtitle={
-        inviteData.isInvite && inviteData.businessName
+        inviteData.isStaffInvite && inviteData.businessName
+          ? `${inviteData.businessName} ti ha invitato a registrarti per gestire le tue prenotazioni!`
+          : inviteData.isInvite && inviteData.businessName
           ? `Sei stato invitato da ${inviteData.businessName}`
           : 'Crea il tuo account per iniziare a gestire le tue prenotazioni'
       }

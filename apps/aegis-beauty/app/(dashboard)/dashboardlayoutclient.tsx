@@ -14,7 +14,9 @@ import {
 } from '@aegis/ui';
 import type { SidebarMenuItem } from '@aegis/ui';
 import { createClient } from '@aegis/core';
-import { beautyMenuSections, getActiveMenuId } from '@/config/menu';
+import type { StaffPermissions } from '@aegis/core';
+import { getMenuForRole, getActiveMenuId } from '@/config/menu';
+import { StaffPermissionsProvider } from '@/lib/staff-permissions-context';
 
 // ============================================================================
 // TYPES
@@ -36,6 +38,7 @@ interface DashboardData {
 
 interface DashboardLayoutClientProps {
   data: DashboardData;
+  permissions: StaffPermissions;
   children: React.ReactNode;
 }
 
@@ -59,7 +62,7 @@ function AegisLogo() {
 // COMPONENT
 // ============================================================================
 
-export function DashboardLayoutClient({ data, children }: DashboardLayoutClientProps) {
+export function DashboardLayoutClient({ data, permissions, children }: DashboardLayoutClientProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -67,6 +70,9 @@ export function DashboardLayoutClient({ data, children }: DashboardLayoutClientP
   if (pathname.startsWith('/onboarding')) {
     return <>{children}</>;
   }
+
+  // Determina menu corretto in base al ruolo
+  const menuSections = getMenuForRole(permissions.isOwnerOrAdmin);
 
   // Determina menu item attivo
   const activeItemId = getActiveMenuId(pathname);
@@ -84,27 +90,29 @@ export function DashboardLayoutClient({ data, children }: DashboardLayoutClientP
   };
 
   return (
-    <ContentThemeProvider theme={beautyContentTheme}>
-      <DashboardLayout
-        theme={beautyTheme}
-        platformLogo={<AegisLogo />}
-        menuSections={beautyMenuSections}
-        activeItemId={activeItemId}
-        businessName={data.business.name}
-        businessLogo={data.business.logoUrl || undefined}
-        userName={data.user.name}
-        userEmail={data.user.email}
-        onMenuItemClick={handleMenuItemClick}
-        onLogout={handleLogout}
-        onProfileClick={() => router.push('/dashboard/impostazioni?tab=account')}
-        onSettingsClick={() => router.push('/dashboard/impostazioni?tab=generale')}
-        onHelp={() => router.push('/dashboard/aiuto')}
-        showHelp
-        showLogout
-        currentPath={pathname}
-      >
-        {children}
-      </DashboardLayout>
-    </ContentThemeProvider>
+    <StaffPermissionsProvider permissions={permissions}>
+      <ContentThemeProvider theme={beautyContentTheme}>
+        <DashboardLayout
+          theme={beautyTheme}
+          platformLogo={<AegisLogo />}
+          menuSections={menuSections}
+          activeItemId={activeItemId}
+          businessName={data.business.name}
+          businessLogo={data.business.logoUrl || undefined}
+          userName={data.user.name}
+          userEmail={data.user.email}
+          onMenuItemClick={handleMenuItemClick}
+          onLogout={handleLogout}
+          onProfileClick={() => router.push('/dashboard/impostazioni?tab=account')}
+          onSettingsClick={() => router.push('/dashboard/impostazioni?tab=generale')}
+          onHelp={() => router.push('/dashboard/aiuto')}
+          showHelp
+          showLogout
+          currentPath={pathname}
+        >
+          {children}
+        </DashboardLayout>
+      </ContentThemeProvider>
+    </StaffPermissionsProvider>
   );
 }

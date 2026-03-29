@@ -5,53 +5,128 @@
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createServerSupabaseClient } from '@aegis/core';
+import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const type = requestUrl.searchParams.get('type');
   const next = requestUrl.searchParams.get('next') || '/dashboard';
-  
-  // ================================================================
-  // CASO 1: Implicit flow (hash fragment con access_token)
-  // Supabase invites usano questo flow - il token è nel # fragment
-  // Ma il server non può leggere il hash, quindi serve una pagina client
-  // Redirect a una pagina client che gestisce il hash
-  // ================================================================
-  
-  // Se non c'è code ma c'è type=invite, probabilmente è implicit flow
-  // Il browser deve gestire il hash fragment lato client
+
+  // Se non c'è code ma c'è type=invite, è implicit flow — gestito lato client
   if (!code && type === 'invite') {
-    // Redirect alla pagina register che gestirà il token lato client
     return NextResponse.redirect(new URL('/register?from_invite=true', request.url));
   }
-  
-  // ================================================================
-  // CASO 2: PKCE flow (code nei query params)
-  // ================================================================
+
   if (code) {
-    const cookieStore = await cookies();
-    const supabase = createServerSupabaseClient(cookieStore) as any;
-    
-    // Exchange code for session
+    // Prepara la response di redirect — i cookie vengono scritti su di essa
+    const redirectUrl = new URL('/dashboard', request.url);
+    const response = NextResponse.redirect(redirectUrl);
+
+    // Crea il client SSR corretto per Route Handler:
+    // legge da request.cookies, scrive su response.cookies
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      }
+    );
+
+    // Scambia il code con la sessione — scrive i cookie sulla response
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (error) {
       console.error('Auth callback error:', error);
       return NextResponse.redirect(new URL('/login?error=auth_failed', request.url));
     }
-    
+
     const user = data?.user;
     const metadata = user?.user_metadata || {};
-    
-    // Check if this is an invite
+
+    // ================================================================
+    // STAFF INVITE — collega user_id, crea business_member e profilo
+    // ================================================================
+    console.log('[Callback] user:', user?.id, '| invite_type:', metadata.invite_type, '| staff_id:', metadata.staff_id);
+
+    if (metadata.invite_type === 'staff' && metadata.staff_id && user?.id) {
+      try {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+
+        // 1. Collega staff.user_id
+        const { error: linkErr } = await supabaseAdmin
+          .from('staff')
+          .update({ user_id: user.id })
+          .eq('id', metadata.staff_id)
+          .is('user_id', null);
+        console.log('[Callback] staff link error:', linkErr);
+
+        // 2. Leggi business_id e role dallo staff record
+        const { data: staffRecord, error: staffErr } = await supabaseAdmin
+          .from('staff')
+          .select('business_id')
+          .eq('id', metadata.staff_id)
+          .single();
+        console.log('[Callback] staffRecord:', staffRecord, '| error:', staffErr);
+
+        // 3. Aggiungi a business_members — delete + insert per massima affidabilità
+        if (staffRecord?.business_id) {
+          await supabaseAdmin
+            .from('business_members')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('business_id', staffRecord.business_id);
+
+          const { error: memberErr } = await supabaseAdmin
+            .from('business_members')
+            .insert({
+              user_id: user.id,
+              business_id: staffRecord.business_id,
+              role: 'staff',
+              is_active: true,
+            });
+          console.log('[Callback] business_members insert error:', memberErr);
+        }
+
+        // 4. Crea/aggiorna profilo
+        const { error: profileErr } = await supabaseAdmin
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            email: user.email,
+            full_name: metadata.full_name || '',
+            phone: metadata.phone || null,
+          }, { onConflict: 'id' });
+        console.log('[Callback] profile upsert error:', profileErr);
+
+      } catch (e) {
+        console.error('[Callback] Errore setup staff:', e);
+      }
+
+      // Ritorna la response con sessione nei cookie → dashboard diretta
+      return response;
+    }
+
+    // ================================================================
+    // CUSTOMER/BUSINESS INVITE
+    // ================================================================
     if (type === 'invite' || metadata.invited_by_business) {
-      // Build query params for register page
       const params = new URLSearchParams();
       params.set('invite', 'true');
-      
       if (metadata.full_name) params.set('name', metadata.full_name);
       if (user?.email) params.set('email', user.email);
       if (metadata.phone) params.set('phone', metadata.phone);
@@ -59,32 +134,33 @@ export async function GET(request: NextRequest) {
       if (metadata.business_slug) params.set('business_slug', metadata.business_slug);
       if (metadata.customer_id) params.set('customer_id', metadata.customer_id);
       if (user?.id) params.set('user_id', user.id);
-      
-      // Redirect to register page with pre-filled data
       return NextResponse.redirect(new URL(`/register?${params.toString()}`, request.url));
     }
-    
-    // Check if user has a profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-    
-    if (!profile) {
-      // Create profile for new user
-      const { error: profileError } = await supabase.rpc('create_profile', {
-        user_id: user.id,
-        user_email: user.email,
-        user_full_name: metadata.full_name || '',
-        user_phone: metadata.phone || null,
-      });
-      
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
+
+    // ================================================================
+    // CONFERMA EMAIL STANDARD (titolare / cliente)
+    // ================================================================
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) {
+        await supabase.rpc('create_profile', {
+          user_id: user.id,
+          user_email: user.email,
+          user_full_name: metadata.full_name || '',
+          user_phone: metadata.phone || null,
+        });
       }
     }
+
+    // Ritorna la response con sessione nei cookie
+    response.headers.set('Location', new URL(next, request.url).toString());
+    return response;
   }
-  
+
   return NextResponse.redirect(new URL(next, request.url));
 }

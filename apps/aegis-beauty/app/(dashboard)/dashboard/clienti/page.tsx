@@ -38,10 +38,10 @@ export default async function ClientiPage() {
   // Fetch customers with counts
   const { data: customers, count: totalCount } = await supabase
     .from('customers')
-    .select('id, full_name, email, phone, total_appointments, total_spent, last_visit_at, is_active, notes, preferences, tags, birth_date, gender, source, accepts_marketing, created_at', { count: 'exact' })
+    .select('id, full_name, email, phone, total_appointments, total_spent, last_visit_at, is_active, notes, preferences, tags, birth_date, gender, source, accepts_marketing, created_at, user_id, invited_at', { count: 'exact' })
     .eq('business_id', businessId)
     .order('full_name', { ascending: true })
-    .range(0, 19) as { 
+    .range(0, 19) as {
       data: Array<{
         id: string;
         full_name: string;
@@ -59,6 +59,8 @@ export default async function ClientiPage() {
         source: string | null;
         accepts_marketing: boolean;
         created_at: string;
+        user_id: string | null;
+        invited_at: string | null;
       }> | null;
       count: number | null;
     };

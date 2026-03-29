@@ -26,6 +26,24 @@ const PROTECTED_PREFIXES = [
   '/onboarding',
 ];
 
+// Customer sub-routes that require login (/[slug]/prenota and /[slug]/account)
+// /[slug] itself is PUBLIC — only prenota and account are protected
+const CUSTOMER_PROTECTED_SUBPATHS = ['account', 'prenota'];
+const KNOWN_ROOT_PREFIXES = [
+  '/dashboard', '/onboarding', '/login', '/register',
+  '/forgot-password', '/reset-password', '/auth', '/api', '/_next',
+  '/demo', '/legal', // marketing routes — not customer slugs
+];
+
+function isCustomerProtectedRoute(pathname: string): boolean {
+  // Skip if it matches any known system path
+  if (KNOWN_ROOT_PREFIXES.some((p) => pathname.startsWith(p))) return false;
+  // Match /[slug]/(account|prenota) — at least 2-char slug
+  const match = pathname.match(/^\/([a-z0-9][a-z0-9-]*)\/([a-z]+)(\/.*)?$/);
+  if (!match) return false;
+  return CUSTOMER_PROTECTED_SUBPATHS.includes(match[2]);
+}
+
 // Static/API routes to skip entirely
 const SKIP_PREFIXES = [
   '/_next',
@@ -95,9 +113,19 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   // ── Authenticated user on public routes → redirect to dashboard ──
-  if (isAuthenticated && isPublicRoute) {
+  // Exception: staff invite QR links must pass through so the staff can register
+  const isStaffInvite = request.nextUrl.searchParams.get('staff_invite') === 'true';
+  const hasNoAccess = request.nextUrl.searchParams.get('reason') === 'no_access';
+  if (isAuthenticated && isPublicRoute && !isStaffInvite && !hasNoAccess) {
     const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
+    const redirectParam = request.nextUrl.searchParams.get('redirect');
+    // If redirect points to a customer route, honor it (customer already logged in)
+    if (redirectParam && isCustomerProtectedRoute(redirectParam)) {
+      url.pathname = redirectParam;
+      url.search = '';
+    } else {
+      url.pathname = '/dashboard';
+    }
     return NextResponse.redirect(url);
   }
 
@@ -106,6 +134,16 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     // Preserve the intended destination
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // ── Unauthenticated user on customer protected sub-routes ──
+  // /[slug]/prenota and /[slug]/account require login
+  // /[slug] itself stays PUBLIC
+  if (!isAuthenticated && isCustomerProtectedRoute(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }

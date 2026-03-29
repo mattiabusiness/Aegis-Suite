@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
   StaffList,
   StaffModal,
@@ -55,7 +56,7 @@ interface BusinessHoursData {
 
 interface StaffHoursData {
   day_of_week: string;
-  is_available: boolean;
+  is_working: boolean;
   start_time_1: string | null;
   end_time_1: string | null;
   start_time_2: string | null;
@@ -281,6 +282,11 @@ export function StaffContent({
           const result = await response.json();
 
           if (response.ok) {
+            if (result.alreadyExists) {
+              toast('Utente già registrato — il QR porta alla pagina di login');
+            } else {
+              toast.success('Invito inviato con successo');
+            }
             setIsModalOpen(false);
             setEditingStaff(null);
             setQrCodeData({
@@ -289,6 +295,9 @@ export function StaffContent({
               inviteUrl: result.inviteUrl,
             });
             return;
+          } else {
+            toast.error(result.error || 'Errore nell\'invio dell\'invito');
+            return; // Lascia il modal aperto per correggere
           }
         }
 
@@ -312,39 +321,55 @@ export function StaffContent({
         if (insertError) throw insertError;
 
         if (newStaff) {
-          setStaff(prev => [...prev, newStaff]);
-
-          const response = await fetch('/api/staff/invite', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              staffId: newStaff.id,
-              email: data.email,
-              fullName: data.fullName,
-              phone: data.phone,
-              businessId,
-              businessSlug,
-              role: data.role,
-            }),
-          });
-
-          const result = await response.json();
-
-          if (!response.ok) {
-            throw new Error(result.error || 'Errore nell\'invio dell\'invito');
+          // Assign all active services to new staff by default
+          const activeServiceIds = initialServices.map(s => s.id);
+          if (activeServiceIds.length > 0) {
+            await supabase.from('staff_services').insert(
+              activeServiceIds.map(serviceId => ({
+                staff_id: newStaff.id,
+                service_id: serviceId,
+              })) as never
+            );
           }
 
+          setStaff(prev => [...prev, newStaff]);
           setIsModalOpen(false);
-          setQrCodeData({
-            isOpen: true,
-            staffName: data.fullName,
-            inviteUrl: result.inviteUrl || `${window.location.origin}/register?staff_invite=true&staff_id=${newStaff.id}`,
-          });
+
+          // Only generate QR if email was provided
+          if (data.email) {
+            const response = await fetch('/api/staff/invite', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                staffId: newStaff.id,
+                email: data.email,
+                fullName: data.fullName,
+                phone: data.phone,
+                businessId,
+                businessSlug,
+                role: data.role,
+              }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              toast.error(result.error || 'Staff salvato ma QR non generato');
+            } else {
+              setQrCodeData({
+                isOpen: true,
+                staffName: data.fullName,
+                inviteUrl: result.inviteUrl || `${window.location.origin}/register?staff_invite=true&staff_id=${newStaff.id}`,
+              });
+            }
+          }
         }
       }
     } catch (err) {
       console.error('Error saving staff:', err);
-      throw err instanceof Error ? err : new Error('Errore durante il salvataggio');
+      const msg = err instanceof Error ? err.message : 'Errore durante il salvataggio';
+      toast.error(msg);
+      throw err instanceof Error ? err : new Error(msg);
     }
   };
 
@@ -405,12 +430,12 @@ export function StaffContent({
 
     const useBusinessHours = !staffHours || staffHours.length === 0;
 
-    const currentHours: DayHours[] = useBusinessHours 
+    const currentHours: DayHours[] = useBusinessHours
       ? businessHoursForModal
       : staffHours.map(h => ({
           dayOfWeek: h.day_of_week,
           dayLabel: DAY_LABELS[h.day_of_week] || h.day_of_week,
-          isOpen: h.is_available,
+          isOpen: h.is_working,
           openTime1: h.start_time_1 || undefined,
           closeTime1: h.end_time_1 || undefined,
           openTime2: h.start_time_2 || undefined,
@@ -429,29 +454,38 @@ export function StaffContent({
   const handleSaveHours = async (useBusinessHours: boolean, customHours?: DayHours[]) => {
     const staffId = hoursModal.staffId;
 
-    // Delete existing staff hours
-    await supabase
+    const { error: deleteError } = await supabase
       .from('staff_hours')
       .delete()
       .eq('staff_id', staffId);
 
-    // If custom hours, insert them
+    if (deleteError) {
+      toast.error('Errore durante il salvataggio degli orari');
+      return;
+    }
+
     if (!useBusinessHours && customHours) {
       const inserts = customHours.map(h => ({
         staff_id: staffId,
         day_of_week: h.dayOfWeek,
-        is_available: h.isOpen,
+        is_working: h.isOpen,
         start_time_1: h.openTime1 || null,
         end_time_1: h.closeTime1 || null,
         start_time_2: h.openTime2 || null,
         end_time_2: h.closeTime2 || null,
       }));
 
-      await supabase
+      const { error: insertError } = await supabase
         .from('staff_hours')
         .insert(inserts as never);
+
+      if (insertError) {
+        toast.error('Errore durante il salvataggio degli orari');
+        return;
+      }
     }
 
+    toast.success('Orari salvati correttamente');
     setHoursModal({ isOpen: false, staffId: '', staffName: '', useBusinessHours: true, currentHours: [] });
   };
 

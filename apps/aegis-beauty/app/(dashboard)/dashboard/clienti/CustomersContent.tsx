@@ -5,12 +5,14 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import ExcelJS from 'exceljs';
 import { useRouter } from 'next/navigation';
 import {
   CustomerList,
   CustomerDetailModal,
   AppointmentModal,
+  ImporterModal,
   EmptyCustomers,
   type CustomerListItem,
   type CustomerFilter,
@@ -24,8 +26,11 @@ import {
   type StaffServicesMap,
   type BusinessHoursData,
   type ClosureData,
+  type SlotInfo,
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
+import { useStaffPermissions } from '@/lib/staff-permissions-context';
+import { toast } from 'sonner';
 
 // ============================================================================
 // TYPES
@@ -48,6 +53,8 @@ interface CustomerData {
   source: string | null;
   accepts_marketing: boolean;
   created_at: string;
+  user_id: string | null;
+  invited_at: string | null;
 }
 
 interface StaffData {
@@ -118,6 +125,7 @@ export function ClientiContent({
 }: ClientiContentProps) {
   const router = useRouter();
   const supabase = createClient();
+  const permissions = useStaffPermissions();
 
   // State
   const [customers, setCustomers] = useState<CustomerData[]>(initialCustomers);
@@ -127,6 +135,7 @@ export function ClientiContent({
   const [activeFilter, setActiveFilter] = useState<CustomerFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [importerOpen, setImporterOpen] = useState(false);
 
   // Detail modal state
   const [detailModal, setDetailModal] = useState<{
@@ -161,7 +170,7 @@ export function ClientiContent({
 
       let query = supabase
         .from('customers')
-        .select('id, full_name, email, phone, total_appointments, total_spent, last_visit_at, is_active, notes, preferences, tags, birth_date, gender, source, accepts_marketing, created_at', { count: 'exact' })
+        .select('id, full_name, email, phone, total_appointments, total_spent, last_visit_at, is_active, notes, preferences, tags, birth_date, gender, source, accepts_marketing, created_at, user_id, invited_at', { count: 'exact' })
         .eq('business_id', businessId);
 
       // Apply filter
@@ -249,6 +258,8 @@ export function ClientiContent({
       isActive: customerData.is_active,
       source: customerData.source || undefined,
       acceptsMarketing: customerData.accepts_marketing,
+      userId: customerData.user_id,
+      invitedAt: customerData.invited_at,
     };
 
     setDetailModal({
@@ -375,6 +386,55 @@ export function ClientiContent({
   };
 
   // ============================================================================
+  // SAVE CONTACT (email / phone)
+  // ============================================================================
+
+  const handleSaveContact = async (customerId: string, data: { email?: string; phone?: string }) => {
+    const { error } = await supabase
+      .from('customers')
+      .update(data as never)
+      .eq('id', customerId);
+
+    if (error) throw error;
+
+    setCustomers(prev => prev.map(c =>
+      c.id === customerId
+        ? { ...c, ...(data.email !== undefined ? { email: data.email } : {}), ...(data.phone !== undefined ? { phone: data.phone } : {}) }
+        : c
+    ));
+    toast.success(data.email !== undefined ? 'Email aggiornata' : 'Telefono aggiornato');
+  };
+
+  // ============================================================================
+  // INVITE SINGLE CUSTOMER
+  // ============================================================================
+
+  const handleInviteSingle = async (customerId: string) => {
+    try {
+      const res = await fetch('/api/clients/invite-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerIds: [customerId] }),
+      });
+      if (!res.ok) throw new Error('Errore invito');
+      const invitedAt = new Date().toISOString();
+      setCustomers(prev => prev.map(c =>
+        c.id === customerId ? { ...c, invited_at: invitedAt } : c
+      ));
+      // Also update the open detail modal if it's showing this customer
+      setDetailModal(prev => {
+        if (prev.customer?.id === customerId) {
+          return { ...prev, customer: { ...prev.customer, invitedAt } };
+        }
+        return prev;
+      });
+      toast.success('Invito inviato');
+    } catch {
+      toast.error('Errore durante l\'invio dell\'invito');
+    }
+  };
+
+  // ============================================================================
   // BOOK APPOINTMENT (open modal with pre-selected customer)
   // ============================================================================
 
@@ -384,6 +444,58 @@ export function ClientiContent({
     preselectedCustomerId: string | null;
   }>({ isOpen: false, preselectedCustomerId: null });
   const [isSubmittingAppointment, setIsSubmittingAppointment] = useState(false);
+
+  // Availability slots
+  const [availableSlots, setAvailableSlots] = useState<SlotInfo[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
+  const slotsAbortRef = useRef<AbortController | null>(null);
+
+  const fetchAvailableSlots = useCallback(async (
+    date: string,
+    serviceId: string,
+    staffId?: string | null,
+  ) => {
+    slotsAbortRef.current?.abort();
+    const controller = new AbortController();
+    slotsAbortRef.current = controller;
+
+    setSlotsLoading(true);
+    setSlotsError(null);
+    setAvailableSlots([]);
+
+    try {
+      const params = new URLSearchParams({ date, serviceId, businessId });
+      if (staffId) params.set('staffId', staffId);
+
+      const response = await fetch(`/api/availability?${params}`, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Errore nel caricamento');
+
+      if (!controller.signal.aborted) {
+        setAvailableSlots(() => {
+          const slots: SlotInfo[] = data.slots || [];
+          const now = new Date();
+          const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          if (date === todayStr) {
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            return slots.filter(s => {
+              const [h, m] = s.time.split(':').map(Number);
+              return h * 60 + m > nowMinutes;
+            });
+          }
+          return slots;
+        });
+      }
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      setSlotsError(err instanceof Error ? err.message : 'Errore nel caricamento orari');
+    } finally {
+      if (!controller.signal.aborted) setSlotsLoading(false);
+    }
+  }, [businessId]);
 
   // Build data for AppointmentModal
   const staffServicesMap: StaffServicesMap = {};
@@ -399,6 +511,7 @@ export function ClientiContent({
     name: c.full_name,
     phone: c.phone || undefined,
     email: c.email || undefined,
+    invitedAt: c.invited_at || null,
   }));
 
   const modalServices: ModalService[] = servicesList.map(s => ({
@@ -463,6 +576,25 @@ export function ClientiContent({
 
       setAppointmentModal({ isOpen: false, preselectedCustomerId: null });
 
+      // If an existing customer was given missing contact data, save it back to their record
+      if (data.customerId && !data.isNewCustomer) {
+        const contactPatch: Record<string, string> = {};
+        // Only patch fields that were previously missing (we detect this by checking the original customer)
+        const original = customers.find(c => c.id === data.customerId);
+        if (original) {
+          if (!original.email && data.customerEmail?.trim()) contactPatch.email = data.customerEmail.trim().toLowerCase();
+          if (!original.phone && data.customerPhone?.trim()) contactPatch.phone = data.customerPhone.trim();
+        }
+        if (Object.keys(contactPatch).length > 0) {
+          await supabase.from('customers').update(contactPatch as never).eq('id', data.customerId);
+          setCustomers(prev => prev.map(c => c.id === data.customerId ? { ...c, ...contactPatch } : c));
+        }
+        // Send invite if requested (customer just got email added or already had one)
+        if (data.sendInvite) {
+          await handleInviteSingle(data.customerId);
+        }
+      }
+
       // Refresh customer list to update visit counts
       fetchCustomers(currentPage, activeFilter, searchQuery);
     } catch (error) {
@@ -479,10 +611,9 @@ export function ClientiContent({
 
   const handleExport = async () => {
     try {
-      // Fetch all customers for export
       const { data: allCustomers } = await supabase
         .from('customers')
-        .select('full_name, email, phone, total_appointments, total_spent, last_visit_at, is_active, notes, preferences, created_at')
+        .select('full_name, email, phone, total_appointments, total_spent, last_visit_at, is_active, notes, preferences, birth_date, gender, created_at')
         .eq('business_id', businessId)
         .order('full_name', { ascending: true }) as { data: Array<{
           full_name: string;
@@ -494,48 +625,134 @@ export function ClientiContent({
           is_active: boolean;
           notes: string | null;
           preferences: string | null;
+          birth_date: string | null;
+          gender: string | null;
           created_at: string;
         }> | null };
 
       if (!allCustomers || allCustomers.length === 0) {
-        alert('Nessun cliente da esportare');
+        toast.error('Nessun cliente da esportare');
         return;
       }
 
-      // Build CSV
-      const headers = ['Nome', 'Email', 'Telefono', 'Visite', 'Totale Speso', 'Ultima Visita', 'Stato', 'Note', 'Preferenze', 'Registrato il'];
-      const rows = allCustomers.map(c => [
-        c.full_name,
-        c.email || '',
-        c.phone || '',
-        c.total_appointments.toString(),
-        c.total_spent.toFixed(2),
-        c.last_visit_at ? new Date(c.last_visit_at).toLocaleDateString('it-IT') : '',
-        c.is_active ? 'Attivo' : 'Inattivo',
-        (c.notes || '').replace(/"/g, '""'),
-        (c.preferences || '').replace(/"/g, '""'),
-        new Date(c.created_at).toLocaleDateString('it-IT'),
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Aegis Beauty';
+      workbook.created = new Date();
+
+      const ws = workbook.addWorksheet('Clienti', {
+        views: [{ state: 'frozen', ySplit: 1 }], // freeze header row
+      });
+
+      // Definizione colonne con larghezze
+      ws.columns = [
+        { key: 'nome',         width: 28 },
+        { key: 'email',        width: 32 },
+        { key: 'telefono',     width: 18 },
+        { key: 'visite',       width: 9  },
+        { key: 'speso',        width: 16 },
+        { key: 'ultimaVisita', width: 15 },
+        { key: 'nascita',      width: 16 },
+        { key: 'genere',       width: 10 },
+        { key: 'stato',        width: 10 },
+        { key: 'note',         width: 44 },
+        { key: 'preferenze',   width: 44 },
+        { key: 'registrato',   width: 15 },
+      ];
+
+      // ── HEADER ──
+      const headerRow = ws.addRow([
+        'Nome Completo', 'Email', 'Telefono', 'Visite',
+        'Totale Speso (€)', 'Ultima Visita', 'Data di Nascita',
+        'Genere', 'Stato', 'Note', 'Preferenze', 'Registrato il',
       ]);
+      headerRow.height = 22;
+      headerRow.eachCell(cell => {
+        cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7C3AED' } };
+        cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, name: 'Calibri', size: 11 };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = {
+          top:    { style: 'thin',   color: { argb: 'FF5B21B6' } },
+          left:   { style: 'thin',   color: { argb: 'FF5B21B6' } },
+          bottom: { style: 'medium', color: { argb: 'FF5B21B6' } },
+          right:  { style: 'thin',   color: { argb: 'FF5B21B6' } },
+        };
+      });
 
-      const csvContent = [
-        headers.join(';'),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(';')),
-      ].join('\n');
+      // ── DATI ──
+      allCustomers.forEach((c, i) => {
+        const isEven = i % 2 === 0;
+        const bgColor = isEven ? 'FFFFFFFF' : 'FFF5F3FF';
 
-      // BOM for Excel UTF-8 compatibility
-      const BOM = '\uFEFF';
-      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const row = ws.addRow([
+          c.full_name,
+          c.email || '',
+          c.phone || '',
+          c.total_appointments,
+          c.total_spent,
+          c.last_visit_at ? new Date(c.last_visit_at).toLocaleDateString('it-IT') : '',
+          c.birth_date ? new Date(c.birth_date + 'T00:00:00').toLocaleDateString('it-IT') : '',
+          c.gender || '',
+          c.is_active ? 'Attivo' : 'Inattivo',
+          c.notes || '',
+          c.preferences || '',
+          new Date(c.created_at).toLocaleDateString('it-IT'),
+        ]);
+
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+          cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF1F2937' } };
+          cell.border = {
+            top:    { style: 'thin', color: { argb: 'FFE5E7EB' } },
+            left:   { style: 'thin', color: { argb: 'FFE5E7EB' } },
+            bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+            right:  { style: 'thin', color: { argb: 'FFE5E7EB' } },
+          };
+          cell.alignment = {
+            vertical: 'top',
+            wrapText: true,
+          };
+        });
+
+        // Formato numero per visite e totale speso
+        row.getCell(4).numFmt = '#,##0';
+        row.getCell(5).numFmt = '#,##0.00 "€"';
+      });
+
+      // Auto-height rows for wrapped text (columns keep their fixed widths)
+      ws.eachRow((row) => {
+        let maxLines = 1;
+        row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+          if (!cell.alignment?.wrapText) return;
+          if (typeof cell.value !== 'string' || cell.value.length <= 25) return;
+          const colWidth = Math.max((ws.getColumn(colNumber).width as number | undefined) ?? 20, 12);
+          const lines = Math.ceil(cell.value.length / Math.floor(colWidth * 1.05));
+          maxLines = Math.max(maxLines, lines);
+        });
+        if (maxLines > 1) {
+          const h = Math.min(120, maxLines * 15 + 4);
+          if (!row.height || row.height < h) row.height = h;
+        }
+      });
+
+      // Download via blob
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `clienti_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `clienti_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      toast.success(`${allCustomers.length} clienti esportati`);
+
     } catch (err) {
-      console.error('Error exporting customers:', err);
-      alert('Errore durante l\'esportazione');
+      console.error('Export error:', err);
+      toast.error('Errore durante l\'esportazione');
     }
   };
 
@@ -553,7 +770,39 @@ export function ClientiContent({
     lastVisitAt: c.last_visit_at || undefined,
     createdAt: c.created_at,
     isActive: c.is_active,
+    userId: c.user_id,
+    source: c.source,
+    invitedAt: c.invited_at,
   }));
+
+  const handleCheckDuplicates = async (
+    emails: string[],
+    phones: string[],
+  ): Promise<{ duplicateEmails: Set<string>; duplicatePhones: Set<string> }> => {
+    const { data } = await supabase
+      .from('customers')
+      .select('email, phone')
+      .eq('business_id', businessId);
+
+    const duplicateEmails = new Set<string>();
+    const duplicatePhones = new Set<string>();
+
+    if (data) {
+      const existingEmails = new Set(
+        (data as Array<{ email: string | null; phone: string | null }>)
+          .filter(c => c.email)
+          .map(c => c.email!.toLowerCase()),
+      );
+      const existingPhones = new Set(
+        (data as Array<{ email: string | null; phone: string | null }>)
+          .filter(c => c.phone)
+          .map(c => c.phone!),
+      );
+      emails.forEach(e => { if (existingEmails.has(e.toLowerCase())) duplicateEmails.add(e); });
+      phones.forEach(p => { if (existingPhones.has(p)) duplicatePhones.add(p); });
+    }
+    return { duplicateEmails, duplicatePhones };
+  };
 
   // ============================================================================
   // RENDER
@@ -568,7 +817,7 @@ export function ClientiContent({
           <style>{`@keyframes cl-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
         </div>
 
-        <div className="mt-6 pb-8">
+        <div className="mt-6 pb-2">
           <CustomerList
             customers={customerListItems}
             totalCount={totalCount}
@@ -582,7 +831,9 @@ export function ClientiContent({
             onSearchChange={handleSearchChange}
             onPageChange={handlePageChange}
             onViewCustomer={handleViewCustomer}
-            onExport={handleExport}
+            onInviteSingle={handleInviteSingle}
+            onExport={permissions.canExportClients ? handleExport : undefined}
+            onImport={permissions.canImportClients ? () => setImporterOpen(true) : undefined}
             loading={loading}
             emptyState={
               <EmptyCustomers
@@ -604,8 +855,21 @@ export function ClientiContent({
         currency="€"
         onSaveNotes={handleSaveNotes}
         onSavePreferences={handleSavePreferences}
+        onSaveContact={handleSaveContact}
+        onInvite={handleInviteSingle}
         onBookAppointment={handleBookAppointment}
         loading={detailModal.loading}
+      />
+
+      {/* Importer Modal */}
+      <ImporterModal
+        isOpen={importerOpen}
+        onClose={() => setImporterOpen(false)}
+        onImportComplete={() => {
+          fetchCustomers(1, activeFilter, searchQuery);
+          toast.success('Clienti importati con successo');
+        }}
+        onCheckDuplicates={handleCheckDuplicates}
       />
 
       {/* Appointment Modal (from Prenota button) */}
@@ -621,6 +885,12 @@ export function ClientiContent({
         closures={modalClosures}
         isLoading={isSubmittingAppointment}
         initialCustomerId={appointmentModal.preselectedCustomerId || undefined}
+        availableSlots={availableSlots}
+        slotsLoading={slotsLoading}
+        slotsError={slotsError || undefined}
+        onSlotsNeeded={fetchAvailableSlots}
+        lockedStaffId={permissions.isStaff && !permissions.canManageTeamBookings ? (permissions.currentStaffId ?? undefined) : undefined}
+        allowedStaffIds={permissions.isStaff && permissions.canManageTeamBookings && permissions.teamBookingStaffIds.length > 0 ? permissions.teamBookingStaffIds : undefined}
         labels={{
           title: 'Nuovo Appuntamento',
           customer: 'Cliente',

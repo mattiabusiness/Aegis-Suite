@@ -29,59 +29,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build redirect URL with staff metadata
+    // Fetch business name for the invite page subtitle
+    let businessName = '';
+    const { data: businessData } = await supabaseAdmin
+      .from('businesses')
+      .select('name')
+      .eq('id', businessId)
+      .single();
+    if (businessData) businessName = businessData.name;
+
+    // Build fallback QR URL — always available regardless of invite outcome
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const redirectUrl = `${baseUrl}/auth/callback?type=staff_invite`;
+    const fallbackUrl = new URL(`${baseUrl}/register`);
+    fallbackUrl.searchParams.set('staff_invite', 'true');
+    fallbackUrl.searchParams.set('email', email);
+    fallbackUrl.searchParams.set('name', fullName);
+    fallbackUrl.searchParams.set('phone', phone || '');
+    fallbackUrl.searchParams.set('staff_id', staffId);
+    fallbackUrl.searchParams.set('business_slug', businessSlug || '');
+    fallbackUrl.searchParams.set('business_name', businessName);
+    fallbackUrl.searchParams.set('role', role || 'employee');
 
-    // Send invite via Supabase
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      email,
-      {
-        data: {
-          full_name: fullName,
-          phone: phone || '',
-          staff_id: staffId,
-          business_id: businessId,
-          business_slug: businessSlug,
-          role: role || 'employee',
-          invite_type: 'staff',
-        },
-        redirectTo: redirectUrl,
-      }
-    );
-
-    if (inviteError) {
-      console.error('Supabase invite error:', inviteError);
-      
-      // Check if user already exists
-      if (inviteError.message?.includes('already been registered')) {
-        return NextResponse.json(
-          { error: 'Questa email è già registrata. L\'utente può accedere direttamente.' },
-          { status: 400 }
-        );
-      }
-      
-      return NextResponse.json(
-        { error: inviteError.message || 'Errore nell\'invio dell\'invito' },
-        { status: 500 }
-      );
-    }
-
-    // Build QR code URL - this is what staff will scan
-    // It points to login page which will handle the invite token from email
-    const qrUrl = new URL(`${baseUrl}/register`);
-    qrUrl.searchParams.set('staff_invite', 'true');
-    qrUrl.searchParams.set('email', email);
-    qrUrl.searchParams.set('name', fullName);
-    qrUrl.searchParams.set('phone', phone || '');
-    qrUrl.searchParams.set('staff_id', staffId);
-    qrUrl.searchParams.set('business_slug', businessSlug || '');
-    qrUrl.searchParams.set('role', role || 'employee');
-
+    // Return QR URL — no email sent here.
+    // The confirmation email is triggered automatically by Supabase when the staff
+    // fills in the pre-compiled form and clicks "Registrati".
     return NextResponse.json({
       success: true,
-      inviteUrl: qrUrl.toString(),
-      message: 'Invito inviato con successo',
+      inviteUrl: fallbackUrl.toString(),
     });
 
   } catch (error) {

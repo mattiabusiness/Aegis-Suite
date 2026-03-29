@@ -18,6 +18,7 @@ import {
   type CategoryFormData,
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
+import { useStaffPermissions } from '@/lib/staff-permissions-context';
 
 // ============================================================================
 // TYPES
@@ -62,6 +63,7 @@ export function ServiziContent({
 }: ServiziContentProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { isStaff } = useStaffPermissions();
 
   // State
   const [services, setServices] = useState<ServiceData[]>(initialServices);
@@ -332,8 +334,33 @@ export function ServiziContent({
 
         if (insertError) throw insertError;
 
-        // Update local state
+        // Auto-assign new service to all staff who have explicit service restrictions.
+        // (staff with no entries already cover all services implicitly)
         if (newService) {
+          const { data: allStaff } = await supabase
+            .from('staff')
+            .select('id')
+            .eq('business_id', businessId)
+            .eq('is_active', true) as { data: Array<{ id: string }> | null };
+
+          if (allStaff && allStaff.length > 0) {
+            const allStaffIds = allStaff.map(s => s.id);
+            const { data: existingLinks } = await supabase
+              .from('staff_services')
+              .select('staff_id')
+              .in('staff_id', allStaffIds) as { data: Array<{ staff_id: string }> | null };
+
+            const staffWithRestrictions = [...new Set((existingLinks || []).map(r => r.staff_id))];
+            if (staffWithRestrictions.length > 0) {
+              await supabase.from('staff_services').insert(
+                staffWithRestrictions.map(staffId => ({
+                  staff_id: staffId,
+                  service_id: (newService as { id: string }).id,
+                })) as never
+              );
+            }
+          }
+
           setServices(prev => [...prev, newService as ServiceData]);
         }
       }
@@ -354,22 +381,24 @@ export function ServiziContent({
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Servizi</h1>
-              <p className="text-gray-500 mt-1">Gestisci i servizi offerti dal tuo salone</p>
+              <p className="text-gray-500 mt-1">{isStaff ? 'I trattamenti affidati a te' : 'Gestisci i servizi offerti dal tuo salone'}</p>
             </div>
-            <button
-              onClick={handleAddCategory}
-              className="px-4 py-2.5 rounded-xl text-sm font-medium"
-              style={{
-                color: '#9333ea',
-                background: 'rgba(168,85,247,0.06)',
-                border: '1px solid rgba(168,85,247,0.12)',
-                transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.1)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)'; }}
-            >
-              + Nuova categoria
-            </button>
+            {!isStaff && (
+              <button
+                onClick={handleAddCategory}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium"
+                style={{
+                  color: '#9333ea',
+                  background: 'rgba(168,85,247,0.06)',
+                  border: '1px solid rgba(168,85,247,0.12)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.1)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)'; }}
+              >
+                + Nuova categoria
+              </button>
+            )}
           </div>
           <style>{`@keyframes sl-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
         </div>
@@ -380,19 +409,21 @@ export function ServiziContent({
             services={serviceItems}
             categories={categoryItems}
             currency="€"
-            onAddService={handleAddService}
-            onAddServiceToCategory={handleAddServiceToCategory}
-            onEditService={handleEditService}
-            onDeleteService={handleDeleteService}
-            onToggleActive={handleToggleActive}
-            onEditCategory={handleEditCategory}
-            onDeleteCategory={handleDeleteCategory}
-            showCategoryManagement={true}
+            onAddService={isStaff ? undefined : handleAddService}
+            onAddServiceToCategory={isStaff ? undefined : handleAddServiceToCategory}
+            onEditService={isStaff ? undefined : handleEditService}
+            onDeleteService={isStaff ? undefined : handleDeleteService}
+            onToggleActive={isStaff ? undefined : handleToggleActive}
+            onEditCategory={isStaff ? undefined : handleEditCategory}
+            onDeleteCategory={isStaff ? undefined : handleDeleteCategory}
+            showCategoryManagement={!isStaff}
             emptyState={
-              <EmptyServices
-                onAction={handleAddService}
-                actionLabel="Aggiungi il primo servizio"
-              />
+              isStaff ? undefined : (
+                <EmptyServices
+                  onAction={handleAddService}
+                  actionLabel="Aggiungi il primo servizio"
+                />
+              )
             }
           />
         </div>

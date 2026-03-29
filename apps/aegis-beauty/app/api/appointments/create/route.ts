@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
       isNewCustomer, sendInvite, serviceId, staffId, date, time, notes, businessId,
     } = body;
     
-    // Validate required fields
-    if (!serviceId || !staffId || !date || !time || !businessId) {
+    // Validate required fields (staffId is optional — null means "first available")
+    if (!serviceId || !date || !time || !businessId) {
       return NextResponse.json({ error: 'Campi obbligatori mancanti' }, { status: 400 });
     }
     
@@ -190,29 +190,89 @@ export async function POST(request: NextRequest) {
     const endTime = new Date(startTime.getTime() + service.duration_minutes * 60000);
     
     // ========================================================================
-    // STEP 4: Create appointment
+    // STEP 4: Auto-assign staff if not specified ("Nessuna preferenza")
     // ========================================================================
-    
-    const { data: appointment, error: appointmentError } = await supabase
+
+    let finalStaffId: string | null = staffId || null;
+
+    if (!finalStaffId) {
+      // Auto-assign: find first staff who (1) can do the service AND (2) is free at this slot.
+      // If no one qualifies → return error (do NOT fall through to RPC auto-assign).
+
+      const { data: eligibleStaff } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('business_id', businessId)
+        .eq('is_active', true) as { data: Array<{ id: string }> | null };
+
+      if (!eligibleStaff || eligibleStaff.length === 0) {
+        return NextResponse.json({ error: 'Nessuno staff disponibile' }, { status: 409 });
+      }
+
+      // Step A: which staff can do this service?
+      // Every staff always has explicit rows in staff_services (auto-assigned on creation).
+      // So we just check who has THIS service listed.
+      const allStaffIds = eligibleStaff.map(s => s.id);
+
+      const { data: serviceLinks } = await supabase
+        .from('staff_services')
+        .select('staff_id')
+        .in('staff_id', allStaffIds)
+        .eq('service_id', serviceId) as { data: Array<{ staff_id: string }> | null };
+
+      const staffWhoCanDoService = new Set((serviceLinks || []).map(r => r.staff_id));
+
+      const candidates = eligibleStaff.filter(s => staffWhoCanDoService.has(s.id));
+
+      if (candidates.length === 0) {
+        return NextResponse.json({ error: 'Nessuno staff può eseguire questo servizio' }, { status: 409 });
+      }
+
+      // Step B: among candidates, find the first free in this time slot
+      const { data: conflicts } = await supabase
+        .from('appointments')
+        .select('staff_id')
+        .eq('business_id', businessId)
+        .in('staff_id', candidates.map(s => s.id))
+        .neq('status', 'cancelled')
+        .lt('start_time', endTime.toISOString())
+        .gt('end_time', startTime.toISOString()) as { data: Array<{ staff_id: string }> | null };
+
+      const busyIds = new Set((conflicts || []).map(c => c.staff_id));
+      const picked = candidates.find(s => !busyIds.has(s.id));
+
+      if (!picked) {
+        return NextResponse.json({ error: 'Nessuno staff disponibile in questo orario per il servizio selezionato' }, { status: 409 });
+      }
+
+      finalStaffId = picked.id;
+    }
+
+    // ========================================================================
+    // STEP 5: Create appointment
+    // ========================================================================
+
+    const { data: newAppt, error: insertError } = await supabase
       .from('appointments')
       .insert({
         business_id: businessId,
+        staff_id:    finalStaffId,
         customer_id: finalCustomerId,
-        staff_id: staffId,
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        status: 'confirmed',
-        notes: notes || null,
-        booked_online: false,
-        source: 'dashboard',
+        start_time:  startTime.toISOString(),
+        end_time:    endTime.toISOString(),
+        status:      'confirmed',
+        notes:       notes || null,
+        source:      'dashboard',
       })
       .select('id')
       .single();
-    
-    if (appointmentError || !appointment) {
-      console.error('Error creating appointment:', appointmentError);
+
+    if (insertError || !newAppt) {
+      console.error('[appointments/create] insert error:', insertError);
       return NextResponse.json({ error: 'Errore nella creazione dell\'appuntamento' }, { status: 500 });
     }
+
+    const appointmentId = (newAppt as { id: string }).id;
     
     // ========================================================================
     // STEP 5: Create appointment_services link
@@ -221,7 +281,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('appointment_services')
       .insert({
-        appointment_id: appointment.id,
+        appointment_id: appointmentId,
         service_id: serviceId,
         service_name: service.name,
         duration_minutes: service.duration_minutes,
@@ -240,7 +300,7 @@ export async function POST(request: NextRequest) {
         customer:customers(id, full_name),
         staff:staff(id, full_name, color)
       `)
-      .eq('id', appointment.id)
+      .eq('id', appointmentId)
       .single();
     
     return NextResponse.json({

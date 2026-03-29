@@ -111,10 +111,12 @@ export async function GET(request: NextRequest) {
             .in('staff_id', activeStaffIds)
         : Promise.resolve({ data: [] as Record<string, unknown>[], error: null }),
 
-      supabase
-        .from('staff_services')
-        .select('staff_id, service_id')
-        .eq('service_id', serviceId),
+      activeStaffIds.length > 0
+        ? supabase
+            .from('staff_services')
+            .select('staff_id, service_id')
+            .in('staff_id', activeStaffIds)
+        : Promise.resolve({ data: [] as Record<string, unknown>[], error: null }),
 
       supabase
         .from('appointments')
@@ -237,6 +239,15 @@ export async function GET(request: NextRequest) {
       },
     };
 
+    if ((staffHoursResult as { error?: unknown }).error) {
+      console.error('[Availability] Errore fetch staff_hours:', (staffHoursResult as { error?: unknown }).error);
+    }
+
+    console.log(`[Availability] date=${date} staffHoursCount=${staffHours.length} activeStaff=${activeStaffIds.length}`);
+    if (staffHours.length > 0) {
+      console.log('[Availability] staffHours sample:', JSON.stringify(staffHours.slice(0, 3)));
+    }
+
     const slots = getAvailableSlots(availabilityConfig);
 
     return NextResponse.json({
@@ -246,6 +257,7 @@ export async function GET(request: NextRequest) {
       workstations: business.workstations || 1,
       totalSlots: slots.length,
       slots,
+      _debug_staffHoursCount: staffHours.length,
     });
   } catch (error) {
     console.error('Availability API error:', error);
