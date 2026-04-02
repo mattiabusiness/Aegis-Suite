@@ -95,7 +95,9 @@ export function FounderSection() {
 
             {/* LinkedIn */}
             <a
-              href="#"
+              href="https://www.linkedin.com/in/mattia-papa-9b1b523a7/"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
