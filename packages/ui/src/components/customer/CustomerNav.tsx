@@ -493,7 +493,7 @@ export function DesktopHeader({ business, currentPath, theme, onNavigate, brandL
           <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
             <AegisLogo size={17} />
           </div>
-          <span style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, letterSpacing: '-0.01em', opacity: 0.9 }}>
+          <span style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, letterSpacing: '-0.02em', opacity: 0.9, fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)" }}>
             {brandLabel}
           </span>
         </div>

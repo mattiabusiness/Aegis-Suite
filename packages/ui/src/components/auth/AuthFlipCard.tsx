@@ -503,10 +503,11 @@ export function AuthFlipCard({
 
         .afc-brand-name {
           font-size: 1.35rem; font-weight: 700; color: #fff;
-          letter-spacing: -0.01em; margin: 0 0 1.25rem;
+          letter-spacing: -0.02em; margin: 0 0 1.25rem;
+          font-family: var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
           animation: breathe 3.5s ease-in-out infinite;
         }
-        .afc-brand-sub { font-weight: 400; opacity: 0.8; }
+        .afc-brand-sub { font-weight: 600; opacity: 0.8; font-family: var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif); }
 
         .afc-welcome-divider {
           width: 40px; height: 2px; margin: 0 auto 1.25rem;
