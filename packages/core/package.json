@@ -10,7 +10,8 @@
   "dependencies": {
     "@aegis/types": "workspace:*",
     "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.48.1"
+    "@supabase/supabase-js": "^2.48.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^22.19.3",
