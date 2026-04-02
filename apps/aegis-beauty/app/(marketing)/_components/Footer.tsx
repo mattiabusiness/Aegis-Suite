@@ -6,6 +6,7 @@
 // ============================================================================
 
 import Link from 'next/link';
+import { inter } from './fonts';
 
 export function Footer() {
   return (
@@ -31,9 +32,9 @@ export function Footer() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
             <FooterLogoIcon />
-            <span style={{ fontSize: 17, letterSpacing: '-0.02em', fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)" }}>
-              <span style={{ color: '#F8FAFC', fontWeight: 700 }}>Aegis</span>
-              <span style={{ color: '#a855f7', fontWeight: 600 }}> Beauty</span>
+            <span style={{ fontSize: 17, display: 'flex' }}>
+              <span className={inter.className} style={{ color: '#F8FAFC', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>Aegis</span>
+              <span className={inter.className} style={{ color: '#a855f7', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>&nbsp;Beauty</span>
             </span>
           </div>
           <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, maxWidth: 280, margin: '0 0 20px' }}>

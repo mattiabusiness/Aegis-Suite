@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
+import { inter } from './fonts';
 
 export function Navbar() {
   const [visible, setVisible] = useState(true);
@@ -62,9 +63,9 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
             <LogoIcon />
-            <span style={{ fontSize: 18, letterSpacing: '-0.02em', fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)" }}>
-              <span style={{ color: '#F8FAFC', fontWeight: 700 }}>Aegis</span>
-              <span style={{ color: '#a855f7', fontWeight: 600 }}> Beauty</span>
+            <span style={{ fontSize: 18, display: 'flex' }}>
+              <span className={inter.className} style={{ color: '#F8FAFC', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>Aegis</span>
+              <span className={inter.className} style={{ color: '#a855f7', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>&nbsp;Beauty</span>
             </span>
           </Link>
 
