@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 176 36" width="176" height="36">
+  <defs>
+    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#7e22ce" stop-opacity="0.4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon box -->
+  <rect x="0" y="2" width="32" height="32" rx="10" fill="url(#iconBg)" stroke="#a855f7" stroke-opacity="0.25" stroke-width="1"/>
+
+  <!-- Layers icon (Lucide), 18x18 centered in 32x32 box -->
+  <g transform="translate(7, 9) scale(0.75)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+    <path d="M2 17l10 5 10-5"/>
+    <path d="M2 12l10 5 10-5"/>
+  </g>
+
+  <!-- Text -->
+  <text x="42" y="24" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="18" font-weight="700" letter-spacing="-0.36">
+    <tspan fill="#F8FAFC">Aegis</tspan><tspan fill="#a855f7"> Beauty</tspan>
+  </text>
+</svg>
