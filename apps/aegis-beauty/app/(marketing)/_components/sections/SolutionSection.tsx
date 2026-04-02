@@ -56,7 +56,7 @@ const features = [
 
 export function SolutionSection() {
   return (
-    <section id="solution" style={{ backgroundColor: '#0D0D16', padding: '100px 24px' }}>
+    <section id="solution" style={{ backgroundColor: '#0D0D16', padding: '100px 24px', scrollMarginTop: 80 }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         {/* Header */}
         <ScrollReveal>

@@ -5,13 +5,23 @@
 // File: apps/aegis-beauty/app/(marketing)/demo/_DemoContent.tsx
 // ============================================================================
 
+import { useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock, Video } from 'lucide-react';
 import { Navbar } from '../_components/Navbar';
 import { Footer } from '../_components/Footer';
 
-const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL;
-
 export function DemoContent() {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://assets.calendly.com/assets/external/widget.js';
+    script.async = true;
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
+
   return (
     <>
       <Navbar />
@@ -93,8 +103,8 @@ export function DemoContent() {
             className="demo-info-grid"
           >
             {[
-              { icon: Clock, label: '30 minuti', sublabel: 'Durata chiamata' },
-              { icon: Video, label: 'Video call', sublabel: 'Google Meet / Zoom' },
+              { icon: Clock, label: '20 minuti', sublabel: 'Durata chiamata' },
+              { icon: Video, label: 'Video call', sublabel: 'Google Meet' },
               { icon: Calendar, label: 'Gratuita', sublabel: 'Zero impegni' },
             ].map(({ icon: Icon, label, sublabel }, i) => (
               <div
@@ -116,7 +126,7 @@ export function DemoContent() {
             ))}
           </div>
 
-          {/* Calendly embed or placeholder */}
+          {/* Calendly inline widget */}
           <div
             style={{
               borderRadius: 20,
@@ -125,71 +135,11 @@ export function DemoContent() {
               boxShadow: '0 0 40px rgba(124,58,237,0.08)',
             }}
           >
-            {calendlyUrl ? (
-              <iframe
-                src={calendlyUrl}
-                width="100%"
-                height="700"
-                frameBorder="0"
-                title="Prenota una demo — Aegis Beauty"
-                style={{ display: 'block' }}
-              />
-            ) : (
-              <div
-                style={{
-                  aspectRatio: '4/3',
-                  background: 'rgba(124,58,237,0.03)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 16,
-                  padding: 40,
-                  textAlign: 'center',
-                }}
-              >
-                <Calendar size={40} color="rgba(168,85,247,0.4)" />
-                <div>
-                  <p style={{ fontSize: 16, fontWeight: 600, color: '#64748B', margin: '0 0 8px' }}>
-                    Calendly embed — da inserire
-                  </p>
-                  <p style={{ fontSize: 14, color: '#334155', margin: 0 }}>
-                    Imposta{' '}
-                    <code
-                      style={{
-                        background: 'rgba(124,58,237,0.1)',
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        color: '#a855f7',
-                        fontSize: 12,
-                      }}
-                    >
-                      NEXT_PUBLIC_CALENDLY_URL
-                    </code>{' '}
-                    in .env.local per attivare il widget
-                  </p>
-                </div>
-                <a
-                  href="mailto:mattia@aegisbeauty.app"
-                  style={{
-                    display: 'inline-flex',
-                    padding: '10px 24px',
-                    borderRadius: 10,
-                    background: 'rgba(124,58,237,0.1)',
-                    border: '1px solid rgba(124,58,237,0.2)',
-                    color: '#a855f7',
-                    textDecoration: 'none',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    transition: 'background 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(124,58,237,0.18)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(124,58,237,0.1)')}
-                >
-                  Contattaci via email
-                </a>
-              </div>
-            )}
+            <div
+              className="calendly-inline-widget w-full rounded-xl overflow-hidden"
+              data-url="https://calendly.com/mattia-businessgrowth/30min?hide_gdpr_banner=1&hide_landing_page_details=1&primary_color=7C3AED&background_color=0a0a0f&text_color=f8fafc"
+              style={{ minWidth: '320px', height: '1000px', scrollbarWidth: 'none', msOverflowStyle: 'none', backgroundColor: '#0a0a0f' }}
+            />
           </div>
         </div>
       </main>
@@ -197,6 +147,7 @@ export function DemoContent() {
 
       <style>{`
         @media (max-width: 540px) { .demo-info-grid { grid-template-columns: 1fr !important; } }
+        .calendly-inline-widget::-webkit-scrollbar { display: none; }
       `}</style>
     </>
   );

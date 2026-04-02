@@ -17,6 +17,7 @@ import { WhySection } from './_components/sections/WhySection';
 import { FounderSection } from './_components/sections/FounderSection';
 import { StatsSection } from './_components/sections/StatsSection';
 import { CTASection } from './_components/sections/CTASection';
+import { FAQSection } from './_components/sections/FAQSection';
 
 export const metadata: Metadata = {
   title: 'Aegis Beauty — Il software che semplifica il tuo salone',
@@ -38,6 +39,7 @@ export default function LandingPage() {
         <WhySection />
         <FounderSection />
         <StatsSection />
+        <FAQSection />
         <CTASection />
       </main>
       <Footer />

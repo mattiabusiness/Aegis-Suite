@@ -26,9 +26,9 @@ export function Navbar() {
   }, []);
 
   const navLinks = [
-    { label: 'Prodotto', href: '#solution' },
-    { label: 'Pioneers', href: '#pioneers' },
-    { label: 'Chi Sono', href: '#founder' },
+    { label: 'Prodotto', href: '/#solution' },
+    { label: 'Pioneers', href: '/#pioneers' },
+    { label: 'Chi Sono', href: '/#founder' },
   ];
 
   return (

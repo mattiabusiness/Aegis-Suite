@@ -24,7 +24,7 @@ const benefits = [
 
 export function PioneersSection() {
   return (
-    <section id="pioneers" style={{ backgroundColor: '#0A0A0F', padding: '100px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section id="pioneers" style={{ backgroundColor: '#0A0A0F', padding: '100px 24px', position: 'relative', overflow: 'hidden', scrollMarginTop: 80 }}>
       {/* Subtle background pattern */}
       <div
         aria-hidden="true"

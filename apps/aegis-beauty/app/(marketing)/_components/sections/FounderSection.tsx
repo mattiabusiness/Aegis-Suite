@@ -10,7 +10,7 @@ import { ScrollReveal } from '../ui/ScrollReveal';
 
 export function FounderSection() {
   return (
-    <section id="founder" style={{ backgroundColor: '#0A0A0F', padding: '100px 24px' }}>
+    <section id="founder" style={{ backgroundColor: '#0A0A0F', padding: '100px 24px', scrollMarginTop: 80 }}>
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
         <ScrollReveal>
           {/* Label */}
