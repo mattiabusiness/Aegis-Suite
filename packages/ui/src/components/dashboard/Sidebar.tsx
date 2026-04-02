@@ -440,7 +440,7 @@ export function Sidebar({
           style={{
             fontSize: '1.05rem',
             letterSpacing: '-0.01em',
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+            fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)",
             opacity: collapsed ? 0 : 1,
             maxWidth: collapsed ? 0 : 160,
             overflow: 'hidden',

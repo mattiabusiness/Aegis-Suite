@@ -62,7 +62,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
             <LogoIcon />
-            <span style={{ fontSize: 18, letterSpacing: '-0.02em', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }}>
+            <span style={{ fontSize: 18, letterSpacing: '-0.02em', fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)" }}>
               <span style={{ color: '#F8FAFC', fontWeight: 700 }}>Aegis</span>
               <span style={{ color: '#a855f7', fontWeight: 600 }}> Beauty</span>
             </span>
