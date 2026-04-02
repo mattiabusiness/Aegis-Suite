@@ -9,7 +9,7 @@
 import * as React from 'react';
 import {
   Search, ChevronLeft, ChevronRight, Eye, Edit2, Mail, Phone,
-  Calendar, TrendingUp, Download, UserPlus,
+  Calendar, TrendingUp, Download, Upload, UserPlus,
 } from 'lucide-react';
 
 // ============================================================================
@@ -28,6 +28,10 @@ export interface CustomerListItem {
   lastVisitAt?: string;
   createdAt: string;
   isActive: boolean;
+  // Import status fields (optional — only set for imported customers)
+  userId?: string | null;
+  source?: string | null;
+  invitedAt?: string | null;
 }
 
 export interface CustomerListProps {
@@ -43,8 +47,10 @@ export interface CustomerListProps {
   onPageChange: (page: number) => void;
   onViewCustomer: (customer: CustomerListItem) => void;
   onEditCustomer?: (customer: CustomerListItem) => void;
+  onInviteSingle?: (customerId: string) => Promise<void>;
   onAddCustomer?: () => void;
   onExport?: () => void;
+  onImport?: () => void;
   loading?: boolean;
   emptyState?: React.ReactNode;
   className?: string;
@@ -83,14 +89,30 @@ const FILTERS: { key: CustomerFilter; label: string }[] = [
 // ============================================================================
 
 function CustomerRow({
-  customer, currency, onView, onEdit, delay,
+  customer, currency, onView, onEdit, onInviteSingle, delay,
 }: {
   customer: CustomerListItem;
   currency: string;
   onView: () => void;
   onEdit?: () => void;
+  onInviteSingle?: (customerId: string) => Promise<void>;
   delay: number;
 }) {
+  const [inviting, setInviting] = React.useState(false);
+  const [inviteError, setInviteError] = React.useState(false);
+
+  const handleInvite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onInviteSingle || inviting) return;
+    if (!customer.email) {
+      setInviteError(true);
+      setTimeout(() => setInviteError(false), 3000);
+      return;
+    }
+    setInviting(true);
+    try { await onInviteSingle(customer.id); } finally { setInviting(false); }
+  };
+
   return (
     <div
       className="group flex items-center gap-4 p-4 rounded-xl cursor-pointer"
@@ -126,7 +148,45 @@ function CustomerRow({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 truncate">{customer.fullName}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-gray-900 truncate">{customer.fullName}</p>
+          {/* Import status badge */}
+          {customer.source === 'import' && !customer.userId && (
+            customer.invitedAt ? (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
+                style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.2)' }}>
+                <Mail className="w-2.5 h-2.5" />Invitato
+              </span>
+            ) : inviteError ? (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
+                style={{ background: 'rgba(239,68,68,0.08)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)', animation: 'cl-card-in 0.15s ease-out both' }}>
+                Email mancante
+              </span>
+            ) : (
+              <button
+                onClick={handleInvite}
+                disabled={inviting}
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
+                style={{
+                  background: 'rgba(100,116,139,0.1)',
+                  color: '#64748b',
+                  border: '1px solid rgba(100,116,139,0.15)',
+                  cursor: inviting ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={e => { if (!inviting) { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.color = '#7c3aed'; e.currentTarget.style.border = '1px solid rgba(168,85,247,0.2)'; } }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(100,116,139,0.1)'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.border = '1px solid rgba(100,116,139,0.15)'; }}
+                title={customer.email ? 'Clicca per inviare invito email' : 'Aggiungi un\'email al cliente prima di inviare l\'invito'}
+              >
+                {inviting
+                  ? <span className="w-2.5 h-2.5 rounded-full border border-current border-t-transparent animate-spin" />
+                  : <Upload className="w-2.5 h-2.5" />
+                }
+                Non registrato
+              </button>
+            )
+          )}
+        </div>
         <div className="flex items-center gap-3 mt-0.5 text-sm text-gray-500">
           {customer.email && (
             <span className="flex items-center gap-1.5 truncate"><Mail className="w-3.5 h-3.5" />{customer.email}</span>
@@ -206,7 +266,7 @@ function CustomerRow({
 export function CustomerList({
   customers, totalCount, currentPage, pageSize, activeFilter, searchQuery,
   currency = '€', onFilterChange, onSearchChange, onPageChange, onViewCustomer,
-  onEditCustomer, onAddCustomer, onExport, loading = false, emptyState, className = '',
+  onEditCustomer, onInviteSingle, onAddCustomer, onExport, onImport, loading = false, emptyState, className = '',
   filterCounts,
 }: CustomerListProps) {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -324,6 +384,33 @@ export function CustomerList({
                 <span className="relative z-10">Esporta</span>
               </button>
             )}
+            {onImport && (
+              <button
+                onClick={onImport}
+                className="relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium overflow-hidden"
+                style={{
+                  background: 'rgba(16,185,129,0.08)',
+                  border: '1px solid rgba(16,185,129,0.2)',
+                  color: '#059669',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(16,185,129,0.14)';
+                  e.currentTarget.style.borderColor = 'rgba(16,185,129,0.35)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(16,185,129,0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(16,185,129,0.2)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Importa</span>
+              </button>
+            )}
             {onAddCustomer && (
               <button
                 onClick={(e) => {
@@ -392,6 +479,7 @@ export function CustomerList({
                 delay={0.05 + i * 0.03}
                 onView={() => onViewCustomer(customer)}
                 onEdit={onEditCustomer ? () => onEditCustomer(customer) : undefined}
+                onInviteSingle={onInviteSingle}
               />
             ))}
           </div>
@@ -399,7 +487,7 @@ export function CustomerList({
           {/* Pagination */}
           {totalPages > 1 && (
             <div
-              className="flex items-center justify-between mt-6 px-2"
+              className="flex items-center justify-between mt-3 px-2"
               style={{ animation: 'cl-card-in 0.35s ease-out 0.3s both' }}
             >
               <p className="text-xs text-gray-400">

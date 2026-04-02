@@ -360,7 +360,7 @@ export function AuthFlipCard({
                 <h2 className="afc-welcome-title">{registerWelcomeTitle}</h2>
                 <p className="afc-welcome-sub">{registerWelcomeSubtitle}</p>
                 <div className="afc-deco"><span className="afc-deco-line" /><span className="afc-deco-dot" /><span className="afc-deco-line" /></div>
-                <p className="afc-welcome-hint">Hai già un account?</p>
+                {!inviteMode && <p className="afc-welcome-hint">Hai già un account?</p>}
                 {!inviteMode && <button type="button" onClick={() => switchTo('login')} className="afc-welcome-btn">Accedi al tuo account</button>}
               </div>
             </div>

@@ -115,6 +115,10 @@ export interface BusinessMember {
   can_manage_staff: boolean;
   can_view_analytics: boolean;
   can_manage_settings: boolean;
+  can_see_business_calendar: boolean;
+  can_see_business_stats: boolean;
+  can_manage_team_bookings: boolean;
+  team_booking_staff_ids: string[];
   invited_at: string | null;
   joined_at: string | null;
   is_active: boolean;
@@ -258,6 +262,7 @@ export interface Customer {
   marketing_consent_at: string | null;
   source: string | null;
   referred_by: string | null;
+  invited_at: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -413,6 +418,10 @@ export interface BusinessMemberInsert {
   can_manage_staff?: boolean;
   can_view_analytics?: boolean;
   can_manage_settings?: boolean;
+  can_see_business_calendar?: boolean;
+  can_see_business_stats?: boolean;
+  can_manage_team_bookings?: boolean;
+  team_booking_staff_ids?: string[];
   invited_at?: string | null;
   joined_at?: string | null;
   is_active?: boolean;

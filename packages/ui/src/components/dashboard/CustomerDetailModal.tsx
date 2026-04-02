@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 import {
   X, Mail, Phone, Calendar, Clock, TrendingUp, Star,
   FileText, User, CreditCard, Plus, ChevronDown, ChevronUp,
-  Save, AlertCircle, Scissors, CheckCircle2, XCircle, Ban,
+  Save, AlertCircle, Scissors, CheckCircle2, XCircle, Ban, Upload,
 } from 'lucide-react';
 
 // ============================================================================
@@ -45,6 +45,8 @@ export interface CustomerDetail {
   isActive: boolean;
   source?: string;
   acceptsMarketing: boolean;
+  userId?: string | null;
+  invitedAt?: string | null;
 }
 
 export interface CustomerStats {
@@ -68,6 +70,8 @@ export interface CustomerDetailModalProps {
   onSaveNotes?: (customerId: string, notes: string) => Promise<void>;
   onSavePreferences?: (customerId: string, preferences: string) => Promise<void>;
   onBookAppointment?: (customerId: string) => void;
+  onSaveContact?: (customerId: string, data: { email?: string; phone?: string }) => Promise<void>;
+  onInvite?: (customerId: string) => Promise<void>;
   loading?: boolean;
 }
 
@@ -215,7 +219,7 @@ function AppointmentRow({ apt, currency, delay }: {
 
 export function CustomerDetailModal({
   isOpen, onClose, customer, appointments, stats, currency = '€',
-  onSaveNotes, onSavePreferences, onBookAppointment, loading = false,
+  onSaveNotes, onSavePreferences, onBookAppointment, onSaveContact, onInvite, loading = false,
 }: CustomerDetailModalProps) {
   const [mounted, setMounted] = React.useState(false);
   const [closing, setClosing] = React.useState(false);
@@ -225,6 +229,16 @@ export function CustomerDetailModal({
   const [savingNotes, setSavingNotes] = React.useState(false);
   const [savingPrefs, setSavingPrefs] = React.useState(false);
   const [showAllAppointments, setShowAllAppointments] = React.useState(false);
+  // Contact inline edit
+  const [currentEmail, setCurrentEmail] = React.useState<string | undefined>(undefined);
+  const [currentPhone, setCurrentPhone] = React.useState<string | undefined>(undefined);
+  const [editingEmail, setEditingEmail] = React.useState(false);
+  const [editingPhone, setEditingPhone] = React.useState(false);
+  const [emailDraft, setEmailDraft] = React.useState('');
+  const [phoneDraft, setPhoneDraft] = React.useState('');
+  const [savingContact, setSavingContact] = React.useState(false);
+  const [inviting, setInviting] = React.useState(false);
+  const [inviteError, setInviteError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -246,6 +260,13 @@ export function CustomerDetailModal({
       setPreferences(customer.preferences || '');
       setActiveTab('overview');
       setShowAllAppointments(false);
+      setCurrentEmail(customer.email);
+      setCurrentPhone(customer.phone);
+      setEditingEmail(false);
+      setEditingPhone(false);
+      setEmailDraft('');
+      setPhoneDraft('');
+      setInviting(false);
     }
   }, [customer]);
 
@@ -272,6 +293,41 @@ export function CustomerDetailModal({
     if (!customer || !onSavePreferences) return;
     setSavingPrefs(true);
     try { await onSavePreferences(customer.id, preferences); } finally { setSavingPrefs(false); }
+  };
+
+  const handleSaveEmail = async () => {
+    if (!customer || !onSaveContact || !emailDraft.trim()) return;
+    setSavingContact(true);
+    try {
+      await onSaveContact(customer.id, { email: emailDraft.trim().toLowerCase() });
+      setCurrentEmail(emailDraft.trim().toLowerCase());
+      setEditingEmail(false);
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const handleSavePhone = async () => {
+    if (!customer || !onSaveContact || !phoneDraft.trim()) return;
+    setSavingContact(true);
+    try {
+      await onSaveContact(customer.id, { phone: phoneDraft.trim() });
+      setCurrentPhone(phoneDraft.trim());
+      setEditingPhone(false);
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const handleInviteClick = async () => {
+    if (!customer || !onInvite || inviting) return;
+    if (!currentEmail) {
+      setInviteError('Aggiungi prima un\'email per inviare l\'invito');
+      setTimeout(() => setInviteError(null), 3500);
+      return;
+    }
+    setInviting(true);
+    try { await onInvite(customer.id); } finally { setInviting(false); }
   };
 
   if ((!isOpen && !closing) || !customer) return null;
@@ -361,6 +417,37 @@ export function CustomerDetailModal({
                 >
                   {customer.isActive ? 'Attivo' : 'Inattivo'}
                 </span>
+                {/* Import status badge */}
+                {customer.source === 'import' && !customer.userId && (
+                  customer.invitedAt ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium flex-shrink-0"
+                      style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.2)' }}>
+                      <Mail className="w-3 h-3" />Invitato
+                    </span>
+                  ) : (
+                    <button
+                      onClick={handleInviteClick}
+                      disabled={inviting || !onInvite}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium flex-shrink-0"
+                      style={{
+                        background: 'rgba(100,116,139,0.1)',
+                        color: '#64748b',
+                        border: '1px solid rgba(100,116,139,0.15)',
+                        cursor: (!onInvite || inviting) ? 'default' : 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={e => { if (onInvite && !inviting) { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.color = '#7c3aed'; e.currentTarget.style.border = '1px solid rgba(168,85,247,0.2)'; } }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(100,116,139,0.1)'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.border = '1px solid rgba(100,116,139,0.15)'; }}
+                      title={onInvite ? 'Clicca per inviare invito email' : undefined}
+                    >
+                      {inviting
+                        ? <span className="w-2.5 h-2.5 rounded-full border border-current border-t-transparent animate-spin" />
+                        : <Upload className="w-3 h-3" />
+                      }
+                      Non registrato
+                    </button>
+                  )
+                )}
                 {onBookAppointment && (
                   <button
                     onClick={(e) => {
@@ -406,14 +493,89 @@ export function CustomerDetailModal({
                   </button>
                 )}
               </div>
-              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-                {customer.email && (
-                  <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />{customer.email}</span>
-                )}
-                {customer.phone && (
-                  <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{customer.phone}</span>
-                )}
-           </div>
+              {/* Invite error */}
+              {inviteError && (
+                <div className="flex items-center gap-1.5 mt-1 text-xs font-medium"
+                  style={{ color: '#dc2626', animation: 'cdm-card-in 0.2s ease-out both' }}>
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  {inviteError}
+                </div>
+              )}
+              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                {/* Email */}
+                {editingEmail ? (
+                  <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                    <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <input
+                      type="email"
+                      value={emailDraft}
+                      onChange={e => setEmailDraft(e.target.value)}
+                      autoFocus
+                      placeholder="email@esempio.com"
+                      className="text-sm text-gray-900 outline-none"
+                      style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 8, padding: '2px 8px', minWidth: 160, transition: 'all 0.15s ease' }}
+                      onFocus={e => { e.currentTarget.style.border = '1px solid rgba(168,85,247,0.55)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.08)'; }}
+                      onBlur={e => { e.currentTarget.style.border = '1px solid rgba(168,85,247,0.3)'; e.currentTarget.style.boxShadow = 'none'; }}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSaveEmail(); if (e.key === 'Escape') setEditingEmail(false); }}
+                    />
+                    <button onClick={handleSaveEmail} disabled={savingContact || !emailDraft.trim()}
+                      className="px-2.5 py-0.5 rounded-lg text-xs font-semibold text-white flex-shrink-0"
+                      style={{ background: '#9333ea', opacity: (savingContact || !emailDraft.trim()) ? 0.5 : 1, transition: 'opacity 0.15s ease' }}>
+                      {savingContact ? '…' : 'Salva'}
+                    </button>
+                    <button onClick={() => setEditingEmail(false)} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Annulla</button>
+                  </div>
+                ) : currentEmail ? (
+                  <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                    <Mail className="w-3.5 h-3.5" />{currentEmail}
+                  </span>
+                ) : onSaveContact ? (
+                  <button onClick={() => { setEmailDraft(''); setEditingEmail(true); }}
+                    className="flex items-center gap-1 text-xs font-semibold rounded-lg"
+                    style={{ color: '#7c3aed', background: 'rgba(147,51,234,0.07)', border: '1px solid rgba(147,51,234,0.22)', padding: '3px 10px', transition: 'all 0.15s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(147,51,234,0.13)'; e.currentTarget.style.borderColor = 'rgba(147,51,234,0.38)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 3px 8px rgba(147,51,234,0.12)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(147,51,234,0.07)'; e.currentTarget.style.borderColor = 'rgba(147,51,234,0.22)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                    <Plus className="w-3 h-3" />Aggiungi email
+                  </button>
+                ) : null}
+
+                {/* Phone */}
+                {editingPhone ? (
+                  <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                    <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <input
+                      type="tel"
+                      value={phoneDraft}
+                      onChange={e => setPhoneDraft(e.target.value)}
+                      autoFocus
+                      placeholder="+39 340 000 0000"
+                      className="text-sm text-gray-900 outline-none"
+                      style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 8, padding: '2px 8px', minWidth: 140, transition: 'all 0.15s ease' }}
+                      onFocus={e => { e.currentTarget.style.border = '1px solid rgba(168,85,247,0.55)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.08)'; }}
+                      onBlur={e => { e.currentTarget.style.border = '1px solid rgba(168,85,247,0.3)'; e.currentTarget.style.boxShadow = 'none'; }}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSavePhone(); if (e.key === 'Escape') setEditingPhone(false); }}
+                    />
+                    <button onClick={handleSavePhone} disabled={savingContact || !phoneDraft.trim()}
+                      className="px-2.5 py-0.5 rounded-lg text-xs font-semibold text-white flex-shrink-0"
+                      style={{ background: '#9333ea', opacity: (savingContact || !phoneDraft.trim()) ? 0.5 : 1, transition: 'opacity 0.15s ease' }}>
+                      {savingContact ? '…' : 'Salva'}
+                    </button>
+                    <button onClick={() => setEditingPhone(false)} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Annulla</button>
+                  </div>
+                ) : currentPhone ? (
+                  <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                    <Phone className="w-3.5 h-3.5" />{currentPhone}
+                  </span>
+                ) : onSaveContact ? (
+                  <button onClick={() => { setPhoneDraft(''); setEditingPhone(true); }}
+                    className="flex items-center gap-1 text-xs font-semibold rounded-lg"
+                    style={{ color: '#7c3aed', background: 'rgba(147,51,234,0.07)', border: '1px solid rgba(147,51,234,0.22)', padding: '3px 10px', transition: 'all 0.15s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(147,51,234,0.13)'; e.currentTarget.style.borderColor = 'rgba(147,51,234,0.38)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 3px 8px rgba(147,51,234,0.12)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(147,51,234,0.07)'; e.currentTarget.style.borderColor = 'rgba(147,51,234,0.22)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                    <Plus className="w-3 h-3" />Aggiungi telefono
+                  </button>
+                ) : null}
+              </div>
         </div>
           </div>
         </div>

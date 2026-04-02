@@ -63,6 +63,10 @@ export interface SettingsPageProps {
   onSaveBookings: (settings: BookingSettings) => Promise<void>;
   onSaveAccount: (data: { fullName: string; phone: string }) => Promise<void>;
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  /** Se presente, mostra solo i tab con questi id (es. ['account'] per lo staff) */
+  allowedTabs?: string[];
+  /** Contenuto aggiuntivo da mostrare in fondo al tab Prenotazioni */
+  extraBookingContent?: React.ReactNode;
   className?: string;
 }
 
@@ -874,7 +878,6 @@ function BookingsTab({ form, setForm, baseSettings, onSave }: {
                   <div className="flex items-center gap-2">
                     <Icon className="w-4 h-4 text-purple-500 flex-shrink-0" />
                     <span className="text-sm font-semibold text-gray-900">{opt.label}</span>
-                    {savingToggle === opt.key && <RefreshCw className="w-3.5 h-3.5 text-purple-400 animate-spin" />}
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5 ml-6">{opt.desc}</p>
                 </div>
@@ -994,9 +997,13 @@ export function SettingsPage({
   publicUrlBase, businessType,
   onSaveGeneral, onUploadLogo, onRemoveLogo, onSaveHours, onSaveWorkstations,
   onAddClosure, onDeleteClosure, onSaveBookings, onSaveAccount, onChangePassword,
+  allowedTabs, extraBookingContent,
   className = '',
 }: SettingsPageProps) {
-  const [activeTab, setActiveTab] = React.useState('general');
+  const visibleTabs = allowedTabs
+    ? DEFAULT_TABS.filter(t => allowedTabs.includes(t.id))
+    : DEFAULT_TABS;
+  const [activeTab, setActiveTab] = React.useState(visibleTabs[0]?.id ?? 'general');
   const [generalForm, setGeneralForm] = React.useState(generalData);
   const [generalBase, setGeneralBase] = React.useState(generalData);
   const [hoursForm, setHoursForm] = React.useState(businessHours);
@@ -1020,10 +1027,10 @@ export function SettingsPage({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6" style={{ animation: 'stFadeUp 0.35s ease-out both' }}>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Impostazioni</h1>
-          <p className="text-gray-500 mt-1">Gestisci le impostazioni della tua attività</p>
+          <p className="text-gray-500 mt-1">{allowedTabs ? 'Gestisci il tuo profilo personale' : 'Gestisci le impostazioni della tua attività'}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {DEFAULT_TABS.map(tab => {
+          {visibleTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -1048,7 +1055,12 @@ export function SettingsPage({
 
       {activeTab === 'general' && <GeneralTab form={generalForm} setForm={setGeneralForm} baseData={generalBase} publicUrlBase={publicUrlBase} businessType={businessType} onSave={wGen} onUploadLogo={onUploadLogo} onRemoveLogo={onRemoveLogo} />}
       {activeTab === 'hours' && <HoursTab hours={hoursForm} setHours={setHoursForm} baseHours={hoursBase} closures={closures} workstations={wsForm} setWorkstations={setWsForm} baseWorkstations={wsBase} businessType={businessType} onSaveHours={wHrs} onSaveWorkstations={wWs} onAddClosure={onAddClosure} onDeleteClosure={onDeleteClosure} />}
-      {activeTab === 'bookings' && <BookingsTab form={bookForm} setForm={setBookForm} baseSettings={bookBase} onSave={wBk} />}
+      {activeTab === 'bookings' && (
+        <div className="space-y-6">
+          <BookingsTab form={bookForm} setForm={setBookForm} baseSettings={bookBase} onSave={wBk} />
+          {extraBookingContent}
+        </div>
+      )}
       {activeTab === 'account' && <AccountTab form={acctForm} setForm={setAcctForm} baseData={accountData} onSave={onSaveAccount} onChangePassword={onChangePassword} />}
     </div>
   );

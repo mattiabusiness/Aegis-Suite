@@ -36,7 +36,15 @@ export {
   registerBusiness,
   getCurrentUserBusiness,
   getBusinessBySlug,
+  getCustomerByUserId,
 } from './lib/business';
+
+// Appointment functions (customer-facing)
+export {
+  getUpcomingAppointments,
+  getPastAppointments,
+  cancelAppointment,
+} from './lib/appointments';
 
 // Auth Types
 export type { 
@@ -78,3 +86,23 @@ export type {
   AvailableSlot,
   SlotCheckResult,
 } from './lib/availability';
+
+// Importer
+export {
+  parseFile,
+  autoDetectMapping,
+  validateAndMap,
+  checkDuplicates,
+} from './lib/importer';
+
+export type {
+  ParsedData,
+  ColumnMapping,
+  ParsedRow,
+  ValidationResult,
+  ImportResult,
+} from './lib/importer';
+
+// Staff Permissions
+export { resolveStaffPermissions, getCurrentStaffPermissions } from './lib/staff-permissions';
+export type { StaffPermissions } from './lib/staff-permissions';

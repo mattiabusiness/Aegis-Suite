@@ -308,7 +308,10 @@ function getAvailableStaffForSlot(
     let workingRanges: [number, number][];
 
     // Check if staff has CUSTOM hours for this day
-    const customHours = staffHours.find(h => h.staffId === staffId && h.dayOfWeek === dayName);
+    const customHours = staffHours.find(h =>
+      h.staffId === staffId &&
+      h.dayOfWeek.toLowerCase() === dayName.toLowerCase()
+    );
 
     if (customHours) {
       // Staff has custom hours → use them

@@ -59,6 +59,8 @@ export { SettingsPage } from './components/dashboard/SettingsPage';
 export { StatsPage } from './components/dashboard/StatsPage';
 export { OverviewPage } from './components/dashboard/OverviewPage';
 export { QRCodeDisplay, QRCodeModal } from './components/QRCodeDisplay';
+export { ImporterModal } from './components/dashboard/ImporterModal';
+export type { ImporterModalProps, ImporterParsedRow } from './components/dashboard/ImporterModal';
 
 // ============================================================================
 // THEMES
@@ -280,3 +282,41 @@ export type {
 export type {
   ContentTheme,
 } from './components/dashboard/ContentTheme';
+
+// ============================================================================
+// CUSTOMER COMPONENTS (multi-vertical)
+// ============================================================================
+
+export { BottomNav, DesktopHeader } from './components/customer/CustomerNav';
+export { CustomerLayout } from './components/customer/CustomerLayout';
+export { ServiceCard } from './components/customer/ServiceCard';
+export { StaffCard } from './components/customer/StaffCard';
+export { AppointmentCard } from './components/customer/AppointmentCard';
+
+export type { BottomNavProps, DesktopHeaderProps } from './components/customer/CustomerNav';
+export type { CustomerLayoutProps, CustomerLayoutBusiness } from './components/customer/CustomerLayout';
+export type { ServiceCardProps, ServiceCardService } from './components/customer/ServiceCard';
+export type { StaffCardProps, StaffCardStaff } from './components/customer/StaffCard';
+export type { AppointmentCardProps, AppointmentCardData } from './components/customer/AppointmentCard';
+
+// ============================================================================
+// BOOKING CAROUSEL (multi-vertical)
+// ============================================================================
+
+export { BookingCarousel } from './components/customer/booking/BookingCarousel';
+export { CarouselCard } from './components/customer/booking/CarouselCard';
+export {
+  Step1Front, Step1Back,
+  Step2Front, Step2Back,
+  Step3Front, Step3Back,
+} from './components/customer/booking/Steps';
+
+export type {
+  BookingState,
+  BookingBusiness,
+  BookingService,
+  BookingStaff,
+  BookingHours,
+  BookingSlot,
+  FetchSlotsFn,
+} from './components/customer/booking/types';

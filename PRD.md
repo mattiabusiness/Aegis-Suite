@@ -62,28 +62,21 @@ L'area dedicata all'utente finale del salone. **Mobile-First strict.**
 
 ---
 
-## 6. TO-DO LIST & ROADMAP DI PERFEZIONAMENTO
+## 6. ACTIVE BACKLOG (Prioritized)
 
-### FASE A: UI/UX Refinement (FOCUS ATTUALE) 🎯
-- [ ] **Coerenza Atomica**: Unificare border-radius, ombre e spaziature tra `apps` e `packages/ui`.
-- [ ] **Effetti "Wow"**: Implementare transizioni Framer Motion su ogni cambio pagina e apertura modal.
-- [ ] **Grandma-Proofing**: Semplificare i form complessi (es. orari staff) rendendoli visuali.
-- [ ] **Feedback Visivo**: Implementare Skeleton Loaders ovunque per eliminare il layout shift.
-- [ ] **Perfezionamento generale dashbaord**: Tutto deve essere perfetto, bello, estetico e futuristico con effetti, animazioni e transizioni, tutto fluido e armonioso, ottimmizzazione di codice per le performance, responsive.
+### P0 — CLIENT INTERFACE NOW (Sessione corrente)
+- [ ] `/[slug]` — Business landing semi-pubblica (SSG)
+  Toggle visibilità nelle impostazioni gestore (default: ON)
+- [ ] `/[slug]/prenota` — 3D carousel booking (3 step max)
+- [ ] `/[slug]/account` — Area personale cliente
 
-### FASE B: Interfaccia Cliente & Matching Algorithm 🚀
-- [ ] Sviluppo completo del flusso di prenotazione `/app/[slug]/book`. (algoritmo gia creato per le prenotazioni manuali dalla dashboard gestore, ma va perfezionato per essa e affinato per l'interfaccia cliente)
-- [ ] Test di carico sull'algoritmo di matching (Staff/Postazioni).
-- [ ] Area personale cliente con storico prenotazioni e area business.
-
-### FASE C: Avanzate & Lancio 🏁
-- [ ] Sistema notifiche (Sonner per in-app, Email via Supabase/Resend).
-- [ ] PWA: Rendere l'app installabile su smartphone come app nativa.
-- [ ] Export dati (Excel/PDF) per statistiche e clienti.
-- [ ] Fare tutte le ottimmizzazioni finali e perfezionare il tutto con tutti i dettagli, implementare i testi legali nel app
-- [ ] Testare che tutto funzioni e non ci siano problemi, bug
-- [ ] VERIFICARE CHE TUTTO IL SOFTWARE SIA SICURO AL 100% E CHE NON CI SIANO PROBLEMI
----
+### P1 — LAUNCH PREP
+- [ ] Email transazionali (Resend) + notifiche: conferma, reminder 24h, notifica gestore
+- [ ] PWA: manifest, service worker, installabile
+- [ ] Lighthouse > 90 su tutte le pagine
+- [ ] Legal pages: Privacy Policy, T&C, Cookie Policy
+- [ ] Security audit finale (RLS, API routes, input sanitization)
+- [ ] Performance: bundle analysis, lazy loading, image optimization
 
 ## 7. REGOLE D'ORO PER LO SVILUPPO
 - **Nessuna Duplicazione**: Se una logica serve a due pagine, va in un Hook in `packages/core`.

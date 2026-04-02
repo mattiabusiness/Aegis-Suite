@@ -291,6 +291,29 @@ export async function getBusinessBySlug(
   }
 }
 
+/**
+ * Ottiene un cliente tramite user_id e business_id
+ */
+export async function getCustomerByUserId(
+  supabase: AnySupabaseClient,
+  userId: string,
+  businessId: string
+) {
+  try {
+    const { data } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .single();
+
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // ============================================================================
 // ERROR TRANSLATION
 // ============================================================================

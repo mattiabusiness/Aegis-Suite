@@ -701,6 +701,14 @@ export function StaffHoursModal({
     setHours(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
   };
 
+  const addSecondRange = (index: number) => {
+    setHours(prev => prev.map((h, i) => i === index ? { ...h, openTime2: '14:00', closeTime2: '19:00' } : h));
+  };
+
+  const removeSecondRange = (index: number) => {
+    setHours(prev => prev.map((h, i) => i === index ? { ...h, openTime2: undefined, closeTime2: undefined } : h));
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try { await onSave(useBusinessHrs, useBusinessHrs ? undefined : hours); }
@@ -714,7 +722,7 @@ export function StaffHoursModal({
       onClose={onClose}
       title={`Orari di ${staffName}`}
       subtitle="Configura la disponibilità settimanale"
-      maxWidth="max-w-xl"
+      maxWidth="max-w-[620px]"
     >
       {({ handleClose }: { handleClose: () => void }) => (
         <>
@@ -750,7 +758,7 @@ export function StaffHoursModal({
                 {hours.map((day, i) => (
                   <div
                     key={day.dayOfWeek}
-                    className="flex items-center gap-3 p-3 rounded-xl"
+                    className="flex items-center gap-2 p-3 rounded-xl"
                     style={{
                       background: day.isOpen ? 'rgba(0,0,0,0.015)' : 'rgba(0,0,0,0.01)',
                       border: '1px solid rgba(0,0,0,0.04)',
@@ -780,14 +788,31 @@ export function StaffHoursModal({
                     </div>
 
                     {/* Day label */}
-                    <span className="text-sm font-medium text-gray-900 w-20 flex-shrink-0">{day.dayLabel}</span>
+                    <span className="text-xs font-medium text-gray-900 w-16 flex-shrink-0">{day.dayLabel}</span>
 
                     {/* Times */}
                     {day.isOpen && (
-                      <div className="flex items-center gap-2 flex-1">
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
                         <input type="time" value={day.openTime1 || '09:00'} onChange={(e) => updateDay(i, 'openTime1', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
                         <span className="text-xs text-gray-400">—</span>
-                        <input type="time" value={day.closeTime1 || '18:00'} onChange={(e) => updateDay(i, 'closeTime1', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                        <input type="time" value={day.closeTime1 || '13:00'} onChange={(e) => updateDay(i, 'closeTime1', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                        {day.openTime2 ? (
+                          <>
+                            <span className="text-xs text-gray-300" style={{ margin: '0 8px' }}>|</span>
+                            <input type="time" value={day.openTime2} onChange={(e) => updateDay(i, 'openTime2', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                            <span className="text-xs text-gray-400">—</span>
+                            <input type="time" value={day.closeTime2 || '19:00'} onChange={(e) => updateDay(i, 'closeTime2', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                            <button
+                              type="button"
+                              onClick={() => removeSecondRange(i)}
+                              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
+                              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#9ca3af'; }}
+                              style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', lineHeight: 1, flexShrink: 0, transition: 'color 0.15s ease' }}
+                            >✕</button>
+                          </>
+                        ) : (
+                          <button type="button" onClick={() => addSecondRange(i)} style={{ fontSize: 10, color: '#9333ea', fontWeight: 600, background: 'rgba(147,51,234,0.06)', border: '1px solid rgba(147,51,234,0.15)', borderRadius: 6, padding: '2px 7px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ pausa</button>
+                        )}
                       </div>
                     )}
                   </div>

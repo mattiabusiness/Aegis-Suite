@@ -10,7 +10,7 @@
 'use client';
 
 import * as React from 'react';
-import { Clock, Users, AlertTriangle, RefreshCw, Sun, Sunset } from 'lucide-react';
+import { Clock, AlertTriangle, RefreshCw, Sun, Sunset } from 'lucide-react';
 
 // ============================================================================
 // TYPES
@@ -96,61 +96,114 @@ function SlotButton({
   isSelected,
   onSelect,
   showWorkstations,
+  index = 0,
 }: {
   slot: SlotInfo;
   isSelected: boolean;
   onSelect: () => void;
   showWorkstations?: boolean;
+  index?: number;
 }) {
   const occupancy = getOccupancyLevel(slot);
+  const dotColor =
+    occupancy === 'low' ? '#10b981' :
+    occupancy === 'medium' ? '#f59e0b' :
+    '#ef4444';
+
+  const [hovered, setHovered] = React.useState(false);
 
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={`
-        relative group flex flex-col items-center justify-center
-        px-3 py-2 rounded-xl text-sm font-medium
-        transition-all duration-200 ease-out
-        border-2 min-w-[72px]
-        focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accent-500
-        ${isSelected
-          ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-sm shadow-accent-200'
-          : 'border-gray-200 bg-white text-gray-700 hover:border-accent-300 hover:bg-accent-50/50 hover:shadow-sm'
-        }
-      `}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '8px 12px',
+        borderRadius: 12,
+        fontSize: 13,
+        fontWeight: 600,
+        minWidth: 72,
+        cursor: 'pointer',
+        outline: 'none',
+        background: isSelected
+          ? 'linear-gradient(135deg, #9333ea, #7c3aed)'
+          : '#ffffff',
+        border: isSelected
+          ? '1.5px solid transparent'
+          : hovered
+            ? '1.5px solid rgba(168,85,247,0.3)'
+            : '1.5px solid rgba(0,0,0,0.08)',
+        color: isSelected ? '#ffffff' : '#374151',
+        boxShadow: isSelected
+          ? '0 4px 16px rgba(147,51,234,0.3)'
+          : hovered
+            ? '0 2px 8px rgba(168,85,247,0.08)'
+            : '0 1px 3px rgba(0,0,0,0.04)',
+        transform: hovered && !isSelected ? 'translateY(-1px)' : 'translateY(0)',
+        transition: 'all 0.18s ease-out',
+        animation: `sp-slot-in 0.2s ease-out ${index * 0.02}s both`,
+      }}
     >
-      <span className={`text-sm font-semibold ${isSelected ? 'text-accent-700' : 'text-gray-900'}`}>
-        {slot.time}
-      </span>
+      <span style={{ fontSize: 13, fontWeight: 600 }}>{slot.time}</span>
 
-      {showWorkstations && slot.totalWorkstations > 1 && (
-        <div className="flex items-center gap-1 mt-0.5">
-          {Array.from({ length: slot.totalWorkstations }).map((_, i) => (
-            <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                i < slot.freeWorkstations
-                  ? occupancy === 'high'
-                    ? 'bg-amber-400'
-                    : 'bg-emerald-400'
-                  : 'bg-gray-200'
-              }`}
-            />
-          ))}
-        </div>
+      {/* Single occupancy dot — top right corner */}
+      {showWorkstations && slot.totalWorkstations > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 4,
+            right: 4,
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            backgroundColor: dotColor,
+            flexShrink: 0,
+          }}
+        />
       )}
 
       {/* Tooltip on hover */}
-      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
-        <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-1.5 whitespace-nowrap shadow-lg">
-          {slot.time} - {slot.endTime}
-          {showWorkstations && slot.totalWorkstations > 1 && (
-            <span className="ml-1 text-gray-300">
-              · {slot.freeWorkstations}/{slot.totalWorkstations} libere
-            </span>
-          )}
-        </div>
+      <div style={{
+        position: 'absolute',
+        bottom: 'calc(100% + 6px)',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        pointerEvents: 'none',
+        opacity: hovered ? 1 : 0,
+        transition: 'opacity 0.15s ease',
+        background: 'linear-gradient(135deg, #7c3aed, #9333ea)',
+        color: '#fff',
+        fontSize: 11,
+        borderRadius: 8,
+        padding: '4px 8px',
+        whiteSpace: 'nowrap',
+        boxShadow: '0 4px 12px rgba(124,58,237,0.35)',
+        zIndex: 50,
+      }}>
+        {slot.time} – {slot.endTime}
+        {showWorkstations && slot.totalWorkstations > 1 && (
+          <span style={{ color: 'rgba(255,255,255,0.7)', marginLeft: 6 }}>
+            {slot.freeWorkstations}/{slot.totalWorkstations} libere
+          </span>
+        )}
+        {/* Tooltip arrow (pointing down) */}
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 0,
+          height: 0,
+          borderLeft: '4px solid transparent',
+          borderRight: '4px solid transparent',
+          borderTop: '4px solid #9333ea',
+        }} />
       </div>
     </button>
   );
@@ -167,6 +220,7 @@ function PeriodSection({
   selectedTime,
   onSelectTime,
   showWorkstations,
+  indexOffset = 0,
 }: {
   icon: React.ElementType;
   title: string;
@@ -174,21 +228,45 @@ function PeriodSection({
   selectedTime: string | null;
   onSelectTime: (time: string) => void;
   showWorkstations?: boolean;
+  indexOffset?: number;
 }) {
   if (slots.length === 0) return null;
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-4 h-4 text-gray-400" />
-        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{title}</span>
-        <span className="text-xs text-gray-400">({slots.length} disponibili)</span>
+      {/* Period label */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          marginBottom: 8,
+        }}
+      >
+        <Icon style={{ width: 13, height: 13, color: '#9ca3af' }} />
+        <span style={{
+          fontSize: 10,
+          fontWeight: 700,
+          color: '#9ca3af',
+          textTransform: 'uppercase' as const,
+          letterSpacing: '0.08em',
+        }}>
+          {title}
+        </span>
+        <span style={{ fontSize: 10, color: '#d1d5db' }}>({slots.length})</span>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {slots.map(slot => (
+
+      {/* Slot grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+        gap: 8,
+      }}>
+        {slots.map((slot, i) => (
           <SlotButton
             key={slot.time}
             slot={slot}
+            index={indexOffset + i}
             isSelected={selectedTime === slot.time}
             onSelect={() => onSelectTime(slot.time)}
             showWorkstations={showWorkstations}
@@ -219,9 +297,9 @@ export function SlotPicker({
   // Not ready state
   if (!readyToLoad) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <Clock className="w-8 h-8 text-gray-300 mb-2" />
-        <p className="text-sm text-gray-500">{labels.selectDateFirst}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 0', textAlign: 'center' }}>
+        <Clock style={{ width: 32, height: 32, color: '#d1d5db', marginBottom: 8 }} />
+        <p style={{ fontSize: 13, color: '#6b7280' }}>{labels.selectDateFirst}</p>
       </div>
     );
   }
@@ -229,9 +307,9 @@ export function SlotPicker({
   // Loading state
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <RefreshCw className="w-6 h-6 text-accent-500 animate-spin mb-2" />
-        <p className="text-sm text-gray-500">{labels.loading}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 0', textAlign: 'center' }}>
+        <RefreshCw style={{ width: 24, height: 24, color: '#9333ea', marginBottom: 8, animation: 'spin 1s linear infinite' }} />
+        <p style={{ fontSize: 13, color: '#6b7280' }}>{labels.loading}</p>
       </div>
     );
   }
@@ -239,14 +317,14 @@ export function SlotPicker({
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-6 text-center">
-        <AlertTriangle className="w-6 h-6 text-amber-500 mb-2" />
-        <p className="text-sm text-red-600 mb-2">{error}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 0', textAlign: 'center' }}>
+        <AlertTriangle style={{ width: 24, height: 24, color: '#f59e0b', marginBottom: 8 }} />
+        <p style={{ fontSize: 13, color: '#dc2626', marginBottom: 8 }}>{error}</p>
         {onRetry && (
           <button
             type="button"
             onClick={onRetry}
-            className="text-sm text-accent-600 hover:text-accent-700 font-medium"
+            style={{ fontSize: 13, color: '#9333ea', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             Riprova
           </button>
@@ -258,10 +336,10 @@ export function SlotPicker({
   // No slots available
   if (slots.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <AlertTriangle className="w-6 h-6 text-amber-400 mb-2" />
-        <p className="text-sm text-gray-600 font-medium">{labels.noSlots}</p>
-        <p className="text-xs text-gray-400 mt-1">Prova a cambiare data, servizio o operatore</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 0', textAlign: 'center' }}>
+        <AlertTriangle style={{ width: 24, height: 24, color: '#fbbf24', marginBottom: 8 }} />
+        <p style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>{labels.noSlots}</p>
+        <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>Prova a cambiare data, servizio o operatore</p>
       </div>
     );
   }
@@ -269,32 +347,21 @@ export function SlotPicker({
   // Group by period
   const { morning, afternoon } = groupSlotsByPeriod(slots);
 
+  // CSS keyframes injected once
+  const styleTag = (
+    <style>{`
+      @keyframes sp-slot-in {
+        from { opacity: 0; transform: translateY(6px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+    `}</style>
+  );
+
+  const selectedSlot = slots.find(s => s.time === selectedTime);
+
   return (
-    <div className="space-y-4">
-      {/* Workstation legend */}
-      {showWorkstations && slots[0]?.totalWorkstations > 1 && (
-        <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
-          <Users className="w-4 h-4 text-gray-400" />
-          <span className="text-xs text-gray-500">
-            I pallini indicano le postazioni disponibili
-          </span>
-          <div className="flex items-center gap-1 ml-auto">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span className="text-xs text-gray-400">Libera</span>
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-200 ml-2" />
-            <span className="text-xs text-gray-400">Occupata</span>
-            <div className="relative group ml-2" style={{ lineHeight: 1 }}>
-              <span className="flex items-center justify-center cursor-help"
-                style={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid rgba(0,0,0,0.12)', fontSize: 9, fontWeight: 700, color: '#9ca3af' }}>?</span>
-              <div className="absolute bottom-full right-0 mb-1.5 px-2.5 py-1.5 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)', fontSize: 10, zIndex: 50, boxShadow: '0 4px 12px rgba(147,51,234,0.3)', whiteSpace: 'nowrap' }}>
-                Ogni pallino = una postazione. Verde = libera, Grigio = occupata.
-                <div className="absolute top-full right-2 w-0 h-0" style={{ borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #9333ea' }} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {styleTag}
 
       <PeriodSection
         icon={Sun}
@@ -303,7 +370,12 @@ export function SlotPicker({
         selectedTime={selectedTime}
         onSelectTime={onSelectTime}
         showWorkstations={showWorkstations}
+        indexOffset={0}
       />
+
+      {morning.length > 0 && afternoon.length > 0 && (
+        <div style={{ height: 1, background: 'rgba(0,0,0,0.06)', margin: '0 4px' }} />
+      )}
 
       <PeriodSection
         icon={Sunset}
@@ -312,16 +384,25 @@ export function SlotPicker({
         selectedTime={selectedTime}
         onSelectTime={onSelectTime}
         showWorkstations={showWorkstations}
+        indexOffset={morning.length}
       />
 
       {/* Selected time summary */}
-      {selectedTime && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-accent-50 rounded-lg border border-accent-200">
-          <Clock className="w-4 h-4 text-accent-600" />
-          <span className="text-sm font-medium text-accent-700">
-            Orario selezionato: {selectedTime}
-            {slots.find(s => s.time === selectedTime)?.endTime && (
-              <span className="text-accent-500"> - {slots.find(s => s.time === selectedTime)!.endTime}</span>
+      {selectedTime && selectedSlot && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '8px 12px',
+          background: 'rgba(147,51,234,0.05)',
+          borderRadius: 10,
+          border: '1px solid rgba(147,51,234,0.15)',
+        }}>
+          <Clock style={{ width: 14, height: 14, color: '#9333ea', flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#7c3aed' }}>
+            {selectedTime}
+            {selectedSlot.endTime && (
+              <span style={{ color: '#a855f7', fontWeight: 400 }}> – {selectedSlot.endTime}</span>
             )}
           </span>
         </div>

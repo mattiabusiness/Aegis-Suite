@@ -39,6 +39,7 @@ export interface SignUpData {
   password: string;
   fullName: string;
   phone?: string;
+  redirectTo?: string;
 }
 
 export interface SignInData {
@@ -62,6 +63,7 @@ export async function signUp(
       email: data.email,
       password: data.password,
       options: {
+        emailRedirectTo: data.redirectTo,
         data: {
           full_name: data.fullName,
           phone: data.phone,

@@ -32,6 +32,7 @@ export interface Customer {
   name: string;
   phone?: string;
   email?: string;
+  invitedAt?: string | null;
 }
 
 export interface Service {
@@ -111,6 +112,10 @@ export interface AppointmentModalProps {
   slotsLoading?: boolean;
   slotsError?: string;
   onSlotsNeeded?: (date: string, serviceId: string, staffId?: string | null) => void;
+  /** Se presente, il campo staff è pre-selezionato e non modificabile (per staff senza permesso team) */
+  lockedStaffId?: string;
+  /** Se presente, mostra solo questi staff nella lista (per staff con permesso team parziale) */
+  allowedStaffIds?: string[];
 }
 
 // ============================================================================
@@ -597,8 +602,6 @@ function StaffDropdown({
     return staff.filter(m => m.name.toLowerCase().includes(s));
   }, [staff, searchQuery]);
 
-  if (filtered.length === 0) return null;
-
   return createPortal(
     <div
       ref={ref}
@@ -622,6 +625,41 @@ function StaffDropdown({
       }}
     >
       <div className="py-1">
+        {/* Nessuna preferenza — sempre come prima opzione */}
+        {(() => {
+          const isNoneSelected = selectedId === '';
+          const isNoneHovered = hoveredId === '__none__';
+          return (
+            <button
+              key="__none__"
+              type="button"
+              onClick={() => onSelect({ id: '', name: 'Nessuna preferenza', color: '' })}
+              onMouseEnter={() => setHoveredId('__none__')}
+              onMouseLeave={() => setHoveredId(null)}
+              className="w-full text-left outline-none"
+              style={{ padding: '0 4px' }}
+            >
+              <div
+                className="flex items-center gap-2.5 px-2.5 py-2 mx-0.5 rounded-lg"
+                style={{
+                  background: isNoneSelected ? 'rgba(168,85,247,0.08)' : isNoneHovered ? 'rgba(168,85,247,0.04)' : 'transparent',
+                  borderLeft: isNoneSelected ? '2.5px solid #a855f7' : isNoneHovered ? '2.5px solid rgba(168,85,247,0.3)' : '2.5px solid transparent',
+                  borderBottom: '1px solid rgba(0,0,0,0.04)',
+                  transition: 'all 0.15s ease-out',
+                }}
+              >
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                  style={{ background: 'rgba(156,163,175,0.2)', color: '#9ca3af' }}>
+                  ∅
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 500, color: '#6b7280', fontStyle: 'italic', flex: 1 }}>
+                  Nessuna preferenza
+                </span>
+                {isNoneSelected && <Check style={{ width: 14, height: 14, color: '#7c3aed' }} />}
+              </div>
+            </button>
+          );
+        })()}
         {filtered.map(m => {
           const isSelected = m.id === selectedId;
           const isHovered = m.id === hoveredId;
@@ -796,10 +834,20 @@ export function AppointmentModal({
   initialDate, initialTime, initialStaffId, initialCustomerId,
   isLoading = false, labels: customLabels,
   availableSlots, slotsLoading = false, slotsError, onSlotsNeeded,
+  lockedStaffId, allowedStaffIds,
 }: AppointmentModalProps) {
   const labels = { ...defaultLabels, ...customLabels };
   const timeSlots = React.useMemo(() => generateTimeSlots(), []);
   const isDynamicMode = !!onSlotsNeeded;
+
+  // Applica restrizioni staff: filtra la lista e usa l'id bloccato come default
+  const effectiveStaff = React.useMemo(() => {
+    if (allowedStaffIds && allowedStaffIds.length > 0) {
+      return staff.filter(s => allowedStaffIds.includes(s.id));
+    }
+    return staff;
+  }, [staff, allowedStaffIds]);
+  const effectiveInitialStaffId = lockedStaffId || initialStaffId || '';
 
   // Animation
   const [mounted, setMounted] = React.useState(false);
@@ -810,7 +858,7 @@ export function AppointmentModal({
   const [formData, setFormData] = React.useState<AppointmentFormData>({
     customerId: null, customerFirstName: '', customerLastName: '',
     customerPhone: '', customerEmail: '', serviceId: '',
-    staffId: initialStaffId || '',
+    staffId: effectiveInitialStaffId,
     date: initialDate ? fmtDate(initialDate) : fmtDate(new Date()),
     time: initialTime || '', notes: '', isNewCustomer: false, sendInvite: true,
   });
@@ -824,6 +872,10 @@ export function AppointmentModal({
   const [showStaffList, setShowStaffList] = React.useState(false);
   const [showCalendar, setShowCalendar] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [internalSubmitting, setInternalSubmitting] = React.useState(false);
+  const [missingFields, setMissingFields] = React.useState<{ phone: boolean; email: boolean } | null>(null);
+  const [selectedCustomerInvited, setSelectedCustomerInvited] = React.useState(false);
+  const isDisabled = isLoading || internalSubmitting;
 
   // Refs for dropdown positioning
   const serviceFieldRef = React.useRef<HTMLDivElement>(null);
@@ -872,10 +924,11 @@ export function AppointmentModal({
 
   // === DYNAMIC SLOT FETCHING ===
   React.useEffect(() => {
-   if (!isDynamicMode) return;
+    if (!isDynamicMode) return;
     if (!formData.date || !formData.serviceId) return;
+    if (incompatibleStaffService) return; // non caricare slot se staff non può fare il servizio
     onSlotsNeeded(formData.date, formData.serviceId, formData.staffId || null);
-  }, [isDynamicMode, formData.date, formData.serviceId, formData.staffId, onSlotsNeeded]);
+  }, [isDynamicMode, formData.date, formData.serviceId, formData.staffId, onSlotsNeeded, incompatibleStaffService]);
 
   React.useEffect(() => {
     if (!isDynamicMode || !availableSlots) return;
@@ -896,7 +949,7 @@ export function AppointmentModal({
         customerId: prefill?.id || null,
         customerFirstName: parts[0] || '', customerLastName: parts.slice(1).join(' ') || '',
         customerPhone: prefill?.phone || '', customerEmail: prefill?.email || '',
-        serviceId: '', staffId: initialStaffId || '',
+        serviceId: '', staffId: lockedStaffId || initialStaffId || '',
         date: initialDate ? fmtDate(initialDate) : fmtDate(new Date()),
         time: initialTime || '', notes: '', isNewCustomer: false, sendInvite: true,
       });
@@ -905,6 +958,15 @@ export function AppointmentModal({
       setStaffSearch(''); setShowStaffList(false);
       setShowCalendar(false);
       setErrors({});
+      // Check if prefilled customer is missing contact data
+      if (prefill) {
+        const m = { phone: !prefill.phone, email: !prefill.email };
+        setMissingFields((m.phone || m.email) ? m : null);
+        setSelectedCustomerInvited(!!prefill.invitedAt);
+      } else {
+        setMissingFields(null);
+        setSelectedCustomerInvited(false);
+      }
       requestAnimationFrame(() => { requestAnimationFrame(() => setMounted(true)); });
     } else {
       setMounted(false);
@@ -1000,6 +1062,12 @@ export function AppointmentModal({
     }));
     setCustomerSearch(c.name);
     setShowCustomerDropdown(false);
+    // Auto-open missing data form if contact info is incomplete
+    const m = { phone: !c.phone, email: !c.email };
+    const hasMissing = m.phone || m.email;
+    setMissingFields(hasMissing ? m : null);
+    setSelectedCustomerInvited(!!c.invitedAt);
+    if (hasMissing) setFormData(prev => ({ ...prev, sendInvite: !c.invitedAt }));
     if (errors.customerFirstName) setErrors(prev => { const n = { ...prev }; delete n.customerFirstName; return n; });
   };
 
@@ -1033,11 +1101,13 @@ export function AppointmentModal({
       if (!formData.customerPhone.trim()) e.customerPhone = 'Inserisci il telefono';
       if (!formData.customerEmail.trim()) e.customerEmail = 'Inserisci l\'email';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) e.customerEmail = 'Email non valida';
+    } else if (missingFields) {
+      if (missingFields.email && !formData.customerEmail.trim()) e.customerEmail = 'Inserisci l\'email del cliente';
+      else if (missingFields.email && formData.customerEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) e.customerEmail = 'Email non valida';
     } else if (!formData.customerId && !formData.customerFirstName.trim()) {
       e.customerFirstName = 'Seleziona o inserisci un cliente';
     }
     if (!formData.serviceId) e.serviceId = 'Seleziona un servizio';
-    if (!formData.staffId) e.staffId = 'Seleziona un operatore';
     if (!formData.date) e.date = 'Seleziona una data';
     else if (selectedDateClosed.closed) e.date = selectedDateClosed.reason || 'Giorno chiuso';
     if (!formData.time) e.time = 'Seleziona un orario';
@@ -1047,9 +1117,12 @@ export function AppointmentModal({
 
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
+    if (isDisabled) return;
     if (!validate()) { doShake(); return; }
+    setInternalSubmitting(true);
     try { await onSubmit(formData); handleClose(); }
     catch (err) { console.error('Error creating appointment:', err); }
+    finally { setInternalSubmitting(false); }
   };
 
   if (!isOpen && !closing) return null;
@@ -1100,7 +1173,7 @@ export function AppointmentModal({
         <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.15), transparent)' }} />
 
         {/* ═══ FORM ═══ */}
-        <form onSubmit={handleSubmit} className="flex-1 px-6 py-5" style={{ scrollbarWidth: 'none' as const, overflowY: (showCustomerDropdown || showServiceList || showStaffList || showCalendar) ? 'hidden' : 'auto' }}>
+        <form id="appointment-form" onSubmit={handleSubmit} className="flex-1 px-6 py-5" style={{ scrollbarWidth: 'none' as const, overflowY: (showCustomerDropdown || showServiceList || showStaffList || showCalendar) ? 'hidden' : 'auto' }}>
           <div className="space-y-5">
 
             {/* Incompatibility Warning */}
@@ -1125,7 +1198,7 @@ export function AppointmentModal({
                   onChange={(e) => {
                     setCustomerSearch(e.target.value);
                     if (!showCustomerDropdown) { updateCustomerPos(); setShowCustomerDropdown(true); }
-                    if (formData.customerId) setFormData(prev => ({ ...prev, customerId: null, isNewCustomer: false }));
+                    if (formData.customerId) { setFormData(prev => ({ ...prev, customerId: null, isNewCustomer: false })); setMissingFields(null); setSelectedCustomerInvited(false); }
                   }}
                   placeholder={labels.searchCustomer}
                   style={{ ...inputBase, paddingLeft: 36, ...errorBorder(!!errors.customerFirstName) }}
@@ -1158,11 +1231,68 @@ export function AppointmentModal({
               {errors.customerFirstName && <p className="text-xs" style={{ color: '#dc2626' }}>* {errors.customerFirstName}</p>}
             </div>
 
+            {/* ── MISSING CONTACT DATA FORM (existing customer, incomplete) ── */}
+            {!formData.isNewCustomer && missingFields && (missingFields.phone || missingFields.email) && (
+              <div className="p-4 rounded-xl space-y-3" style={{
+                background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.25)',
+                boxShadow: '0 2px 12px rgba(245,158,11,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+                animation: 'apm-slide-down 0.3s ease-out',
+              }}>
+                <p className="text-sm font-semibold flex items-center gap-2" style={{ color: '#b45309' }}>
+                  <AlertTriangle className="w-4 h-4" />Dati di contatto mancanti
+                </p>
+                <p className="text-xs" style={{ color: '#92400e' }}>
+                  Completa i dati mancanti per procedere con la prenotazione.
+                </p>
+                {missingFields.phone && (
+                  <input type="tel" value={formData.customerPhone}
+                    onChange={(e) => handleInputChange('customerPhone', e.target.value)}
+                    placeholder="Telefono (opzionale)"
+                    style={{ ...inputBase, background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(245,158,11,0.25)' }}
+                    onFocus={(e) => { e.currentTarget.style.border = '1px solid rgba(245,158,11,0.6)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.1)'; e.currentTarget.style.background = '#fff'; }}
+                    onBlur={(e) => { e.currentTarget.style.border = `1px solid ${errors.customerPhone ? 'rgba(239,68,68,0.5)' : 'rgba(245,158,11,0.25)'}`; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.background = 'rgba(255,255,255,0.7)'; }}
+                  />
+                )}
+                {errors.customerPhone && <p className="text-xs" style={{ color: '#dc2626' }}>* {errors.customerPhone}</p>}
+                {missingFields.email && (
+                  <input type="email" value={formData.customerEmail}
+                    onChange={(e) => handleInputChange('customerEmail', e.target.value)}
+                    placeholder="Email *"
+                    style={{ ...inputBase, background: 'rgba(255,255,255,0.7)', border: `1px solid ${errors.customerEmail ? 'rgba(239,68,68,0.5)' : 'rgba(245,158,11,0.25)'}` }}
+                    onFocus={(e) => { e.currentTarget.style.border = '1px solid rgba(245,158,11,0.6)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.1)'; e.currentTarget.style.background = '#fff'; }}
+                    onBlur={(e) => { e.currentTarget.style.border = `1px solid ${errors.customerEmail ? 'rgba(239,68,68,0.5)' : 'rgba(245,158,11,0.25)'}`; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.background = 'rgba(255,255,255,0.7)'; }}
+                  />
+                )}
+                {errors.customerEmail && <p className="text-xs" style={{ color: '#dc2626' }}>* {errors.customerEmail}</p>}
+                {!selectedCustomerInvited && (
+                  <label className="flex items-center gap-2.5 cursor-pointer pt-1">
+                    <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: formData.sendInvite ? '#d97706' : 'transparent',
+                        border: formData.sendInvite ? 'none' : '1.5px solid rgba(245,158,11,0.35)',
+                        transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        transform: formData.sendInvite ? 'scale(1.05)' : 'scale(0.85)',
+                      }}
+                      onClick={() => handleInputChange('sendInvite', !formData.sendInvite)}
+                    >
+                      {formData.sendInvite && (
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 6l3 3 5-5" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-sm flex items-center gap-1.5" style={{ color: '#b45309' }}>
+                      <Mail className="w-3.5 h-3.5" />Invia invito via email
+                    </span>
+                  </label>
+                )}
+              </div>
+            )}
+
             {/* ── NEW CUSTOMER FORM ── */}
             {formData.isNewCustomer && (
               <div className="p-4 rounded-xl space-y-3" style={{
                 background: 'rgba(5,150,105,0.04)', border: '1px solid rgba(5,150,105,0.2)',
-                backdropFilter: 'blur(8px)',
                 boxShadow: '0 2px 12px rgba(5,150,105,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
                 animation: 'apm-slide-down 0.3s ease-out',
               }}>
@@ -1299,22 +1429,40 @@ export function AppointmentModal({
                 <Users className="w-4 h-4" style={{ color: '#9333ea' }} />{labels.staff}
               </label>
               <div ref={staffFieldRef} className="relative">
-                {selectedStaffMember && !showStaffList ? (
+                {(selectedStaffMember || formData.staffId === '') && !showStaffList ? (
                   <div
-                    className="flex items-center justify-between p-3 rounded-xl cursor-pointer"
-                    style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.15)', transition: 'border 0.15s ease', animation: 'apm-slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1)' }}
-                    onClick={toggleStaffList}
-                    onMouseEnter={(e) => { e.currentTarget.style.border = '1px solid rgba(168,85,247,0.3)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.border = '1px solid rgba(168,85,247,0.15)'; }}
+                    className="flex items-center justify-between p-3 rounded-xl"
+                    style={{
+                      background: 'rgba(168,85,247,0.04)',
+                      border: '1px solid rgba(168,85,247,0.15)',
+                      transition: 'border 0.15s ease',
+                      animation: 'apm-slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                      cursor: lockedStaffId ? 'default' : 'pointer',
+                    }}
+                    onClick={lockedStaffId ? undefined : toggleStaffList}
+                    onMouseEnter={(e) => { if (!lockedStaffId) e.currentTarget.style.border = '1px solid rgba(168,85,247,0.3)'; }}
+                    onMouseLeave={(e) => { if (!lockedStaffId) e.currentTarget.style.border = '1px solid rgba(168,85,247,0.15)'; }}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
-                        style={{ backgroundColor: selectedStaffMember.color || '#9333ea' }}>
-                        {selectedStaffMember.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">{selectedStaffMember.name}</span>
+                      {selectedStaffMember ? (
+                        <>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
+                            style={{ backgroundColor: selectedStaffMember.color || '#9333ea' }}>
+                            {selectedStaffMember.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900">{selectedStaffMember.name}</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium"
+                            style={{ background: 'rgba(156,163,175,0.2)', color: '#9ca3af' }}>
+                            ∅
+                          </div>
+                          <span className="text-sm font-medium" style={{ color: '#6b7280', fontStyle: 'italic' }}>Nessuna preferenza</span>
+                        </>
+                      )}
                     </div>
-                    <span className="text-xs font-medium" style={{ color: '#9333ea' }}>Cambia</span>
+                    {!lockedStaffId && <span className="text-xs font-medium" style={{ color: '#9333ea' }}>Cambia</span>}
                   </div>
                 ) : (
                   <div className="flex gap-2">
@@ -1359,7 +1507,7 @@ export function AppointmentModal({
 
                 {showStaffList && (
                   <StaffDropdown
-                    staff={staff}
+                    staff={effectiveStaff}
                     selectedId={formData.staffId}
                     searchQuery={staffSearch}
                     onSelect={handleStaffSelect}
@@ -1368,7 +1516,6 @@ export function AppointmentModal({
                   />
                 )}
               </div>
-              {errors.staffId && <p className="text-xs" style={{ color: '#dc2626' }}>* {errors.staffId}</p>}
             </div>
 
             {/* ── DATE ── */}
@@ -1417,20 +1564,28 @@ export function AppointmentModal({
                 <Clock className="w-4 h-4" style={{ color: '#9333ea' }} />Orario
               </label>
               {isDynamicMode ? (
-                <SlotPicker
-                  slots={availableSlots || []}
-                  selectedTime={formData.time || null}
-                  onSelectTime={(time) => handleInputChange('time', time)}
-                  loading={slotsLoading}
-                  error={slotsError}
-                  readyToLoad={!!formData.date && !!formData.serviceId && !!formData.staffId}
-                  onRetry={() => {
-                    if (formData.date && formData.serviceId) {
-                      onSlotsNeeded!(formData.date, formData.serviceId, formData.staffId || null);
-                    }
-                  }}
-                  showWorkstations={true}
-                />
+                incompatibleStaffService ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 0', textAlign: 'center', gap: 6 }}>
+                    <AlertTriangle style={{ width: 24, height: 24, color: '#f59e0b' }} />
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Nessun orario disponibile</p>
+                    <p style={{ fontSize: 12, color: '#6b7280' }}>Cambia operatore o seleziona un servizio diverso</p>
+                  </div>
+                ) : (
+                  <SlotPicker
+                    slots={availableSlots || []}
+                    selectedTime={formData.time || null}
+                    onSelectTime={(time) => handleInputChange('time', time)}
+                    loading={slotsLoading}
+                    error={slotsError}
+                    readyToLoad={!!formData.date && !!formData.serviceId}
+                    onRetry={() => {
+                      if (formData.date && formData.serviceId) {
+                        onSlotsNeeded!(formData.date, formData.serviceId, formData.staffId || null);
+                      }
+                    }}
+                    showWorkstations={true}
+                  />
+                )
               ) : (
                 <select value={formData.time}
                   onChange={(e) => handleInputChange('time', e.target.value)}
@@ -1475,32 +1630,32 @@ export function AppointmentModal({
           >
             Annulla
           </button>
-          <button type="submit" onClick={handleSubmit} disabled={isLoading}
+          <button type="submit" form="appointment-form" disabled={isDisabled}
             className="relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden"
             style={{
-              background: isLoading ? '#c084fc' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
-              boxShadow: isLoading ? 'none' : '0 2px 8px rgba(147,51,234,0.25)',
-              opacity: isLoading ? 0.7 : 1, transition: 'all 0.2s ease',
+              background: isDisabled ? '#c084fc' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
+              boxShadow: isDisabled ? 'none' : '0 2px 8px rgba(147,51,234,0.25)',
+              opacity: isDisabled ? 0.7 : 1, transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
-              if (!isLoading) { e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)'; e.currentTarget.style.transform = 'translateY(-1px)'; }
+              if (!isDisabled) { e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)'; e.currentTarget.style.transform = 'translateY(-1px)'; }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = isLoading ? 'none' : '0 2px 8px rgba(147,51,234,0.25)'; e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = isDisabled ? 'none' : '0 2px 8px rgba(147,51,234,0.25)'; e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            {!isLoading && (
+            {!isDisabled && (
               <div className="absolute inset-0 pointer-events-none" style={{
                 background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
                 animation: 'apm-shimmer 2.5s ease-in-out infinite',
               }} />
             )}
-            {isLoading ? (
+            {isDisabled ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <Plus className="w-4 h-4 relative z-10" />
             )}
-            <span className="relative z-10">{isLoading ? 'Creazione...' : labels.submit}</span>
+            <span className="relative z-10">{isDisabled ? 'Creazione...' : labels.submit}</span>
           </button>
         </div>
 

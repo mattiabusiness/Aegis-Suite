@@ -66,6 +66,7 @@ export interface StatsPageProps {
   retention?: RetentionData | null;
   dayRevenue?: DayRevenueData[];
   heatmapData?: HeatmapCell[];
+  isStaff?: boolean;
 }
 
 // ============================================================================
@@ -477,7 +478,7 @@ function DayRevenueRadar({ data, currency, chartColors }: { data: DayRevenueData
 // HEATMAP — FIXED: compact table, controlled size, single-cell tooltip
 // ============================================================================
 
-function HeatmapSection({ data, chartColors }: { data: HeatmapCell[]; chartColors: string[] }) {
+function HeatmapSection({ data, chartColors, isStaff }: { data: HeatmapCell[]; chartColors: string[]; isStaff?: boolean }) {
   const maxCount = Math.max(...data.map(d => d.count), 1);
   const primary = chartColors[0];
   const [hov, setHov] = React.useState<{ day: number; hour: number } | null>(null);
@@ -503,7 +504,7 @@ function HeatmapSection({ data, chartColors }: { data: HeatmapCell[]; chartColor
   return (
     <HoloChartWrap>
       <h3 className="text-base font-semibold text-gray-900 mb-1">Mappa attività</h3>
-      <p className="text-sm text-gray-500 mb-3">Concentrazione appuntamenti per giorno e ora</p>
+      <p className="text-sm text-gray-500 mb-3">{isStaff ? 'Quando sei più impegnato durante la settimana' : 'Concentrazione appuntamenti per giorno e ora'}</p>
       <div>
         <table className="w-full border-collapse table-fixed">
           <thead>
@@ -818,7 +819,7 @@ function ROISection({ roi, currency }: { roi: ROIStats; currency: string }) {
   const aA = useAnimatedNumber(roi.annualSavings);
   return (
     <HoloCard glowColor="#10b981">
-      <h3 className="text-base font-semibold text-gray-900 mb-1">ROI — Risparmio stimato</h3>
+      <h3 className="text-base font-semibold text-gray-900 mb-1">ROI — Risparmio stimato della tua attività</h3>
       <p className="text-sm text-gray-500 mb-4">Basato sui dati inseriti durante la configurazione</p>
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 to-violet-600 rounded-xl p-4 text-center hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(147,51,234,0.35)] transition-all duration-300 cursor-default">
@@ -892,7 +893,7 @@ export function StatsPage({
   kpis, revenueChart, appointmentsChart, topServices, popularHours,
   staffPerformance, insights, roi, currency = '€',
   activePeriod, onPeriodChange, onExport, loading = false, className = '',
-  retention, dayRevenue, heatmapData,
+  retention, dayRevenue, heatmapData, isStaff = false,
 }: StatsPageProps) {
   const [activeTab, setActiveTab] = React.useState<'overview' | 'analysis'>('overview');
   const theme = useContentTheme();
@@ -909,7 +910,7 @@ export function StatsPage({
         {/* Left: title + desc */}
         <div className="flex-shrink-0">
           <h1 className="text-2xl font-bold text-gray-900">Statistiche</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Analisi completa delle performance del tuo salone</p>
+          <p className="text-sm text-gray-500 mt-0.5">{isStaff ? 'Le tue performance personali' : 'Analisi completa delle performance del tuo salone'}</p>
         </div>
 
         {/* Right: tabs + period + export all inline */}
@@ -948,14 +949,45 @@ export function StatsPage({
             ))}
           </div>
 
-          {/* Export button — same as clienti page */}
+          {/* Export button — gradient purple matching clienti page */}
           {onExport && (
             <button
-              onClick={onExport}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const container = e.currentTarget.querySelector('[data-ripple-stats]');
+                if (container) {
+                  const span = document.createElement('span');
+                  Object.assign(span.style, {
+                    position: 'absolute', left: `${x - 50}px`, top: `${y - 50}px`,
+                    width: '100px', height: '100px', borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.35)',
+                    animation: 'stats-ripple 0.6s ease-out forwards', pointerEvents: 'none',
+                  });
+                  container.appendChild(span);
+                  setTimeout(() => span.remove(), 600);
+                }
+                onExport();
+              }}
+              className="relative flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-white overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)', boxShadow: '0 2px 8px rgba(147,51,234,0.25)', transition: 'all 0.2s ease' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.25)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Esporta</span>
+              <div className="absolute inset-0 pointer-events-none" style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                animation: 'stats-shimmer 2.5s ease-in-out infinite',
+              }} />
+              <div data-ripple-stats="" className="absolute inset-0 pointer-events-none" />
+              <Download className="w-3.5 h-3.5 relative z-10" />
+              <span className="relative z-10">Esporta</span>
             </button>
           )}
         </div>
@@ -980,13 +1012,13 @@ export function StatsPage({
           )}
           {activeTab === 'analysis' && (
             <div className="space-y-6">
-              {/* Row 1: Top Servizi (donut) + Staff Performance side by side */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Row 1: Top Servizi (full width per staff, metà per titolare) + Staff Performance */}
+              <div className={isStaff ? undefined : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
                 <TopServicesSection services={topServices} currency={currency} chartColors={chartColors} />
-                <StaffPerformanceSection staff={staffPerformance} currency={currency} />
+                {!isStaff && <StaffPerformanceSection staff={staffPerformance} currency={currency} />}
               </div>
               {/* Row 2: Heatmap full width */}
-              {heatmapData && heatmapData.length > 0 ? <HeatmapSection data={heatmapData} chartColors={chartColors} /> : (
+              {heatmapData && heatmapData.length > 0 ? <HeatmapSection data={heatmapData} chartColors={chartColors} isStaff={isStaff} /> : (
                 <HoloCard>
                   <h3 className="text-base font-semibold text-gray-900 mb-1">Orari più richiesti</h3>
                   <p className="text-sm text-gray-500 mb-4">Fasce orarie più popolari</p>
@@ -1013,6 +1045,16 @@ export function StatsPage({
           )}
         </>
       )}
+      <style>{`
+        @keyframes stats-shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        @keyframes stats-ripple {
+          0% { transform: scale(0); opacity: 1; }
+          100% { transform: scale(4); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -92,6 +92,7 @@ function ServiceCard({
 }) {
   const [showMenu, setShowMenu] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const readOnly = !onEdit && !onDelete && !onToggleActive;
 
   React.useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -125,24 +126,26 @@ function ServiceCard({
     >
       {/* Left: Info */}
       <div className="flex items-center gap-4 flex-1 min-w-0">
-        {/* Toggle */}
-        <div
-          className="w-9 h-5 rounded-full flex items-center px-0.5 flex-shrink-0 cursor-pointer"
-          style={{
-            background: service.isActive ? '#10b981' : '#d1d5db',
-            transition: 'background 0.2s ease',
-          }}
-          onClick={() => onToggleActive?.(!service.isActive)}
-        >
+        {/* Toggle — solo in modalità edit */}
+        {!readOnly && (
           <div
-            className="w-4 h-4 rounded-full bg-white"
+            className="w-9 h-5 rounded-full flex items-center px-0.5 flex-shrink-0 cursor-pointer"
             style={{
-              boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
-              transform: service.isActive ? 'translateX(16px)' : 'translateX(0)',
-              transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+              background: service.isActive ? '#10b981' : '#d1d5db',
+              transition: 'background 0.2s ease',
             }}
-          />
-        </div>
+            onClick={() => onToggleActive?.(!service.isActive)}
+          >
+            <div
+              className="w-4 h-4 rounded-full bg-white"
+              style={{
+                boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                transform: service.isActive ? 'translateX(16px)' : 'translateX(0)',
+                transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            />
+          </div>
+        )}
 
         {/* Name + description */}
         <div className="flex-1 min-w-0">
@@ -155,92 +158,92 @@ function ServiceCard({
 
       {/* Right: Meta + Actions */}
       <div className="flex items-center gap-4 flex-shrink-0">
-        {/* Duration */}
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400">
-          <Clock className="w-3.5 h-3.5" />
-          {formatDuration(service.duration)}
-        </div>
+          {/* Duration */}
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400">
+            <Clock className="w-3.5 h-3.5" />
+            {formatDuration(service.duration)}
+          </div>
 
-        {/* Price */}
-        <div
-          className="text-sm font-bold px-2.5 py-1 rounded-lg"
-          style={{
-            background: 'rgba(168,85,247,0.06)',
-            color: '#7c3aed',
-          }}
-        >
-          {formatPrice(service.price, currency)}
-        </div>
-
-        {/* Context menu */}
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 rounded-lg"
+          {/* Price */}
+          <div
+            className="text-sm font-bold px-2.5 py-1 rounded-lg"
             style={{
-              color: 'rgba(0,0,0,0.25)',
-              transition: 'all 0.15s ease',
+              background: 'rgba(168,85,247,0.06)',
+              color: '#7c3aed',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = 'rgba(0,0,0,0.5)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.25)'; }}
           >
-            <MoreVertical className="w-4 h-4" />
-          </button>
+            {formatPrice(service.price, currency)}
+          </div>
 
-          {showMenu && (
-            <div
-              className="absolute right-0 bottom-full mb-1 w-40 py-1 z-[100] rounded-xl overflow-hidden"
+          {/* Context menu — solo in modalità edit */}
+          {!readOnly && <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-1.5 rounded-lg"
               style={{
-                background: 'rgba(255,255,255,0.98)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(168,85,247,0.1)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(168,85,247,0.05)',
+                color: 'rgba(0,0,0,0.25)',
+                transition: 'all 0.15s ease',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.color = 'rgba(0,0,0,0.5)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(0,0,0,0.25)'; }}
             >
-              <button
-                onClick={() => { onEdit?.(); setShowMenu(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700"
-                style={{ transition: 'all 0.15s ease' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(168,85,247,0.06)';
-                  e.currentTarget.style.paddingLeft = '20px';
-                  const icon = e.currentTarget.querySelector('svg');
-                  if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(-12deg) scale(1.15)'; (icon as unknown as HTMLElement).style.color = '#9333ea'; }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.paddingLeft = '16px';
-                  const icon = e.currentTarget.querySelector('svg');
-                  if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; (icon as unknown as HTMLElement).style.color = ''; }
+              <MoreVertical className="w-4 h-4" />
+            </button>
+
+            {showMenu && (
+              <div
+                className="absolute right-0 bottom-full mb-1 w-40 py-1 z-[100] rounded-xl overflow-hidden"
+                style={{
+                  background: 'rgba(255,255,255,0.98)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(168,85,247,0.1)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(168,85,247,0.05)',
                 }}
               >
-                <Edit2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
-                Modifica
-              </button>
-              <button
-                onClick={() => { onDelete?.(); setShowMenu(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600"
-                style={{ transition: 'all 0.15s ease' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(239,68,68,0.06)';
-                  e.currentTarget.style.paddingLeft = '20px';
-                  const icon = e.currentTarget.querySelector('svg');
-                  if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(12deg) scale(1.15)'; (icon as unknown as HTMLElement).style.color = '#dc2626'; }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.paddingLeft = '16px';
-                  const icon = e.currentTarget.querySelector('svg');
-                  if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; (icon as unknown as HTMLElement).style.color = ''; }
-                }}
-              >
-                <Trash2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
-                Elimina
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={() => { onEdit?.(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700"
+                  style={{ transition: 'all 0.15s ease' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(168,85,247,0.06)';
+                    e.currentTarget.style.paddingLeft = '20px';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(-12deg) scale(1.15)'; (icon as unknown as HTMLElement).style.color = '#9333ea'; }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.paddingLeft = '16px';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; (icon as unknown as HTMLElement).style.color = ''; }
+                  }}
+                >
+                  <Edit2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
+                  Modifica
+                </button>
+                <button
+                  onClick={() => { onDelete?.(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600"
+                  style={{ transition: 'all 0.15s ease' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239,68,68,0.06)';
+                    e.currentTarget.style.paddingLeft = '20px';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(12deg) scale(1.15)'; (icon as unknown as HTMLElement).style.color = '#dc2626'; }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.paddingLeft = '16px';
+                    const icon = e.currentTarget.querySelector('svg');
+                    if (icon) { (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)'; (icon as unknown as HTMLElement).style.color = ''; }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
+                  Elimina
+                </button>
+              </div>
+            )}
+          </div>}
         </div>
-      </div>
     </div>
   );
 }
@@ -413,9 +416,9 @@ function CategorySection({
                 service={service}
                 currency={currency}
                 delay={sectionDelay + 0.03 * (i + 1)}
-                onEdit={() => onEditService?.(service)}
-                onDelete={() => onDeleteService?.(service)}
-                onToggleActive={(active) => onToggleActive?.(service, active)}
+                onEdit={onEditService ? () => onEditService(service) : undefined}
+                onDelete={onDeleteService ? () => onDeleteService(service) : undefined}
+                onToggleActive={onToggleActive ? (active) => onToggleActive(service, active) : undefined}
               />
             ))
           )}
@@ -448,6 +451,7 @@ export function ServiceList({
 }: ServiceListProps) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showActiveOnly, setShowActiveOnly] = React.useState(false);
+  const readOnly = !onEditService && !onDeleteService && !onToggleActive;
 
   const filteredServices = React.useMemo(() => {
     let result = services;
@@ -530,23 +534,28 @@ export function ServiceList({
 
         {/* Right side */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Toggle filter */}
-          <button
-            onClick={() => setShowActiveOnly(!showActiveOnly)}
-            className="px-3.5 py-2 rounded-xl text-sm font-medium"
-            style={{
-              background: showActiveOnly ? 'rgba(168,85,247,0.08)' : 'rgba(0,0,0,0.03)',
-              color: showActiveOnly ? '#7c3aed' : '#6b7280',
-              border: showActiveOnly ? '1px solid rgba(168,85,247,0.15)' : '1px solid rgba(0,0,0,0.04)',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            {showActiveOnly ? 'Solo attivi' : 'Tutti'}
-          </button>
+          {/* Toggle filter — solo in modalità edit */}
+          {!readOnly && (
+            <button
+              onClick={() => setShowActiveOnly(!showActiveOnly)}
+              className="px-3.5 py-2 rounded-xl text-sm font-medium"
+              style={{
+                background: showActiveOnly ? 'rgba(168,85,247,0.08)' : 'rgba(0,0,0,0.03)',
+                color: showActiveOnly ? '#7c3aed' : '#6b7280',
+                border: showActiveOnly ? '1px solid rgba(168,85,247,0.15)' : '1px solid rgba(0,0,0,0.04)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {showActiveOnly ? 'Solo attivi' : 'Tutti'}
+            </button>
+          )}
 
           {/* Stats */}
-          <span className="text-xs text-gray-400">
-            {activeServices}/{totalServices} attivi
+          <span className="text-sm font-semibold text-gray-700">
+            <span className="text-base">{activeServices}</span>
+            <span className="text-gray-300 mx-0.5">/</span>
+            <span className="text-gray-400 font-normal">{totalServices}</span>
+            <span className="text-xs text-gray-400 font-normal ml-1">attivi</span>
           </span>
 
           {/* Add button */}
