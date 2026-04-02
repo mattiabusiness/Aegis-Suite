@@ -1,18 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="36" height="36">
   <defs>
-    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#a855f7" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="#7e22ce" stop-opacity="0.4"/>
     </linearGradient>
   </defs>
 
-  <!-- Icon box -->
-  <rect x="2" y="2" width="32" height="32" rx="10" fill="url(#iconBg)" stroke="#a855f7" stroke-opacity="0.25" stroke-width="1"/>
+  <!-- Icon box: 32x32 centrato in 36x36 -->
+  <rect x="2" y="2" width="32" height="32" rx="10" fill="url(#bg)" stroke="#a855f7" stroke-opacity="0.25" stroke-width="1"/>
 
-  <!-- Layers icon (Lucide), 18x18 centered in 36x36 box -->
-  <g transform="translate(9, 9) scale(0.75)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-    <path d="M2 17l10 5 10-5"/>
-    <path d="M2 12l10 5 10-5"/>
+  <!-- Inner icon: viewBox 0 0 24 24 → 18x18, centrato in 32x32 (offset 7) + box offset 2 → translate(9,9) -->
+  <g transform="translate(9, 9) scale(0.75)">
+    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" fill="white"/>
   </g>
 </svg>
