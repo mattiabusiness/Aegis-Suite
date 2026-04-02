@@ -9,7 +9,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
-import { inter } from './fonts';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], weight: ['600', '700'] });
 
 export function Navbar() {
   const [visible, setVisible] = useState(true);

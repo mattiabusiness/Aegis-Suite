@@ -6,7 +6,9 @@
 // ============================================================================
 
 import Link from 'next/link';
-import { inter } from './fonts';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], weight: ['600', '700'] });
 
 export function Footer() {
   return (
