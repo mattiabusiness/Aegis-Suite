@@ -95,7 +95,7 @@ export function FounderSection() {
 
             {/* LinkedIn */}
             <a
-              href="https://www.linkedin.com/in/mattia-papa-9b1b523a7/"
+              href="https://www.linkedin.com/in/mattia-aegisbeauty/"
               target="_blank"
               rel="noopener noreferrer"
               style={{
