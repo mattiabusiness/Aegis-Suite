@@ -62,9 +62,9 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
             <LogoIcon />
-            <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }}>
-              <span style={{ color: '#F8FAFC' }}>Aegis</span>
-              <span style={{ color: '#a855f7' }}> Beauty</span>
+            <span style={{ fontSize: 18, letterSpacing: '-0.02em' }}>
+              <span style={{ color: '#F8FAFC', fontWeight: 700 }}>Aegis</span>
+              <span style={{ color: '#a855f7', fontWeight: 600 }}> Beauty</span>
             </span>
           </Link>
 

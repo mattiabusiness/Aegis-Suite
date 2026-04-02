@@ -31,9 +31,9 @@ export function Footer() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
             <FooterLogoIcon />
-            <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em' }}>
-              <span style={{ color: '#F8FAFC' }}>Aegis</span>
-              <span style={{ color: '#a855f7' }}> Beauty</span>
+            <span style={{ fontSize: 17, letterSpacing: '-0.02em' }}>
+              <span style={{ color: '#F8FAFC', fontWeight: 700 }}>Aegis</span>
+              <span style={{ color: '#a855f7', fontWeight: 600 }}> Beauty</span>
             </span>
           </div>
           <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, maxWidth: 280, margin: '0 0 20px' }}>
