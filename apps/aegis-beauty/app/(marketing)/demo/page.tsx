@@ -8,9 +8,10 @@ import type { Metadata } from 'next';
 import { DemoContent } from './_DemoContent';
 
 export const metadata: Metadata = {
-  title: 'Prenota una Demo — Aegis Beauty',
+  title: 'Prenota una Demo Gratuita',
   description:
-    '[DEMO DESCRIPTION — DA INSERIRE] Prenota una chiamata gratuita per scoprire Aegis Beauty.',
+    'Prenota una chiamata gratuita di 20 minuti con il fondatore di Aegis Beauty. Scopri come trasformare il tuo salone con il gestionale white-label italiano.',
+  robots: { index: true, follow: true },
   alternates: { canonical: 'https://aegisbeauty.app/demo' },
 };
 

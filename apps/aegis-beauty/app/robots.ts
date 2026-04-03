@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/dashboard/', '/onboarding/'],
+      disallow: ['/api/', '/dashboard/', '/onboarding/'],
     },
     sitemap: 'https://aegisbeauty.app/sitemap.xml',
   };
