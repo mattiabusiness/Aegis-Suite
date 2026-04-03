@@ -337,52 +337,6 @@ export function TermsManager() {
       </Callout>
       <Note>Aegis Beauty risponde alle comunicazioni di natura legale entro 15 giorni lavorativi dal ricevimento.</Note>
 
-      {/* Implementation Note */}
-      <div style={{ marginTop: 48, padding: '24px 28px', borderRadius: 16, background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.18)' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 14px' }}>
-          Nota di implementazione tecnica — Artt. 1341–1342 Codice Civile
-        </p>
-        <p style={{ fontSize: 15, color: '#94A3B8', lineHeight: 1.8, margin: '0 0 10px' }}>
-          Ai sensi degli Artt. 1341 e 1342 del Codice Civile italiano, le clausole che limitano la responsabilità, attribuiscono facoltà di recesso anticipato, stabiliscono un foro competente in deroga o prevedono limitazioni ai diritti dell&apos;altra parte devono essere specificamente approvate per iscritto.
-        </p>
-        <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.8, margin: '0 0 20px' }}>
-          Il flusso di registrazione deve implementare obbligatoriamente due checkbox distinte, non pre-spuntate e obbligatorie per completare la registrazione.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ padding: '16px 20px', borderRadius: 10, background: 'rgba(76,29,149,0.15)', border: '1px solid rgba(139,92,246,0.18)' }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
-              Checkbox 1 — Accettazione generale
-            </p>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid rgba(139,92,246,0.4)', flexShrink: 0, marginTop: 2 }} />
-              <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
-                Ho letto e accetto i Termini di Servizio, la Privacy Policy e il Data Processing Agreement (DPA) di Aegis Beauty, disponibili su aegisbeauty.app/legal. Confermo di agire per scopi inerenti alla mia attività professionale o imprenditoriale (accordo B2B).
-              </p>
-            </div>
-          </div>
-          <div style={{ padding: '16px 20px', borderRadius: 10, background: 'rgba(76,29,149,0.15)', border: '1px solid rgba(139,92,246,0.18)' }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
-              Checkbox 2 — Approvazione clausole vessatorie (Artt. 1341–1342 c.c.)
-            </p>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid rgba(139,92,246,0.4)', flexShrink: 0, marginTop: 2 }} />
-              <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
-                Ai sensi e per gli effetti degli Artt. 1341 e 1342 del Codice Civile italiano, dichiaro di approvare specificamente:{' '}
-                <B>Art. 5</B> (Durata e gratuità — transizione al pagamento) —{' '}
-                <B>Art. 8</B> (Sospensione e risoluzione anticipata) —{' '}
-                <B>Art. 9</B> (Fornitura &quot;As Is&quot;, assenza di SLA) —{' '}
-                <B>Art. 15</B> (Limitazione di responsabilità) —{' '}
-                <B>Art. 18</B> (Modifica unilaterale dei Termini) —{' '}
-                <B>Art. 21</B> (Cessione del contratto) —{' '}
-                <B>Art. 25</B> (Foro esclusivo: Torino).
-              </p>
-            </div>
-          </div>
-        </div>
-        <Note>
-          Implementazione tecnica: entrambe le checkbox devono essere required, non pre-spuntate. Registrare nel DB: tabella <strong>acceptances</strong> — campi: user_id, terms_version, checkbox1_accepted_at, checkbox2_accepted_at, ip_address.
-        </Note>
-      </div>
     </div>
   );
 }
