@@ -75,6 +75,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://aegisbeauty.app',
   },
+  themeColor: '#7C3AED',
 };
 
 const jsonLd = {
