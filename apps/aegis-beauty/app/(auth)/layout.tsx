@@ -9,6 +9,10 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Aegis Beauty - Accedi',
   description: 'Accedi o registrati per gestire il tuo salone',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function AuthLayout({
