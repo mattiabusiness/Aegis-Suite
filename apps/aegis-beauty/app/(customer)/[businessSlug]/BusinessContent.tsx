@@ -512,7 +512,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
                 }} />
                 <span style={{ fontSize: '0.78rem', fontWeight: 700, color: isOpenToday ? '#6ee7b7' : '#fca5a5' }}>
                   {isOpenToday
-                    ? `Oggi ${formatTime(todayHours?.open_time ?? null)}–${formatTime(todayHours?.close_time ?? null)}`
+                    ? `Oggi ${formatTime(todayHours?.open_time_1 ?? null)}–${formatTime(todayHours?.close_time_1 ?? null)}`
                     : 'Oggi chiuso'
                   }
                 </span>
