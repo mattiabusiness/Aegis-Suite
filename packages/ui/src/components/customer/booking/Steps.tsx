@@ -857,14 +857,15 @@ export function Step3Front({ business: _business, staff: _staff, bookingState, o
         onClick={e => e.stopPropagation()}
         placeholder="Note per il professionista (opzionale)"
         maxLength={200}
-        rows={2}
+        rows={3}
         style={{
-          width: '100%', borderRadius: 10, padding: '8px 11px', marginTop: 8,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          color: '#fff', fontSize: '0.76rem', resize: 'none',
+          width: '100%', borderRadius: 10, padding: '10px 12px', marginTop: 6,
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          color: '#fff', fontSize: '0.78rem', resize: 'none',
           outline: 'none', boxSizing: 'border-box',
-          fontFamily: 'inherit', lineHeight: 1.5,
+          fontFamily: 'inherit', lineHeight: 1.6,
+          flex: '1 1 auto', minHeight: 64, maxHeight: 80,
         } as React.CSSProperties}
       />
 

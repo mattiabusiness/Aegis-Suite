@@ -305,11 +305,11 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     return () => mq.removeEventListener('change', h);
   }, []);
 
-  // Hide page scroll during carousel; restore after booking confirmed so SuccessScreen can scroll on small phones
+  // Always lock page scroll — prenota and SuccessScreen are both self-contained containers
   useEffect(() => {
-    document.documentElement.style.overflow = booked ? '' : 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     return () => { document.documentElement.style.overflow = ''; };
-  }, [booked]);
+  }, []);
 
   const fetchSlots: FetchSlotsFn = async ({ businessId, serviceId, staffId, date }) => {
     const params = new URLSearchParams({ businessId, serviceId, date });
@@ -364,21 +364,18 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     toast.success('Prenotazione confermata!');
   }
 
-  // On mobile: header is hidden on prenota, only bottom nav (60px + safe-area) is subtracted
-  // On success screen: allow natural height so content isn't clipped on small phones
-  const outerHeight = booked
-    ? 'auto'
-    : isMobile
-      ? 'calc(100dvh - 60px - env(safe-area-inset-bottom, 0px))'
-      : '100dvh';
+  // Fixed height = viewport minus bottom nav on mobile.
+  // overflow: auto when booked lets SuccessScreen scroll inside the dark container (no light bg strip).
+  const outerHeight = isMobile
+    ? 'calc(100dvh - 60px - env(safe-area-inset-bottom, 0px))'
+    : '100dvh';
 
   return (
     <div style={{
       height: outerHeight,
-      minHeight: booked ? '100dvh' : undefined,
       background: '#0a0a0f',
       position: 'relative',
-      overflow: 'hidden',
+      overflow: booked ? 'auto' : 'hidden',
     }}>
       {/* FloatingParticles a opacity piena — identico al marketing Hero */}
       <FloatingParticles />
