@@ -475,12 +475,12 @@ export function CalendarioContent({
 
   return (
     <>
-      <div className="flex gap-4" style={{ height: 'calc(100vh - 7.5rem)', overflow: 'hidden', animation: 'calC-fadeIn 0.35s ease-out both' }}>
+      <div className="cal-outer flex flex-col lg:flex-row gap-4" style={{ height: 'calc(100vh - 7.5rem)', overflow: 'hidden', animation: 'calC-fadeIn 0.35s ease-out both' }}>
 
         {/* ============================================================== */}
-        {/* LEFT SIDEBAR                                                    */}
+        {/* LEFT SIDEBAR — desktop only                                     */}
         {/* ============================================================== */}
-        <div className="w-72 flex-shrink-0 flex flex-col gap-2 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.1) transparent' }}>
+        <div className="hidden lg:flex w-72 flex-shrink-0 flex-col gap-2 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.1) transparent' }}>
 
           {/* Page title — same format as other pages */}
           <div className="pb-0.5">
@@ -687,7 +687,21 @@ export function CalendarioContent({
         {/* ============================================================== */}
         {/* RIGHT - CALENDAR (full remaining space)                         */}
         {/* ============================================================== */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col gap-3">
+          {/* Mobile compact bar — lg:hidden */}
+          <div className="flex lg:hidden items-center justify-between gap-2">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Calendario</h1>
+            </div>
+            <button
+              onClick={handleNewClick}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-sm font-semibold"
+              style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)', boxShadow: '0 2px 8px rgba(147,51,234,0.3)', flexShrink: 0 }}
+            >
+              <Plus className="w-4 h-4" />
+              Nuovo
+            </button>
+          </div>
           <Calendar
             view={view}
             onViewChange={setView}
@@ -698,7 +712,7 @@ export function CalendarioContent({
             onSlotClick={handleSlotClick}
             businessHours={liveBusinessHours}
             closures={closures}
-            className="h-full"
+            className="flex-1 min-h-0"
           />
         </div>
       </div>
@@ -750,6 +764,11 @@ export function CalendarioContent({
         @keyframes calC-dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes calC-ripple { 0% { width: 4px; height: 4px; opacity: 0.5; } 100% { width: 300px; height: 300px; opacity: 0; } }
         @keyframes calC-listItem { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @media (max-width: 1023px) {
+          .cal-outer {
+            height: calc(100dvh - 56px - 60px - 2rem) !important;
+          }
+        }
       `}</style>
     </>
   );

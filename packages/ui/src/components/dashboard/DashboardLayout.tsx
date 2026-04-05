@@ -10,6 +10,7 @@
 import * as React from 'react';
 import { Sidebar, type SidebarMenuSection, type SidebarMenuItem } from './Sidebar';
 import { Header, type HeaderNotification, type HeaderUserMenuAction } from './Header';
+import { DashboardMobileHeader, DashboardMobileBottomNav, DASH_MOBILE_NAV_H } from './DashboardMobileNav';
 import type { DashboardTheme } from './Themes';
 
 // ============================================================================
@@ -133,50 +134,62 @@ export function DashboardLayout({
         }}
       />
 
-      {/* Sidebar */}
-      <Sidebar
-        logo={platformLogo}
-        brandName={theme.displayName}
-        menuSections={menuSections}
-        activeItemId={activeItemId}
-        collapsed={collapsed}
-        onCollapsedChange={handleCollapsedChange}
-        onMenuItemClick={onMenuItemClick}
-        onLogout={onLogout}
-        onHelp={onHelp}
-        showHelp={showHelp}
-        showLogout={showLogout}
-        theme={theme.sidebar}
-      />
+      {/* ── Desktop Sidebar (hidden on mobile) ───────────────────────────── */}
+      <div className="hidden lg:block">
+        <Sidebar
+          logo={platformLogo}
+          brandName={theme.displayName}
+          menuSections={menuSections}
+          activeItemId={activeItemId}
+          collapsed={collapsed}
+          onCollapsedChange={handleCollapsedChange}
+          onMenuItemClick={onMenuItemClick}
+          onLogout={onLogout}
+          onHelp={onHelp}
+          showHelp={showHelp}
+          showLogout={showLogout}
+          theme={theme.sidebar}
+        />
+      </div>
 
-      {/* Header */}
-      <Header
+      {/* ── Desktop Header (hidden on mobile) ────────────────────────────── */}
+      <div className="hidden lg:block">
+        <Header
+          businessName={businessName}
+          businessLogo={businessLogo}
+          userName={userName}
+          userEmail={userEmail}
+          userAvatar={userAvatar}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onNotificationClick={onNotificationClick}
+          onViewAllNotifications={onViewAllNotifications}
+          onProfileClick={onProfileClick}
+          onSettingsClick={onSettingsClick}
+          onLogout={onLogout}
+          additionalMenuActions={additionalMenuActions}
+          sidebarCollapsed={collapsed}
+        />
+      </div>
+
+      {/* ── Mobile Header (lg:hidden, sticky) ────────────────────────────── */}
+      <DashboardMobileHeader
         businessName={businessName}
         businessLogo={businessLogo}
-        userName={userName}
-        userEmail={userEmail}
-        userAvatar={userAvatar}
-        notifications={notifications}
-        unreadCount={unreadCount}
-        onNotificationClick={onNotificationClick}
-        onViewAllNotifications={onViewAllNotifications}
-        onProfileClick={onProfileClick}
-        onSettingsClick={onSettingsClick}
-        onLogout={onLogout}
-        additionalMenuActions={additionalMenuActions}
-        sidebarCollapsed={collapsed}
+        theme={theme}
+        brandLabel={theme.displayName}
       />
 
-      {/* Main Content */}
+      {/* ── Main Content ─────────────────────────────────────────────────── */}
       <main
-        className="relative z-10 min-h-screen"
+        className="relative z-10 min-h-screen dash-main"
         style={{
           paddingTop: 72,
           marginLeft: collapsed ? 96 : 272,
           transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        <div className={`p-6 ${contentClassName}`.trim()}>
+        <div className={`p-4 lg:p-6 ${contentClassName}`.trim()}>
           <div
             key={currentPath || activeItemId}
             style={{
@@ -187,10 +200,27 @@ export function DashboardLayout({
           </div>
         </div>
       </main>
+
+      {/* ── Mobile Bottom Nav (lg:hidden) ────────────────────────────────── */}
+      <DashboardMobileBottomNav
+        menuSections={menuSections}
+        activeItemId={activeItemId}
+        onMenuItemClick={onMenuItemClick}
+        theme={theme}
+      />
+
     <style>{`
         @keyframes dl-page-in {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        /* Mobile overrides: reset desktop sidebar/header spacing */
+        @media (max-width: 1023px) {
+          .dash-main {
+            margin-left: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: calc(${DASH_MOBILE_NAV_H}px + env(safe-area-inset-bottom, 0px)) !important;
+          }
         }
       `}</style>
     </div>

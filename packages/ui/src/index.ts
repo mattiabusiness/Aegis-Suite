@@ -31,6 +31,8 @@ export { AuthFlipCard } from './components/auth/AuthFlipCard';
 export { Sidebar, defaultSidebarTheme } from './components/dashboard/Sidebar';
 export { Header } from './components/dashboard/Header';
 export { DashboardLayout } from './components/dashboard/DashboardLayout';
+export { DashboardMobileHeader, DashboardMobileBottomNav, DASH_MOBILE_HEADER_H, DASH_MOBILE_NAV_H } from './components/dashboard/DashboardMobileNav';
+export type { DashboardMobileHeaderProps, DashboardMobileBottomNavProps } from './components/dashboard/DashboardMobileNav';
 export { StatCard } from './components/dashboard/StatCard';
 export { PageHeader } from './components/dashboard/PageHeader';
 export { 
