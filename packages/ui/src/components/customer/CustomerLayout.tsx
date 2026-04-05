@@ -71,9 +71,9 @@ export function CustomerLayout({
 
       <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
-        {/* ── Mobile header (< 1024px) ── */}
+        {/* ── Mobile header (< 1024px) — hidden on prenota (fullscreen carousel) ── */}
         <header
-          className="lg:hidden flex items-center justify-between px-4 sticky top-0 z-30"
+          className={`lg:hidden flex items-center justify-between px-4 sticky top-0 z-30 ${currentPath.includes('/prenota') ? 'hidden' : ''}`}
           style={{
             height: 56,
             background: 'rgba(255,255,255,0.85)',

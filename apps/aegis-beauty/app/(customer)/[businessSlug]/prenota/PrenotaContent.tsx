@@ -364,12 +364,12 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     toast.success('Prenotazione confermata!');
   }
 
-  // On mobile: layout has 56px sticky header + 60px fixed bottom nav → subtract both from dvh
+  // On mobile: header is hidden on prenota, only bottom nav (60px + safe-area) is subtracted
   // On success screen: allow natural height so content isn't clipped on small phones
   const outerHeight = booked
     ? 'auto'
     : isMobile
-      ? 'calc(100dvh - 116px - env(safe-area-inset-bottom, 0px))'
+      ? 'calc(100dvh - 60px - env(safe-area-inset-bottom, 0px))'
       : '100dvh';
 
   return (
