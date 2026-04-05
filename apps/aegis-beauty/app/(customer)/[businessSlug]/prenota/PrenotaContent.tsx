@@ -233,38 +233,36 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
 
         {/* Aggiungi al calendario */}
         <div style={{ display: 'flex', gap: 10 }}>
-          <motion.a
+          <a
             href={buildGoogleCalUrl(summary)}
             target="_blank"
             rel="noopener noreferrer"
-            whileHover={{ scale: 1.01, background: 'rgba(255,255,255,0.10)' } as React.CSSProperties}
-            whileTap={{ scale: 0.98 }}
             style={{
               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               padding: '13px 10px', borderRadius: 14, textDecoration: 'none',
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
               color: 'rgba(255,255,255,0.65)', fontSize: '0.82rem', fontWeight: 600,
+              transition: 'background 0.2s',
             }}
           >
             <Calendar style={{ width: 13, height: 13, flexShrink: 0 }} />
             Google Cal
-          </motion.a>
-          <motion.button
+          </a>
+          <button
             onClick={() => downloadIcs(summary)}
-            whileHover={{ scale: 1.01, background: 'rgba(255,255,255,0.10)' } as React.CSSProperties}
-            whileTap={{ scale: 0.98 }}
             style={{
               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               padding: '13px 10px', borderRadius: 14, cursor: 'pointer',
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
               color: 'rgba(255,255,255,0.65)', fontSize: '0.82rem', fontWeight: 600,
+              transition: 'background 0.2s',
             }}
           >
             <Calendar style={{ width: 13, height: 13, flexShrink: 0 }} />
             Apple / Outlook
-          </motion.button>
+          </button>
         </div>
 
         <motion.button
