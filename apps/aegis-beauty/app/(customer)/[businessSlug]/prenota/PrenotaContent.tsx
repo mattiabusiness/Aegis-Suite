@@ -375,7 +375,7 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
       height: outerHeight,
       background: '#0a0a0f',
       position: 'relative',
-      overflow: booked ? 'auto' : 'hidden',
+      overflow: 'hidden',
     }}>
       {/* FloatingParticles a opacity piena — identico al marketing Hero */}
       <FloatingParticles />
