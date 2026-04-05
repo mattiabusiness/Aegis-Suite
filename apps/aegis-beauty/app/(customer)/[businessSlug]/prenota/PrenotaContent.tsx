@@ -375,7 +375,7 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
   return (
     <div style={{
       height: outerHeight,
-      minHeight: booked ? 'calc(100dvh - 116px)' : undefined,
+      minHeight: booked ? '100dvh' : undefined,
       background: '#0a0a0f',
       position: 'relative',
       overflow: 'hidden',

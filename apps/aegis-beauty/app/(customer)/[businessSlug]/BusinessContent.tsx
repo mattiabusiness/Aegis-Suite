@@ -300,6 +300,8 @@ export function BusinessContent({ business, services, staff, hours, categories }
   // Floating CTA mobile
   const heroRef = useRef<HTMLElement>(null);
   const heroInView = useInView(heroRef, { margin: '0px' });
+  const footerRef = useRef<HTMLElement>(null);
+  const footerInView = useInView(footerRef, { margin: '0px' });
 
   const heroGradient = business.primary_color && business.primary_color !== '#9333ea'
     ? `linear-gradient(135deg, ${business.primary_color}dd, ${business.primary_color}99)`
@@ -544,7 +546,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
 
         {/* Floating CTA — mobile only, appare quando hero esce dal viewport */}
         <AnimatePresence>
-          {!heroInView && (
+          {!heroInView && !footerInView && (
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -857,7 +859,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
                   background: 'linear-gradient(90deg, #9333ea, #7c3aed, #6d28d9)',
                 }} />
 
-                <div style={{ padding: '28px 28px 24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <div style={{ padding: isMobile ? '20px 16px 20px' : '28px 28px 24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
                   {/* Description */}
                   {business.description && (
@@ -964,7 +966,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
                           <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#374151' }}>Orari di apertura</span>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', rowGap: 0 }}>
                           {DAY_ORDER.map((day, i) => {
                             const h = hours.find((r) => r.day_of_week === day);
                             if (!h) return null;
@@ -977,39 +979,50 @@ export function BusinessContent({ business, services, staff, hours, categories }
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.25, delay: i * 0.035 }}
                                 style={{
-                                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                  padding: '9px 10px',
-                                  borderRadius: 8,
-                                  background: isToday ? 'rgba(147,51,234,0.04)' : 'transparent',
-                                  borderBottom: i < DAY_ORDER.length - 1 ? '1px solid rgba(0,0,0,0.045)' : 'none',
+                                  display: 'contents',
                                 }}
                               >
-                                <span style={{
-                                  fontSize: '0.83rem',
-                                  fontWeight: isToday ? 700 : 500,
-                                  color: isToday ? '#7c3aed' : h.is_open ? '#374151' : '#c4c4c4',
-                                  minWidth: 96,
+                                <div style={{
+                                  display: 'flex', alignItems: 'center',
+                                  padding: '9px 10px 9px 10px',
+                                  borderRadius: isToday ? '8px 0 0 8px' : 0,
+                                  background: isToday ? 'rgba(147,51,234,0.04)' : 'transparent',
+                                  borderBottom: i < DAY_ORDER.length - 1 ? '1px solid rgba(0,0,0,0.045)' : 'none',
                                 }}>
-                                  {DAY_LABELS[day]}{isToday && <span style={{ fontSize: '0.68rem', marginLeft: 5, opacity: 0.7 }}>oggi</span>}
-                                </span>
-                                {h.is_open ? (
-                                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, textAlign: 'right', fontWeight: 700, fontSize: '0.83rem' }}>
-                                    <span style={{
-                                      background: 'linear-gradient(135deg, #059669, #10b981)',
-                                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                                    }}>
-                                      {formatTime(h.open_time_1)} – {formatTime(h.close_time_1)}
-                                    </span>
-                                    {h.open_time_2 && h.close_time_2 && (
+                                  <span style={{
+                                    fontSize: '0.83rem',
+                                    fontWeight: isToday ? 700 : 500,
+                                    color: isToday ? '#7c3aed' : h.is_open ? '#374151' : '#c4c4c4',
+                                  }}>
+                                    {DAY_LABELS[day]}{isToday && <span style={{ fontSize: '0.68rem', marginLeft: 5, opacity: 0.7 }}>oggi</span>}
+                                  </span>
+                                </div>
+                                <div style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                                  padding: '9px 10px 9px 8px',
+                                  borderRadius: isToday ? '0 8px 8px 0' : 0,
+                                  background: isToday ? 'rgba(147,51,234,0.04)' : 'transparent',
+                                  borderBottom: i < DAY_ORDER.length - 1 ? '1px solid rgba(0,0,0,0.045)' : 'none',
+                                }}>
+                                  {h.is_open ? (
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: '0.83rem', whiteSpace: 'nowrap' }}>
                                       <span style={{
                                         background: 'linear-gradient(135deg, #059669, #10b981)',
                                         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                                      }}>· {formatTime(h.open_time_2)} – {formatTime(h.close_time_2)}</span>
-                                    )}
-                                  </span>
-                                ) : (
-                                  <span style={{ color: '#d1d5db', fontSize: '0.83rem', fontWeight: 400 }}>Chiuso</span>
-                                )}
+                                      }}>
+                                        {formatTime(h.open_time_1)} – {formatTime(h.close_time_1)}
+                                      </span>
+                                      {h.open_time_2 && h.close_time_2 && (
+                                        <span style={{
+                                          background: 'linear-gradient(135deg, #059669, #10b981)',
+                                          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                                        }}>· {formatTime(h.open_time_2)} – {formatTime(h.close_time_2)}</span>
+                                      )}
+                                    </span>
+                                  ) : (
+                                    <span style={{ color: '#d1d5db', fontSize: '0.83rem', fontWeight: 400 }}>Chiuso</span>
+                                  )}
+                                </div>
                               </motion.div>
                             );
                           })}
@@ -1026,7 +1039,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
         {/* ══════════════════════════════════════════════
             FOOTER
         ══════════════════════════════════════════════ */}
-        <footer style={{
+        <footer ref={footerRef} style={{
           textAlign: 'center',
           padding: '14px 24px',
           borderTop: '1px solid rgba(0,0,0,0.05)',
