@@ -129,6 +129,11 @@ function LoginContent() {
 
     // Singola query per tutti i ruoli — evita due round-trip
     const { data: { user } } = await supabase.auth.getUser();
+
+    // IMPORTANT: use window.location.href (full page reload) instead of router.push
+    // so the server receives the new session cookies in the next request.
+    // router.push (soft nav) reuses the previous request context and the server
+    // won't see the updated Supabase cookies, causing auth failures and redirect loops.
     if (user) {
       const { data: members } = await supabase
         .from('business_members')
@@ -137,17 +142,17 @@ function LoginContent() {
         .eq('is_active', true) as { data: Array<{ role: string; businesses: { slug: string } | null }> | null };
 
       const isStaff = members?.some((m) => ['owner', 'admin', 'staff'].includes(m.role));
-      if (isStaff) { router.push('/dashboard'); return; }
+      if (isStaff) { window.location.href = '/dashboard'; return; }
 
-      if (redirectParam) { router.push(redirectParam); return; }
+      if (redirectParam) { window.location.href = redirectParam; return; }
 
       const customerMember = members?.find((m) => m.role === 'customer');
       const slug = (customerMember?.businesses as { slug: string } | null)?.slug;
-      router.push(slug ? `/${slug}` : '/');
+      window.location.href = slug ? `/${slug}` : '/';
       return;
     }
 
-    router.push(redirectParam || '/dashboard');
+    window.location.href = redirectParam || '/dashboard';
   };
 
   const handleRegister = async (data: { fullName: string; email: string; phone: string; password: string }) => {
@@ -181,7 +186,7 @@ function LoginContent() {
               console.error('[SignUp] setup API error:', setupErr);
             }
             setRegisterSuccess('Registrazione completata! Reindirizzamento...');
-            setTimeout(() => router.push('/dashboard'), 800);
+            setTimeout(() => { window.location.href = '/dashboard'; }, 800);
             return;
           }
 
@@ -204,7 +209,7 @@ function LoginContent() {
           } as never);
         }
         setRegisterSuccess('Registrazione completata! Reindirizzamento...');
-        setTimeout(() => { router.push(inviteData.businessSlug ? `/${inviteData.businessSlug}` : '/'); }, 1500);
+        setTimeout(() => { window.location.href = inviteData.businessSlug ? `/${inviteData.businessSlug}` : '/'; }, 1500);
         return;
       } catch (err) { setRegisterError('Errore durante la registrazione.'); throw err; }
     }

@@ -310,7 +310,10 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
   };
 
   async function handleConfirm(state: BookingState): Promise<void> {
-    if (!state.selectedService || !state.selectedDate || !state.selectedTime) return;
+    if (!state.selectedService || !state.selectedDate || !state.selectedTime) {
+      toast.error('Seleziona servizio, data e orario prima di confermare.');
+      return;
+    }
 
     // Use local date parts to avoid UTC offset shifting the date (e.g. UTC+2 midnight → previous day in ISO)
     const d = state.selectedDate;

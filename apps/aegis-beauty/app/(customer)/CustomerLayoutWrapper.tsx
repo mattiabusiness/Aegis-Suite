@@ -7,6 +7,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
+import { Toaster } from 'sonner';
 import { CustomerLayout } from '@aegis/ui';
 import type { CustomerLayoutProps } from '@aegis/ui';
 
@@ -17,12 +18,15 @@ export function CustomerLayoutWrapper({ children, ...props }: WrapperProps) {
   const router = useRouter();
 
   return (
-    <CustomerLayout
-      {...props}
-      currentPath={pathname}
-      onNavigate={(href) => router.push(href)}
-    >
-      {children}
-    </CustomerLayout>
+    <>
+      <Toaster position="top-center" richColors />
+      <CustomerLayout
+        {...props}
+        currentPath={pathname}
+        onNavigate={(href) => router.push(href)}
+      >
+        {children}
+      </CustomerLayout>
+    </>
   );
 }

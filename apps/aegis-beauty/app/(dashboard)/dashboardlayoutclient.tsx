@@ -6,6 +6,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
+import { Toaster } from 'sonner';
 import {
   DashboardLayout,
   beautyTheme,
@@ -92,6 +93,7 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
   return (
     <StaffPermissionsProvider permissions={permissions}>
       <ContentThemeProvider theme={beautyContentTheme}>
+        <Toaster position="top-right" richColors />
         <DashboardLayout
           theme={beautyTheme}
           platformLogo={<AegisLogo />}
