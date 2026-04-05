@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useSpring, useInView, useTransform } from 'framer-motion';
@@ -60,8 +60,9 @@ function getGoogleMapsUrl(b: Business): string {
   return `https://maps.google.com/?q=${encodeURIComponent(addr)}`;
 }
 
-function staffGridColumns(count: number): string {
+function staffGridColumns(count: number, isMobile: boolean): string {
   if (count === 1) return '1fr';
+  if (isMobile) return 'repeat(auto-fill, minmax(140px, 1fr))';
   if (count === 2) return 'repeat(2, minmax(0, 220px))';
   if (count === 3) return 'repeat(3, minmax(0, 220px))';
   return 'repeat(auto-fill, minmax(180px, 220px))';
@@ -235,6 +236,15 @@ export function BusinessContent({ business, services, staff, hours, categories }
   const pillsScrollRef = useRef<HTMLDivElement>(null);
   const [pillsCanScrollLeft, setPillsCanScrollLeft]   = useState(false);
   const [pillsCanScrollRight, setPillsCanScrollRight] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    setIsMobile(mq.matches);
+    const h = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
+  }, []);
 
   function updatePillsScroll() {
     const el = pillsScrollRef.current;
@@ -335,7 +345,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          padding: '72px 24px 56px',
+          padding: isMobile ? '48px 20px 44px' : '72px 24px 56px',
           textAlign: 'center',
           overflow: 'hidden',
         }}>
@@ -543,7 +553,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
               className="lg:hidden flex justify-center"
               style={{
                 position: 'fixed',
-                bottom: 82,
+                bottom: 'calc(60px + env(safe-area-inset-bottom, 0px) + 16px)',
                 left: 0, right: 0,
                 padding: '0 24px',
                 zIndex: 100,
@@ -560,7 +570,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
         {/* ══════════════════════════════════════════════
             MAIN CONTENT
         ══════════════════════════════════════════════ */}
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '56px 20px 0' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: isMobile ? '36px 16px 0' : '56px 20px 0' }}>
 
           {/* ══ PERCHÉ PRENOTARE ONLINE — copy statico per tutti i business ══ */}
           <div style={{ marginBottom: 56 }}>
@@ -811,7 +821,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
               />
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: staffGridColumns(staff.length),
+                gridTemplateColumns: staffGridColumns(staff.length, isMobile),
                 gap: 16,
                 justifyContent: 'center',
               }}>

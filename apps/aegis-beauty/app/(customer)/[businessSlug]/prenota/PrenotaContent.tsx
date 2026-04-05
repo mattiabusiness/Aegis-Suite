@@ -289,17 +289,27 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
 
 export function PrenotaContent({ business, services, staff, hours, customer: _customer, categories }: PrenotaContentProps) {
   const [booked, setBooked]  = useState<BookedSummary | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const searchParams         = useSearchParams();
   const isReschedule         = !!searchParams.get('reschedule');
   const rescheduleServiceId  = searchParams.get('service');
   const initialService       = rescheduleServiceId ? (services.find(s => s.id === rescheduleServiceId) ?? null) : null;
   const initialStep          = isReschedule && initialService ? 1 : 0;
 
-  // Hide page scrollbar — prenota è una fullscreen experience senza scroll
+  // Detect mobile viewport (< 1024px = layout shows mobile header + bottom nav)
   useEffect(() => {
-    document.documentElement.style.overflow = 'hidden';
-    return () => { document.documentElement.style.overflow = ''; };
+    const mq = window.matchMedia('(max-width: 1023px)');
+    setIsMobile(mq.matches);
+    const h = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
   }, []);
+
+  // Hide page scroll during carousel; restore after booking confirmed so SuccessScreen can scroll on small phones
+  useEffect(() => {
+    document.documentElement.style.overflow = booked ? '' : 'hidden';
+    return () => { document.documentElement.style.overflow = ''; };
+  }, [booked]);
 
   const fetchSlots: FetchSlotsFn = async ({ businessId, serviceId, staffId, date }) => {
     const params = new URLSearchParams({ businessId, serviceId, date });
@@ -354,9 +364,18 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     toast.success('Prenotazione confermata!');
   }
 
+  // On mobile: layout has 56px sticky header + 60px fixed bottom nav → subtract both from dvh
+  // On success screen: allow natural height so content isn't clipped on small phones
+  const outerHeight = booked
+    ? 'auto'
+    : isMobile
+      ? 'calc(100dvh - 116px - env(safe-area-inset-bottom, 0px))'
+      : '100dvh';
+
   return (
     <div style={{
-      height: '100dvh',
+      height: outerHeight,
+      minHeight: booked ? 'calc(100dvh - 116px)' : undefined,
       background: '#0a0a0f',
       position: 'relative',
       overflow: 'hidden',
@@ -377,7 +396,7 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
       }} />
 
       {/* Content */}
-      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 16px 40px' }}>
+      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 16px 0' : '0 16px 40px' }}>
         <AnimatePresence mode="wait">
           {booked ? (
             <motion.div

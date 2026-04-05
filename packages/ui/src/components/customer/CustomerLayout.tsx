@@ -110,7 +110,7 @@ export function CustomerLayout({
         </header>
 
         {/* Page content — pt-[64px] = desktop header height, pb-[60px] = mobile bottom nav */}
-        <main className="flex-1 pb-[60px] lg:pb-0 lg:pt-[64px]">
+        <main className="flex-1 pb-[80px] lg:pb-0 lg:pt-[64px]">
           {children}
         </main>
       </div>
