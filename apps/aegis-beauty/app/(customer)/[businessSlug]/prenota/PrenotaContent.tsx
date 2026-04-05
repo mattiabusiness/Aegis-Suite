@@ -97,7 +97,7 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
       transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', textAlign: 'center', padding: '40px 24px',
+        justifyContent: 'center', textAlign: 'center', padding: '20px 20px',
         maxWidth: 420, margin: '0 auto',
       }}
     >
@@ -107,7 +107,7 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
         animate={{ scale: 1 }}
         transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 20 }}
         style={{
-          width: 96, height: 96, borderRadius: '50%', marginBottom: 28,
+          width: 72, height: 72, borderRadius: '50%', marginBottom: 14,
           background: 'linear-gradient(145deg, rgba(16,185,129,0.88), rgba(5,150,105,0.80))',
           border: '2px solid rgba(16,185,129,0.5)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -126,7 +126,7 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.3, type: 'spring', stiffness: 400, damping: 20 }}
         >
-          <CheckCircle style={{ width: 48, height: 48, color: '#fff' }} />
+          <CheckCircle style={{ width: 36, height: 36, color: '#fff' }} />
         </motion.div>
         {/* Pulse ring */}
         <motion.div
@@ -144,8 +144,8 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.4 }}
         style={{
-          fontSize: '1.6rem', fontWeight: 800, color: '#fff',
-          margin: '0 0 8px', letterSpacing: '-0.02em',
+          fontSize: '1.3rem', fontWeight: 800, color: '#fff',
+          margin: '0 0 6px', letterSpacing: '-0.02em',
         }}
       >
         Prenotazione confermata!
@@ -155,7 +155,7 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, duration: 0.4 }}
-        style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.55)', margin: '0 0 32px' }}
+        style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)', margin: '0 0 14px' }}
       >
         Ti aspettiamo presto
       </motion.p>
@@ -166,34 +166,34 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45, duration: 0.4 }}
         style={{
-          width: '100%', borderRadius: 20, padding: '20px 24px', marginBottom: 28,
+          width: '100%', borderRadius: 16, padding: '14px 18px', marginBottom: 12,
           background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(76,29,149,0.1))',
           border: '1px solid rgba(139,92,246,0.3)',
           backdropFilter: 'blur(16px)',
-          display: 'flex', flexDirection: 'column', gap: 12,
+          display: 'flex', flexDirection: 'column', gap: 8,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
             background: 'rgba(168,85,247,0.15)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Calendar style={{ width: 15, height: 15, color: '#a855f7' }} />
+            <Calendar style={{ width: 14, height: 14, color: '#a855f7' }} />
           </div>
-          <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', fontWeight: 600 }}>
+          <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 600 }}>
             {dateLabel}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
             background: 'rgba(168,85,247,0.15)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Clock style={{ width: 15, height: 15, color: '#a855f7' }} />
+            <Clock style={{ width: 14, height: 14, color: '#a855f7' }} />
           </div>
-          <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', fontWeight: 600 }}>
+          <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 600 }}>
             {summary.time} · {summary.serviceName}
           </span>
         </div>
@@ -213,16 +213,16 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.4 }}
-        style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}
       >
         <motion.button
           whileHover={{ scale: 1.02, boxShadow: '0 0 28px rgba(168,85,247,0.45)' }}
           whileTap={{ scale: 0.97 }}
           onClick={() => router.push(`/${slug}/account`)}
           style={{
-            padding: '14px 24px', borderRadius: 14, border: 'none', cursor: 'pointer',
+            padding: '12px 20px', borderRadius: 14, border: 'none', cursor: 'pointer',
             background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
-            color: '#fff', fontWeight: 700, fontSize: '0.95rem',
+            color: '#fff', fontWeight: 700, fontSize: '0.9rem',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
           }}
@@ -239,7 +239,7 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
             rel="noopener noreferrer"
             style={{
               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '13px 10px', borderRadius: 14, textDecoration: 'none',
+              padding: '10px 10px', borderRadius: 14, textDecoration: 'none',
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
               color: 'rgba(255,255,255,0.65)', fontSize: '0.82rem', fontWeight: 600,
@@ -253,7 +253,7 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
             onClick={() => downloadIcs(summary)}
             style={{
               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '13px 10px', borderRadius: 14, cursor: 'pointer',
+              padding: '10px 10px', borderRadius: 14, cursor: 'pointer',
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
               color: 'rgba(255,255,255,0.65)', fontSize: '0.82rem', fontWeight: 600,
@@ -270,10 +270,10 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
           whileTap={{ scale: 0.98 }}
           onClick={() => router.push(`/${slug}`)}
           style={{
-            padding: '13px 24px', borderRadius: 14, cursor: 'pointer',
+            padding: '10px 20px', borderRadius: 14, cursor: 'pointer',
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.12)',
-            color: 'rgba(255,255,255,0.65)', fontWeight: 600, fontSize: '0.9rem',
+            color: 'rgba(255,255,255,0.65)', fontWeight: 600, fontSize: '0.85rem',
           }}
         >
           Torna alla home

@@ -15,13 +15,22 @@ import type { DashboardTheme } from '../dashboard/Themes';
 // AEGIS LOGO (mobile header only)
 // ============================================================================
 
-function AegisLogo({ size, color = '#9333ea' }: { size: number; color?: string }) {
+function AegisLogo({ size }: { size: number }) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: size, height: size, color }}>
+    <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: size, height: size, color: '#fff' }}>
       <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
     </svg>
   );
 }
+
+const HEADER_GRADIENT: Record<string, [string, string]> = {
+  beauty: ['#9333ea', '#4c1d95'],
+  sport:  ['#059669', '#064e3b'],
+  health: ['#0284c7', '#0c4a6e'],
+  home:   ['#d97706', '#78350f'],
+  law:    ['#374151', '#111827'],
+  book:   ['#4f46e5', '#1e1b4b'],
+};
 
 // ============================================================================
 // TYPES
@@ -55,6 +64,7 @@ export function CustomerLayout({
   onNavigate,
   brandLabel = 'Aegis Beauty',
 }: CustomerLayoutProps) {
+  const [gFrom, gTo] = HEADER_GRADIENT[theme.name] ?? HEADER_GRADIENT.beauty;
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', background: '#f9f8fd' }}>
@@ -76,34 +86,38 @@ export function CustomerLayout({
           className={`lg:hidden flex items-center justify-between px-4 sticky top-0 z-30 ${currentPath.includes('/prenota') ? 'hidden' : ''}`}
           style={{
             height: 56,
-            background: 'rgba(255,255,255,0.85)',
-            backdropFilter: 'blur(16px)',
-            borderBottom: '1px solid rgba(0,0,0,0.04)',
+            background: `linear-gradient(135deg, ${gTo} 0%, ${gFrom} 100%)`,
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 2px 16px rgba(0,0,0,0.18)',
           }}
         >
           <div className="flex items-center gap-2">
             {business.logo_url ? (
               <img src={business.logo_url} alt={business.name} width={26} height={26}
-                className="rounded-lg object-cover" style={{ width: 26, height: 26 }} />
+                className="rounded-lg object-cover" style={{ width: 26, height: 26, border: '1.5px solid rgba(255,255,255,0.3)' }} />
             ) : (
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-xs ${theme.sidebar.logoBackground}`}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.7rem', fontWeight: 800, color: '#fff',
+              }}>
                 {business.name.slice(0, 2).toUpperCase()}
               </div>
             )}
-            <span className="font-semibold text-sm text-gray-800">{business.name}</span>
+            <span style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>{business.name}</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{
-              width: 30, height: 30, borderRadius: 10, flexShrink: 0,
+              width: 28, height: 28, borderRadius: 9, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(135deg, rgba(168,85,247,0.25), rgba(126,34,206,0.35))',
-              border: '1px solid rgba(168,85,247,0.3)',
-              boxShadow: '0 2px 10px rgba(168,85,247,0.15)',
+              background: 'rgba(255,255,255,0.18)',
+              border: '1px solid rgba(255,255,255,0.28)',
             }}>
-              <AegisLogo size={15} />
+              <AegisLogo size={14} />
             </div>
-            <span style={{ color: '#7c3aed', fontSize: '0.9rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.88rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
               {brandLabel}
             </span>
           </div>

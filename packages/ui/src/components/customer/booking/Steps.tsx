@@ -804,32 +804,32 @@ export function Step3Front({ business: _business, staff: _staff, bookingState, o
 
       {/* Staff display — always a specific person when available */}
       {displayStaff ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 5 }}>
           {displayStaff.avatar_url ? (
             <img src={displayStaff.avatar_url} alt={displayStaff.full_name}
-              style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(168,85,247,0.4)', flexShrink: 0 }} />
+              style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(168,85,247,0.4)', flexShrink: 0 }} />
           ) : (
             <div style={{
-              width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+              width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
               background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
               border: '2px solid rgba(168,85,247,0.3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.85rem', fontWeight: 800, color: '#fff',
+              fontSize: '0.78rem', fontWeight: 800, color: '#fff',
             }}>{initials}</div>
           )}
           <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>{displayStaff.full_name}</div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>{displayStaff.full_name}</div>
             {displayStaff.specializations?.[0] && (
-              <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{displayStaff.specializations[0]}</div>
+              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{displayStaff.specializations[0]}</div>
             )}
           </div>
         </div>
       ) : null}
 
-      <div style={dividerStyle} />
+      <div style={{ ...dividerStyle, margin: '7px 0' }} />
 
       {/* Summary */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '8px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, margin: '3px 0' }}>
         {[
           { icon: <Scissors style={{ width: 12, height: 12, color: '#a855f7' }} />, value: selectedService?.name ?? '—' },
           { icon: <Calendar style={{ width: 12, height: 12, color: '#a855f7' }} />, value: dateLabel },
@@ -848,7 +848,7 @@ export function Step3Front({ business: _business, staff: _staff, bookingState, o
         ))}
       </div>
 
-      <div style={dividerStyle} />
+      <div style={{ ...dividerStyle, margin: '7px 0' }} />
 
       {/* Notes */}
       <textarea
@@ -857,20 +857,19 @@ export function Step3Front({ business: _business, staff: _staff, bookingState, o
         onClick={e => e.stopPropagation()}
         placeholder="Note per il professionista (opzionale)"
         maxLength={200}
-        rows={3}
+        rows={2}
         style={{
-          width: '100%', borderRadius: 10, padding: '10px 12px', marginTop: 6,
+          width: '100%', borderRadius: 10, padding: '8px 11px', marginTop: 3,
           background: 'rgba(255,255,255,0.05)',
           border: '1px solid rgba(255,255,255,0.10)',
-          color: '#fff', fontSize: '0.78rem', resize: 'none',
+          color: '#fff', fontSize: '0.76rem', resize: 'none',
           outline: 'none', boxSizing: 'border-box',
-          fontFamily: 'inherit', lineHeight: 1.6,
-          flex: '1 1 auto', minHeight: 64, maxHeight: 80,
+          fontFamily: 'inherit', lineHeight: 1.5,
         } as React.CSSProperties}
       />
 
       {/* Buttons */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 7 }}>
         <PrimaryButton disabled={isSubmitting} onClick={onConfirm}>
           {isSubmitting ? (
             <>
