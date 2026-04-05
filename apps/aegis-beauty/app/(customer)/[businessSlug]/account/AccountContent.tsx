@@ -24,12 +24,20 @@ import {
   Shield,
   FileText,
   ChevronRight,
+  ChevronDown,
+  ArrowLeft,
   Clock,
+  Trash2,
+  Phone,
+  Mail,
+  RefreshCw,
+  X,
+  Key,
+  Users,
 } from 'lucide-react';
 import { createClient } from '@aegis/core';
 import { AppointmentCard, beautyTheme } from '@aegis/ui';
 import type { Business, Customer, Profile } from '@aegis/types';
-import type { AppointmentCardData } from '@aegis/ui';
 
 // ============================================================================
 // TYPES
@@ -94,6 +102,10 @@ const KEYFRAMES = `
 @keyframes acct-orb {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50%       { transform: translate(12px, -16px) scale(1.05); }
+}
+@keyframes hp-fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 `;
 
@@ -339,6 +351,89 @@ function SaveButton({ onClick, loading, label }: { onClick: () => void; loading:
 }
 
 // ============================================================================
+// CUSTOMER FAQ ACCORDION ITEM — matches dashboard HelpPage style
+// ============================================================================
+
+function CustomerFAQItem({ question, answer, icon: Icon, isOpen, onToggle, delay }: {
+  question: string; answer: string; icon: React.ElementType;
+  isOpen: boolean; onToggle: () => void; delay: number;
+}) {
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const [height, setHeight] = React.useState(0);
+
+  React.useEffect(() => {
+    if (isOpen && contentRef.current) setHeight(contentRef.current.scrollHeight);
+    else setHeight(0);
+  }, [isOpen, answer]);
+
+  return (
+    <div
+      style={{
+        background: isOpen ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.7)',
+        backdropFilter: 'blur(12px)',
+        borderRadius: 16,
+        border: isOpen ? '1.5px solid rgba(168,85,247,0.2)' : '1.5px solid rgba(0,0,0,0.06)',
+        boxShadow: isOpen ? '0 8px 32px rgba(124,58,237,0.08), 0 2px 8px rgba(0,0,0,0.04)' : '0 1px 3px rgba(0,0,0,0.02)',
+        overflow: 'hidden',
+        transition: 'background 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.25s',
+        animation: `hp-fadeUp 0.4s ease-out ${delay}ms both`,
+      }}
+      onMouseEnter={(e) => {
+        if (!isOpen) {
+          e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)';
+          e.currentTarget.style.boxShadow = '0 8px 32px rgba(124,58,237,0.12), 0 4px 16px rgba(147,51,234,0.08)';
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isOpen) {
+          e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)';
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)';
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
+        }
+      }}
+    >
+      <button
+        onClick={onToggle}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+          padding: '14px 16px', background: 'none', border: 'none',
+          cursor: 'pointer', textAlign: 'left', outline: 'none',
+        }}
+      >
+        <div style={{
+          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: isOpen ? 'linear-gradient(135deg, #7c3aed, #a855f7)' : 'rgba(0,0,0,0.04)',
+          boxShadow: isOpen ? '0 4px 12px rgba(124,58,237,0.25)' : 'none',
+          transition: 'background 0.3s, box-shadow 0.3s',
+        }}>
+          <Icon style={{ width: 16, height: 16, color: isOpen ? '#fff' : '#9ca3af', transition: 'color 0.2s' }} />
+        </div>
+        <span style={{ flex: 1, fontSize: '0.86rem', fontWeight: 600, color: '#1a1a2e', lineHeight: 1.35 }}>
+          {question}
+        </span>
+        <ChevronDown style={{
+          width: 16, height: 16, color: '#d1d5db', flexShrink: 0,
+          transition: 'transform 0.3s ease',
+          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+        }} />
+      </button>
+      <div
+        ref={contentRef}
+        style={{ overflow: 'hidden', maxHeight: height, transition: 'max-height 0.3s ease-out' }}
+      >
+        <p style={{ margin: 0, padding: '0 16px 14px 62px', fontSize: '0.82rem', color: '#6b7280', lineHeight: 1.65 }}>
+          {answer}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -360,24 +455,33 @@ export function AccountContent({
   const [newPw,     setNewPw]     = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [savingPw,  setSavingPw]  = useState(false);
+  const [showHelp,     setShowHelp]     = useState(false);
+  const [expandedFaq,  setExpandedFaq]  = useState<string | null>(null);
 
   const displayName = profile?.full_name ?? customer?.full_name ?? '';
 
   // ── Appointment actions ──────────────────────────────────────────────────
 
   async function handleCancel(appointmentId: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any)
-      .from('appointments')
-      .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
-      .eq('id', appointmentId);
-    if (error) toast.error("Impossibile cancellare l'appuntamento.");
-    else { toast.success('Appuntamento cancellato.'); router.refresh(); }
+    const res = await fetch('/api/bookings/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appointmentId }),
+    });
+    const data = await res.json() as { success?: boolean; error?: string };
+    if (!res.ok || !data.success) {
+      toast.error(data.error ?? "Impossibile cancellare l'appuntamento.");
+    } else {
+      toast.success('Appuntamento cancellato.');
+      router.refresh();
+    }
   }
 
-  function handleRebook(appointment: AppointmentCardData) {
-    const serviceId = appointment.appointment_services?.[0];
-    router.push(serviceId ? `/${slug}/prenota?service=${serviceId}` : `/${slug}/prenota`);
+  function handleReschedule(appointment: { id: string; appointment_services?: Array<{ service_id?: string | null; service_name: string }> }) {
+    const serviceId = appointment.appointment_services?.[0]?.service_id;
+    const params = new URLSearchParams({ reschedule: appointment.id });
+    if (serviceId) params.set('service', serviceId);
+    router.push(`/${slug}/prenota?${params.toString()}`);
   }
 
   // ── Profile save ─────────────────────────────────────────────────────────
@@ -460,8 +564,13 @@ export function AccountContent({
           ) : (
             <motion.div variants={fieldContainerVariants} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {upcoming.map((apt) => (
-                <motion.div key={apt.id} variants={itemVariants}>
-                  <AppointmentCard appointment={apt} theme={beautyTheme} onCancel={handleCancel} index={0} />
+                <motion.div key={apt.id} variants={itemVariants} style={{
+                  borderRadius: 16,
+                  borderLeft: '3px solid rgba(168,85,247,0.65)',
+                  boxShadow: '0 4px 20px rgba(124,58,237,0.1), 0 1px 4px rgba(0,0,0,0.06)',
+                  overflow: 'hidden',
+                }}>
+                  <AppointmentCard appointment={apt} theme={beautyTheme} onCancel={handleCancel} onReschedule={handleReschedule} index={0} />
                 </motion.div>
               ))}
             </motion.div>
@@ -474,19 +583,13 @@ export function AccountContent({
             <motion.div variants={fieldContainerVariants} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {past.map((apt) => (
                 <motion.div key={apt.id} variants={itemVariants}>
-                  <AppointmentCard appointment={apt} theme={beautyTheme} onRebook={handleRebook} index={0} />
+                  <AppointmentCard appointment={apt} theme={beautyTheme} index={0} />
                 </motion.div>
               ))}
             </motion.div>
           </SectionCard>
         )}
 
-        {/* Nuovo appuntamento — se ci sono già appuntamenti futuri */}
-        {upcoming.length > 0 && (
-          <motion.div variants={itemVariants} style={{ textAlign: 'center', paddingBottom: 8 }}>
-            <BookButton onClick={() => router.push(`/${slug}/prenota`)} />
-          </motion.div>
-        )}
       </motion.div>
     );
   }
@@ -556,11 +659,11 @@ export function AccountContent({
               <motion.div
                 initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: 'easeOut' }}
-                style={{ overflow: 'hidden' }}
+                style={{ overflow: 'hidden', marginInline: -4 }}
               >
                 <motion.div
                   variants={fieldContainerVariants} initial="hidden" animate="visible"
-                  style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 20 }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 20, paddingInline: 4 }}
                 >
                   <motion.div variants={itemVariants}>
                     <GlassPasswordInput label="Password attuale" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} />
@@ -579,6 +682,137 @@ export function AccountContent({
             )}
           </AnimatePresence>
         </SectionCard>
+      </motion.div>
+    );
+  }
+
+  function renderHelp() {
+    const FAQS = [
+      { id: 'p1', icon: CalendarDays, q: 'Come prenoto un appuntamento?',     a: 'Vai nel tab Prenota, scegli il servizio, poi la data e l\'orario che preferisci. Conferma e il gioco è fatto.' },
+      { id: 'p2', icon: RefreshCw,    q: 'Posso spostare un appuntamento?',   a: 'Sì. Nel tab Appuntamenti, premi "Sposta" sulla card del tuo appuntamento e scegli un nuovo orario. Il vecchio verrà annullato automaticamente.' },
+      { id: 'p3', icon: X,            q: 'Come cancello un appuntamento?',    a: 'Premi "Disdici" sulla card. Ogni salone ha una propria politica: il sistema ti avviserà se la cancellazione non è più possibile a causa della finestra temporale.' },
+      { id: 'a1', icon: Key,          q: 'Come cambio la password?',          a: 'Nel tab Profilo, scorri fino alla sezione "Modifica Password" e inserisci la nuova password (minimo 8 caratteri).' },
+      { id: 'a2', icon: User,         q: 'Come aggiorno nome e telefono?',    a: 'Nel tab Profilo puoi modificare tutti i tuoi dati. Premi "Salva modifiche" in fondo alla pagina per confermare.' },
+      { id: 'a3', icon: Trash2,       q: 'Come cancello il mio account?',     a: 'Scorri in fondo al tab Altro e premi "Cancella account". Invierai una richiesta via email che verrà elaborata entro 30 giorni.' },
+      { id: 's1', icon: Clock,        q: 'Qual è la politica di cancellazione?', a: 'Le regole variano da salone a salone. Il sistema ti avviserà automaticamente se la cancellazione non è più possibile per il tuo appuntamento.' },
+      { id: 's2', icon: Users,        q: 'Posso prenotare per conto di altri?',  a: 'Per ora ogni account gestisce solo i propri appuntamenti. Per prenotazioni a nome di altri, contatta il salone direttamente.' },
+    ];
+
+    return (
+      <motion.div
+        key="help"
+        initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }}
+        transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+      >
+        {/* Back button */}
+        <motion.button
+          onClick={() => { setShowHelp(false); setExpandedFaq(null); }}
+          whileHover={{ x: -2 }} whileTap={{ scale: 0.97 }}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none',
+            border: 'none', cursor: 'pointer', padding: '4px 0', width: 'fit-content',
+          }}
+        >
+          <div style={{
+            width: 32, height: 32, borderRadius: 10,
+            background: 'rgba(5,150,105,0.1)', border: '1px solid rgba(5,150,105,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <ArrowLeft style={{ width: 15, height: 15, color: '#059669' }} />
+          </div>
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#059669' }}>Torna ad Altro</span>
+        </motion.button>
+
+        {/* Title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 11,
+            background: 'linear-gradient(135deg, rgba(5,150,105,0.12), rgba(5,150,105,0.06))',
+            border: '1px solid rgba(5,150,105,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <HelpCircle style={{ width: 18, height: 18, color: '#059669' }} />
+          </div>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#1a1a2e' }}>Aiuto e supporto</h2>
+            <p style={{ margin: 0, fontSize: '0.72rem', color: '#9ca3af' }}>Domande frequenti</p>
+          </div>
+        </div>
+
+        {/* FAQ list */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {FAQS.map((item, i) => (
+            <CustomerFAQItem
+              key={item.id}
+              question={item.q}
+              answer={item.a}
+              icon={item.icon}
+              isOpen={expandedFaq === item.id}
+              onToggle={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
+              delay={i * 40}
+            />
+          ))}
+        </div>
+
+        {/* Contatta il salone */}
+        {business.phone && (
+          <div>
+            <p style={{ margin: '0 0 8px 2px', fontSize: '0.69rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Contatta il salone
+            </p>
+            <div style={{
+              background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(16px)',
+              borderRadius: 18, border: '1px solid rgba(255,255,255,0.9)', overflow: 'hidden',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
+            }}>
+              <motion.a
+                href={`tel:${business.phone}`}
+                whileHover={{ backgroundColor: 'rgba(5,150,105,0.04)', x: 2 }}
+                whileTap={{ scale: 0.99 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '15px 18px', textDecoration: 'none' }}
+              >
+                <div style={{
+                  width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                  background: 'rgba(5,150,105,0.1)', border: '1px solid rgba(5,150,105,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Phone style={{ width: 18, height: 18, color: '#059669' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1a1a2e' }}>Chiama {business.name}</div>
+                  <div style={{ fontSize: '0.73rem', color: '#9ca3af', marginTop: 1 }}>{business.phone}</div>
+                </div>
+                <ChevronRight style={{ width: 15, height: 15, color: '#d1d5db', flexShrink: 0 }} />
+              </motion.a>
+              {business.email && (
+                <motion.a
+                  href={`mailto:${business.email}`}
+                  whileHover={{ backgroundColor: 'rgba(5,150,105,0.04)', x: 2 }}
+                  whileTap={{ scale: 0.99 }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 14, padding: '15px 18px',
+                    textDecoration: 'none', borderTop: '1px solid rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div style={{
+                    width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                    background: 'rgba(8,145,178,0.1)', border: '1px solid rgba(8,145,178,0.2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Mail style={{ width: 18, height: 18, color: '#0891b2' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1a1a2e' }}>Scrivi al salone</div>
+                    <div style={{ fontSize: '0.73rem', color: '#9ca3af', marginTop: 1 }}>{business.email}</div>
+                  </div>
+                  <ChevronRight style={{ width: 15, height: 15, color: '#d1d5db', flexShrink: 0 }} />
+                </motion.a>
+              )}
+            </div>
+          </div>
+        )}
+
       </motion.div>
     );
   }
@@ -610,18 +844,22 @@ export function AccountContent({
         iconColor: '#059669',
         iconBg: 'rgba(5,150,105,0.1)',
         iconBorder: 'rgba(5,150,105,0.2)',
-        action: () => toast.info('Prossimamente disponibile.'),
+        action: () => setShowHelp(true),
       },
     ];
 
     const legalItems = [
-      { icon: Shield,   label: 'Privacy Policy',       sub: 'Come trattiamo i tuoi dati' },
-      { icon: FileText, label: 'Termini e Condizioni',  sub: 'Regole di utilizzo del servizio' },
+      { icon: Shield,   label: 'Privacy Policy',       sub: 'Come trattiamo i tuoi dati',         href: '/legal#privacy-customer' },
+      { icon: FileText, label: 'Termini e Condizioni',  sub: 'Regole di utilizzo del servizio',    href: '/legal#terms-customer' },
     ];
 
     return (
+      <AnimatePresence mode="wait">
+        {showHelp ? renderHelp() : (
       <motion.div
+        key="other-main"
         variants={containerVariants} initial="hidden" animate="visible"
+        exit={{ opacity: 0, x: -24, transition: { duration: 0.2 } }}
         style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
       >
 
@@ -640,7 +878,7 @@ export function AccountContent({
               <motion.button
                 key={item.label}
                 onClick={item.action}
-                whileHover={{ backgroundColor: 'rgba(147,51,234,0.025)', x: 2 }}
+                whileHover={{ backgroundColor: 'rgba(124,58,237,0.07)', x: 2 }}
                 whileTap={{ scale: 0.99 }}
                 transition={{ duration: 0.15 }}
                 style={{
@@ -675,7 +913,7 @@ export function AccountContent({
             return (
               <motion.button
                 key={item.label}
-                onClick={() => toast.info('Prossimamente disponibile.')}
+                onClick={() => router.push(item.href)}
                 whileHover={{ backgroundColor: 'rgba(0,0,0,0.015)', x: 2 }}
                 whileTap={{ scale: 0.99 }}
                 transition={{ duration: 0.15 }}
@@ -730,7 +968,44 @@ export function AccountContent({
           </motion.button>
         </motion.div>
 
+        {/* Cancellazione account */}
+        <motion.div
+          variants={itemVariants}
+          style={{
+            background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(16px)',
+            borderRadius: 20, border: '1px solid rgba(255,255,255,0.9)', overflow: 'hidden',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.05)',
+          }}
+        >
+          <motion.button
+            onClick={() => {
+              const subject = encodeURIComponent('Richiesta cancellazione account');
+              const body = encodeURIComponent(`Ciao,\n\nVorrei richiedere la cancellazione del mio account.\n\nEmail: ${userEmail}\n\nGrazie.`);
+              window.location.href = `mailto:support@aegisbeauty.app?subject=${subject}&body=${body}`;
+            }}
+            whileHover={{ backgroundColor: 'rgba(239,68,68,0.03)', x: 2 }}
+            whileTap={{ scale: 0.99 }}
+            transition={{ duration: 0.15 }}
+            style={{
+              width: '100%', padding: '15px 18px', display: 'flex', alignItems: 'center',
+              gap: 14, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+            }}
+          >
+            <IconTile
+              icon={Trash2} color="#9ca3af"
+              bg="rgba(156,163,175,0.08)" border="rgba(156,163,175,0.18)"
+            />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#6b7280' }}>Cancella account</div>
+              <div style={{ fontSize: '0.73rem', color: '#9ca3af', marginTop: 1 }}>Invia richiesta — elaborata entro 30 giorni</div>
+            </div>
+            <ChevronRight style={{ width: 15, height: 15, color: '#d1d5db', flexShrink: 0 }} />
+          </motion.button>
+        </motion.div>
+
       </motion.div>
+        )}
+      </AnimatePresence>
     );
   }
 
@@ -806,7 +1081,8 @@ export function AccountContent({
                     layoutId="tab-pill"
                     style={{
                       position: 'absolute', inset: 0, borderRadius: 12,
-                      background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+                      background: '#fff',
+                      boxShadow: '0 0 16px rgba(124,58,237,0.28), 0 4px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(168,85,247,0.12)',
                     }}
                     transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                   />
@@ -844,12 +1120,13 @@ export function AccountContent({
           gap: 8,
         }}>
           <span style={{ color: '#9ca3af', fontSize: '0.72rem' }}>
-            Powered by <span style={{ color: '#7c3aed', fontWeight: 600 }}>Aegis Group</span>
+            Powered by{' '}
+            <span style={{ color: '#7c3aed', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/')}>Aegis Group</span>
           </span>
           <div style={{ display: 'flex', gap: 16 }}>
-            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }}>Privacy Policy</span>
+            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => router.push('/legal#privacy-customer')}>Privacy Policy</span>
             <span style={{ color: '#e5e7eb' }}>·</span>
-            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }}>Termini e Condizioni</span>
+            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => router.push('/legal#terms-customer')}>Termini e Condizioni</span>
           </div>
         </footer>
 

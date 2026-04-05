@@ -6,8 +6,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,16 +32,56 @@ interface PrenotaContentProps {
 }
 
 interface BookedSummary {
-  serviceName: string;
-  staffName:   string;
-  date:        Date;
-  time:        string;
+  serviceName:  string;
+  staffName:    string;
+  date:         Date;
+  time:         string;
   appointmentId: string;
+  businessName: string;
+  durationMinutes: number;
 }
 
 // ============================================================================
 // SUCCESS SCREEN
 // ============================================================================
+
+function formatIcsDate(date: Date, timeStr: string, offsetMinutes = 0): string {
+  const [h, m] = timeStr.split(':').map(Number);
+  const d = new Date(date);
+  d.setHours(h, m + offsetMinutes, 0, 0);
+  return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
+function buildGoogleCalUrl(summary: BookedSummary): string {
+  const start = formatIcsDate(summary.date, summary.time);
+  const end   = formatIcsDate(summary.date, summary.time, summary.durationMinutes);
+  const text  = encodeURIComponent(`${summary.serviceName} — ${summary.businessName}`);
+  const details = encodeURIComponent(summary.staffName ? `con ${summary.staffName}` : '');
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}`;
+}
+
+function buildIcsBlob(summary: BookedSummary): string {
+  const start = formatIcsDate(summary.date, summary.time);
+  const end   = formatIcsDate(summary.date, summary.time, summary.durationMinutes);
+  const title = `${summary.serviceName} — ${summary.businessName}`;
+  const desc  = summary.staffName ? `con ${summary.staffName}` : '';
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AegisBeauty//IT',
+    'BEGIN:VEVENT',
+    `DTSTART:${start}`, `DTEND:${end}`,
+    `SUMMARY:${title}`, `DESCRIPTION:${desc}`,
+    `UID:${summary.appointmentId}@aegisbeauty.app`,
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+}
+
+function downloadIcs(summary: BookedSummary) {
+  const blob = new Blob([buildIcsBlob(summary)], { type: 'text/calendar;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'appuntamento.ics'; a.click();
+  URL.revokeObjectURL(url);
+}
 
 function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string }) {
   const router = useRouter();
@@ -68,19 +108,25 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
         transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 20 }}
         style={{
           width: 96, height: 96, borderRadius: '50%', marginBottom: 28,
-          background: 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(76,29,149,0.2))',
-          border: '2px solid rgba(168,85,247,0.5)',
+          background: 'linear-gradient(145deg, rgba(16,185,129,0.88), rgba(5,150,105,0.80))',
+          border: '2px solid rgba(16,185,129,0.5)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 48px rgba(168,85,247,0.3)',
+          boxShadow: '0 0 48px rgba(16,185,129,0.45), 0 8px 32px rgba(16,185,129,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
           position: 'relative',
         }}
       >
+        {/* Inner shimmer */}
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: '50%',
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.18) 0%, transparent 55%)',
+          pointerEvents: 'none',
+        }} />
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.3, type: 'spring', stiffness: 400, damping: 20 }}
         >
-          <CheckCircle style={{ width: 48, height: 48, color: '#a855f7' }} />
+          <CheckCircle style={{ width: 48, height: 48, color: '#fff' }} />
         </motion.div>
         {/* Pulse ring */}
         <motion.div
@@ -88,7 +134,7 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
           transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut' }}
           style={{
             position: 'absolute', inset: -4, borderRadius: '50%',
-            border: '2px solid rgba(168,85,247,0.3)', pointerEvents: 'none',
+            border: '2px solid rgba(16,185,129,0.4)', pointerEvents: 'none',
           }}
         />
       </motion.div>
@@ -166,7 +212,7 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.55, duration: 0.4 }}
+        transition={{ delay: 0.5, duration: 0.4 }}
         style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}
       >
         <motion.button
@@ -184,6 +230,42 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
           Vedi i miei appuntamenti
           <ArrowRight style={{ width: 16, height: 16 }} />
         </motion.button>
+
+        {/* Aggiungi al calendario */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <motion.a
+            href={buildGoogleCalUrl(summary)}
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.01, background: 'rgba(255,255,255,0.10)' } as React.CSSProperties}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '13px 10px', borderRadius: 14, textDecoration: 'none',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              color: 'rgba(255,255,255,0.65)', fontSize: '0.82rem', fontWeight: 600,
+            }}
+          >
+            <Calendar style={{ width: 13, height: 13, flexShrink: 0 }} />
+            Google Cal
+          </motion.a>
+          <motion.button
+            onClick={() => downloadIcs(summary)}
+            whileHover={{ scale: 1.01, background: 'rgba(255,255,255,0.10)' } as React.CSSProperties}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '13px 10px', borderRadius: 14, cursor: 'pointer',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              color: 'rgba(255,255,255,0.65)', fontSize: '0.82rem', fontWeight: 600,
+            }}
+          >
+            <Calendar style={{ width: 13, height: 13, flexShrink: 0 }} />
+            Apple / Outlook
+          </motion.button>
+        </div>
 
         <motion.button
           whileHover={{ scale: 1.01 }}
@@ -208,7 +290,18 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
 // ============================================================================
 
 export function PrenotaContent({ business, services, staff, hours, customer: _customer, categories }: PrenotaContentProps) {
-  const [booked, setBooked] = useState<BookedSummary | null>(null);
+  const [booked, setBooked]  = useState<BookedSummary | null>(null);
+  const searchParams         = useSearchParams();
+  const isReschedule         = !!searchParams.get('reschedule');
+  const rescheduleServiceId  = searchParams.get('service');
+  const initialService       = rescheduleServiceId ? (services.find(s => s.id === rescheduleServiceId) ?? null) : null;
+  const initialStep          = isReschedule && initialService ? 1 : 0;
+
+  // Hide page scrollbar — prenota è una fullscreen experience senza scroll
+  useEffect(() => {
+    document.documentElement.style.overflow = 'hidden';
+    return () => { document.documentElement.style.overflow = ''; };
+  }, []);
 
   const fetchSlots: FetchSlotsFn = async ({ businessId, serviceId, staffId, date }) => {
     const params = new URLSearchParams({ businessId, serviceId, date });
@@ -221,7 +314,9 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
   async function handleConfirm(state: BookingState): Promise<void> {
     if (!state.selectedService || !state.selectedDate || !state.selectedTime) return;
 
-    const dateStr = state.selectedDate.toISOString().split('T')[0];
+    // Use local date parts to avoid UTC offset shifting the date (e.g. UTC+2 midnight → previous day in ISO)
+    const d = state.selectedDate;
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
     // If no preference selected, use the pre-assigned staff id (if any) to ensure consistency
     const resolvedStaffId = state.selectedStaff?.id ?? state.autoAssignedStaff?.id ?? null;
@@ -246,11 +341,13 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     }
 
     setBooked({
-      serviceName:   state.selectedService.name,
-      staffName:     state.selectedStaff?.full_name ?? '',
-      date:          state.selectedDate,
-      time:          state.selectedTime,
-      appointmentId: data.appointmentId!,
+      serviceName:     state.selectedService.name,
+      staffName:       state.selectedStaff?.full_name ?? '',
+      date:            state.selectedDate,
+      time:            state.selectedTime,
+      appointmentId:   data.appointmentId!,
+      businessName:    business.name,
+      durationMinutes: state.selectedService.duration_minutes,
     });
 
     toast.success('Prenotazione confermata!');
@@ -258,15 +355,13 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100dvh',
       background: '#0a0a0f',
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Background particles (reduced opacity for dark theme) */}
-      <div style={{ opacity: 0.45, position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        <FloatingParticles />
-      </div>
+      {/* FloatingParticles a opacity piena — identico al marketing Hero */}
+      <FloatingParticles />
 
       {/* Extra glow orbs — più intensi per il tema dark */}
       <div style={{
@@ -281,7 +376,7 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
       }} />
 
       {/* Content */}
-      <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '20px 16px' }}>
+      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 16px 40px' }}>
         <AnimatePresence mode="wait">
           {booked ? (
             <motion.div
@@ -310,6 +405,9 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
                 fetchSlots={fetchSlots}
                 onConfirm={handleConfirm}
                 onError={msg => toast.error(msg)}
+                initialStep={initialStep}
+                initialService={initialService}
+                isReschedule={isReschedule}
               />
             </motion.div>
           )}

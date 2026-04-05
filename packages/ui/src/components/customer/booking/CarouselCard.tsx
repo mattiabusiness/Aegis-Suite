@@ -51,9 +51,9 @@ export function CarouselCard({
 }: CarouselCardProps) {
   const { rotateY, scale, opacity, zIndex, translateZ, translateX } = transform;
 
-  const borderColor = isActive ? 'rgba(139,92,246,0.5)'  : 'rgba(139,92,246,0.2)';
-  const glow        = isActive ? ', 0 0 60px rgba(124,58,237,0.28)' : '';
-  const boxShadow   = `0 25px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05)${glow}`;
+  const borderColor = isActive ? 'rgba(168,85,247,0.65)'  : 'rgba(139,92,246,0.22)';
+  const glow        = isActive ? ', 0 0 80px rgba(124,58,237,0.35), 0 0 40px rgba(168,85,247,0.18)' : '';
+  const boxShadow   = `0 32px 64px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.09)${glow}`;
 
   return (
     <motion.div
@@ -76,13 +76,20 @@ export function CarouselCard({
         width:          '100%',
         height:         '100%',
         borderRadius:   24,
-        background:     'linear-gradient(135deg, rgba(76,29,149,0.45), rgba(30,10,60,0.38))',
+        background:     'linear-gradient(135deg, rgba(88,28,235,0.52), rgba(30,10,60,0.44))',
         border:         `1px solid ${borderColor}`,
         backdropFilter: 'blur(20px)',
         boxShadow,
         overflow:       'hidden',
         position:       'relative',
       }}>
+        {/* Top shimmer highlight — Apple glass inner glow */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 60,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%)',
+          borderRadius: '24px 24px 0 0',
+          pointerEvents: 'none', zIndex: 1,
+        }} />
 
         {isActive ? (
           /* Active card — flip inner */

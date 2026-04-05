@@ -10,7 +10,7 @@ import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useSpring, useInView, useTransform } from 'framer-motion';
-import { MapPin, Phone, Clock, ChevronRight, ChevronLeft } from 'lucide-react';
+import { MapPin, Phone, Clock, ChevronRight, ChevronLeft, Zap, BellRing, CalendarCheck } from 'lucide-react';
 import { ServiceCard, StaffCard, beautyTheme } from '@aegis/ui';
 import type { Business, Service, Staff, BusinessHours, DayOfWeek, ServiceCategory } from '@aegis/types';
 
@@ -93,7 +93,7 @@ function ScrollProgressBar() {
 // SECTION HEADER — barra animata su scroll
 // ============================================================================
 
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function SectionHeader({ title, subtitle, badge }: { title: string; subtitle?: string; badge?: string }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
 
@@ -105,7 +105,18 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
       transition={{ duration: 0.5, ease: 'easeOut' }}
       style={{ marginBottom: 36, textAlign: 'center' }}
     >
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1a1a2e', margin: '0 0 6px' }}>
+      {badge && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)',
+          borderRadius: 100, padding: '4px 14px', marginBottom: 12,
+        }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9333ea', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            {badge}
+          </span>
+        </div>
+      )}
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1a1a2e', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
         {title}
       </h2>
       {subtitle && (
@@ -155,8 +166,8 @@ function BookButton({ onClick }: { onClick: () => void }) {
 
         <motion.button
           variants={{
-            rest:  { scale: 1,    boxShadow: '0 4px 20px rgba(147,51,234,0.4), 0 0 0 1px rgba(255,255,255,0.1) inset' },
-            hover: { scale: 1.04, boxShadow: '0 0 36px rgba(147,51,234,0.65), 0 8px 24px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1) inset' },
+            rest:  { scale: 1,    boxShadow: '0 0 30px rgba(124,58,237,0.45), 0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)' },
+            hover: { scale: 1.04, boxShadow: '0 0 50px rgba(124,58,237,0.65), 0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' },
             tap:   { scale: 0.97 },
           }}
           initial="rest"
@@ -287,6 +298,8 @@ export function BusinessContent({ business, services, staff, hours, categories }
   const initials = business.name.slice(0, 2).toUpperCase();
   const openDays = hours.filter(h => h.is_open);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as DayOfWeek;
+  const todayHours = hours.find(h => h.day_of_week === today);
+  const isOpenToday = todayHours?.is_open ?? false;
 
   return (
     <>
@@ -329,20 +342,20 @@ export function BusinessContent({ business, services, staff, hours, categories }
 
           {/* Orbs animati CSS — leggeri, GPU only */}
           <div style={{
-            position: 'absolute', width: 500, height: 500, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(168,85,247,0.35) 0%, transparent 70%)',
+            position: 'absolute', width: 560, height: 560, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(168,85,247,0.48) 0%, transparent 70%)',
             top: '-20%', left: '-10%', pointerEvents: 'none',
             animation: 'orb-1 12s ease-in-out infinite',
           }} />
           <div style={{
-            position: 'absolute', width: 400, height: 400, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)',
+            position: 'absolute', width: 450, height: 450, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(139,92,246,0.42) 0%, transparent 70%)',
             bottom: '-15%', right: '-8%', pointerEvents: 'none',
             animation: 'orb-2 16s ease-in-out infinite',
           }} />
           <div style={{
-            position: 'absolute', width: 300, height: 300, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(196,167,255,0.2) 0%, transparent 70%)',
+            position: 'absolute', width: 340, height: 340, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(196,167,255,0.32) 0%, transparent 70%)',
             top: '40%', right: '20%', pointerEvents: 'none',
             animation: 'orb-3 10s ease-in-out infinite',
           }} />
@@ -476,21 +489,42 @@ export function BusinessContent({ business, services, staff, hours, categories }
             <BookButton onClick={() => router.push(`/${slug}/prenota`)} />
           </motion.div>
 
-          {/* Open days */}
+          {/* Open status + days */}
           {openDays.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              style={{
-                marginTop: 22, zIndex: 2, position: 'relative',
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                color: 'rgba(255,255,255,0.9)', fontSize: '0.85rem', fontWeight: 600,
-                textShadow: '0 1px 8px rgba(0,0,0,0.3)',
-              }}
+              style={{ marginTop: 22, zIndex: 2, position: 'relative', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
             >
-              <Clock style={{ width: 14, height: 14, opacity: 0.85 }} />
-              {openDays.length === 7 ? 'Aperto tutti i giorni' : `Aperto ${openDays.length} giorni su 7`}
+              {/* Oggi aperto / chiuso badge */}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '4px 12px', borderRadius: 100,
+                background: isOpenToday ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.18)',
+                border: `1px solid ${isOpenToday ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}`,
+                backdropFilter: 'blur(8px)',
+              }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                  background: isOpenToday ? '#10b981' : '#ef4444',
+                  boxShadow: isOpenToday ? '0 0 6px rgba(16,185,129,0.8)' : '0 0 6px rgba(239,68,68,0.8)',
+                }} />
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: isOpenToday ? '#6ee7b7' : '#fca5a5' }}>
+                  {isOpenToday
+                    ? `Oggi ${formatTime(todayHours?.open_time ?? null)}–${formatTime(todayHours?.close_time ?? null)}`
+                    : 'Oggi chiuso'
+                  }
+                </span>
+              </span>
+              {/* Giorni totali */}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', fontWeight: 500,
+              }}>
+                <Clock style={{ width: 11, height: 11 }} />
+                {openDays.length === 7 ? 'Tutti i giorni' : `${openDays.length} giorni su 7`}
+              </span>
             </motion.div>
           )}
 
@@ -528,11 +562,116 @@ export function BusinessContent({ business, services, staff, hours, categories }
         ══════════════════════════════════════════════ */}
         <div style={{ maxWidth: 960, margin: '0 auto', padding: '56px 20px 0' }}>
 
+          {/* ══ PERCHÉ PRENOTARE ONLINE — copy statico per tutti i business ══ */}
+          <div style={{ marginBottom: 56 }}>
+            <ScrollReveal>
+              <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '4px 14px', borderRadius: 100,
+                  background: 'rgba(124,58,237,0.1)',
+                  border: '1px solid rgba(124,58,237,0.22)',
+                  color: '#9333ea', fontSize: 12, fontWeight: 600,
+                  letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                  marginBottom: 16,
+                }}>
+                  Perché sceglierci
+                </span>
+                <h3 style={{
+                  fontSize: 'clamp(1.2rem, 3vw, 1.55rem)', fontWeight: 800,
+                  color: '#1a1a2e', margin: '0 0 10px', letterSpacing: '-0.02em',
+                }}>
+                  Il tuo appuntamento, a modo tuo.
+                </h3>
+                <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+                  Niente telefonate, niente attese. Solo pochi tap e sei a posto.
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 20,
+            }}>
+              {([
+                {
+                  icon: Zap,
+                  title: 'Prenota in 30 secondi',
+                  desc: 'Scegli servizio, giorno e ora. Conferma immediata, zero stress.',
+                  delay: 0,
+                },
+                {
+                  icon: BellRing,
+                  title: 'Promemoria automatico',
+                  desc: 'Ti avvisiamo il giorno prima. Non dimentichi più nessun appuntamento.',
+                  delay: 0.1,
+                },
+                {
+                  icon: CalendarCheck,
+                  title: 'Tutto in un posto',
+                  desc: 'Storico, prossimi appuntamenti e disdette — sempre con te.',
+                  delay: 0.2,
+                },
+              ] as const).map((item) => {
+                const Icon = item.icon;
+                return (
+                  <ScrollReveal key={item.title} delay={item.delay}>
+                    <div
+                      style={{
+                        padding: 28,
+                        borderRadius: 20,
+                        background: 'rgba(124,58,237,0.04)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(124,58,237,0.12)',
+                        boxShadow: '0 0 0 1px rgba(124,58,237,0.06), 0 8px 24px rgba(0,0,0,0.05)',
+                        transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s',
+                        cursor: 'default',
+                        height: '100%',
+                        boxSizing: 'border-box' as const,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow =
+                          '0 0 0 1px rgba(124,58,237,0.22), 0 20px 48px rgba(124,58,237,0.1), 0 8px 24px rgba(0,0,0,0.08)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow =
+                          '0 0 0 1px rgba(124,58,237,0.06), 0 8px 24px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 12,
+                        background: 'rgba(124,58,237,0.12)',
+                        border: '1px solid rgba(168,85,247,0.22)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        marginBottom: 18,
+                      }}>
+                        <Icon style={{ width: 22, height: 22, color: '#a855f7' }} />
+                      </div>
+                      <h4 style={{
+                        fontSize: '1rem', fontWeight: 700, color: '#1a1a2e',
+                        margin: '0 0 10px', letterSpacing: '-0.01em', lineHeight: 1.3,
+                      }}>
+                        {item.title}
+                      </h4>
+                      <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: 0, lineHeight: 1.7 }}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </ScrollReveal>
+                );
+              })}
+            </div>
+          </div>
+
           {/* SERVIZI */}
           {services.length > 0 && (
             <section style={{ marginBottom: 64 }}>
               <SectionHeader
-                title="I nostri servizi"
+                badge="I nostri servizi"
+                title="Cosa offriamo"
                 subtitle={`${services.length} trattament${services.length === 1 ? 'o' : 'i'} disponibil${services.length === 1 ? 'e' : 'i'}`}
               />
 
@@ -662,11 +801,12 @@ export function BusinessContent({ business, services, staff, hours, categories }
             </section>
           )}
 
-          {/* TEAM */}
-          {staff.length > 0 && (
+          {/* TEAM — nascosto se è solo una persona (il titolare) */}
+          {staff.length > 1 && (
             <section style={{ marginBottom: 64 }}>
               <SectionHeader
-                title="Il nostro team"
+                badge="Il nostro team"
+                title="I tuoi esperti"
                 subtitle={staff.length === 1 ? 'Il tuo esperto di fiducia' : `${staff.length} professionisti a tua disposizione`}
               />
               <div style={{
@@ -691,7 +831,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
 
           {/* CHI SIAMO */}
           <section style={{ marginBottom: 64 }}>
-            <SectionHeader title="Chi siamo" />
+            <SectionHeader badge="Chi siamo" title="La nostra storia" />
 
             <ScrollReveal>
               <div style={{
@@ -887,12 +1027,13 @@ export function BusinessContent({ business, services, staff, hours, categories }
           gap: 8,
         }}>
           <span style={{ color: '#9ca3af', fontSize: '0.72rem' }}>
-            Powered by <span style={{ color: '#7c3aed', fontWeight: 600 }}>Aegis Group</span>
+            Powered by{' '}
+            <span style={{ color: '#7c3aed', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/')}>Aegis Group</span>
           </span>
           <div style={{ display: 'flex', gap: 16 }}>
-            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }}>Privacy Policy</span>
+            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => router.push('/legal#privacy-customer')}>Privacy Policy</span>
             <span style={{ color: '#e5e7eb' }}>·</span>
-            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }}>Termini e Condizioni</span>
+            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => router.push('/legal#terms-customer')}>Termini e Condizioni</span>
           </div>
         </footer>
 

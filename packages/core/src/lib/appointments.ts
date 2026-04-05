@@ -10,7 +10,7 @@ const APPOINTMENT_SELECT = `
   *,
   customers!inner(full_name, email, phone),
   staff!inner(full_name, nickname),
-  appointment_services(service_name, duration_minutes, price)
+  appointment_services(service_id, service_name, duration_minutes, price)
 `;
 
 /**

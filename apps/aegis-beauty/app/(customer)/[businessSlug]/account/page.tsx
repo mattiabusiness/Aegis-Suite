@@ -45,7 +45,7 @@ export default async function AccountPage({
       ? getUpcomingAppointments(supabase, customer.id, business.id)
       : Promise.resolve([]),
     customer
-      ? getPastAppointments(supabase, customer.id, business.id, 10)
+      ? getPastAppointments(supabase, customer.id, business.id, 50)
       : Promise.resolve([]),
   ]);
 

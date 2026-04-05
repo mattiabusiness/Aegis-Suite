@@ -66,9 +66,8 @@ L'area dedicata all'utente finale del salone. **Mobile-First strict.**
 
 ### P0 — CLIENT INTERFACE NOW (Sessione corrente)
 - [ ] `/[slug]` — Business landing semi-pubblica (SSG)
-  Toggle visibilità nelle impostazioni gestore (default: ON)
-- [ ] `/[slug]/prenota` — 3D carousel booking (3 step max)
-- [ ] `/[slug]/account` — Area personale cliente
+  Inserire Toggle visibilità nelle impostazioni gestore (default: ON)
+- [ ] Perfezionamento pagina cliente
 
 ### P1 — LAUNCH PREP
 - [ ] Email transazionali (Resend) + notifiche: conferma, reminder 24h, notifica gestore
@@ -83,3 +82,6 @@ L'area dedicata all'utente finale del salone. **Mobile-First strict.**
 - **Performance**: Lighthouse score > 90.
 - **Sicurezza**: RLS deve impedire a un gestore di vedere i dati di un altro anche via API.
 - **Estetica**: Se non è futuristico, non è Aegis.
+
+# (Marketing): Sito web 
+Non è da Toccare, è stato appena finito e deployato correttamente, non toccarlo, lo userai solo come riferimento e aiuto per il miglioramento del interfaccia cliente che facciamo adesso

@@ -24,17 +24,15 @@ Senior Full-Stack Developer e UI/UX Architect di Aegis Suite.
 - Perfezionamento flusso prenotazione (modal dashboard → da testare e raffinare)
 - Interfaccia Staff (permessi ridotti sulla stessa UI gestore)
 - Importatore universale clienti (Excel/CSV)
+- Interfaccia Cliente (3 pagine)
 
 ### IN CORSO:
 Interfaccia Cliente (3 pagine):
    - /[slug] → semi-pubblica SSG (visibile senza login)
-     Toggle ON/OFF nelle impostazioni gestore (default: ON)
-     Zero costi Vercel — generata staticamente
-   - /[slug]/prenota → protetta, richiede login cliente
-   - /[slug]/account → protetta, richiede login cliente
-
+    Inserire Toggle ON/OFF nelle impostazioni gestore (default: ON)
+   - Perfezionare tutta l'interfaccia cliente 
 ### DA FARE (in ordine): 
-1. Launch prep (PWA, notifiche email, performance, legal)
+1. Launch prep (Responsive, PWA, notifiche push e email, performance, sicurezza)
 
 ---
 
@@ -209,3 +207,6 @@ Error:     #ef4444
 - ✅ SEMPRE leggere il file esistente prima di modificarlo
 - ✅ SEMPRE modificare chirurgicamente — mai riscrivere file interi per cambiamenti piccoli
 - ❌ MAI creare componenti che esistono già in `packages/ui`
+
+# (Marketing): Sito web 
+Non è da Toccare, è stato appena finito e deployato correttamente, non toccarlo, lo userai solo come riferimento e aiuto per il miglioramento del interfaccia cliente che facciamo adesso

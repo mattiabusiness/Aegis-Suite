@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { CalendarDays, Clock, User, X, RefreshCw } from 'lucide-react';
+import { Clock, User, X, RefreshCw } from 'lucide-react';
 import type { DashboardTheme } from '../dashboard/Themes';
 
 // ============================================================================
@@ -24,15 +24,16 @@ export interface AppointmentCardData {
   // Nested from DB join
   customers?: { full_name: string } | null;
   staff?: { full_name: string; nickname: string | null } | null;
-  appointment_services?: Array<{ service_name: string }>;
+  appointment_services?: Array<{ service_id?: string | null; service_name: string; price?: number | null }>;
 }
 
 export interface AppointmentCardProps {
-  appointment: AppointmentCardData;
-  theme: DashboardTheme;
-  onCancel?: (appointmentId: string) => void;
-  onRebook?: (appointment: AppointmentCardData) => void;
-  index?: number;
+  appointment:   AppointmentCardData;
+  theme:         DashboardTheme;
+  onCancel?:     (appointmentId: string) => void;
+  onRebook?:     (appointment: AppointmentCardData) => void;
+  onReschedule?: (appointment: AppointmentCardData) => void;
+  index?:        number;
 }
 
 // ============================================================================
@@ -66,133 +67,164 @@ function formatDate(isoString: string) {
 // COMPONENT
 // ============================================================================
 
-export function AppointmentCard({ appointment, theme, onCancel, onRebook, index = 0 }: AppointmentCardProps) {
+export function AppointmentCard({ appointment, theme, onCancel, onRebook, onReschedule, index = 0 }: AppointmentCardProps) {
   const [showConfirm, setShowConfirm] = React.useState(false);
 
-  const date    = formatDate(appointment.start_time);
-  const status  = STATUS_CONFIG[appointment.status] ?? STATUS_CONFIG.pending;
-  const service = appointment.appointment_services?.[0]?.service_name ?? 'Appuntamento';
+  const date      = formatDate(appointment.start_time);
+  const status    = STATUS_CONFIG[appointment.status] ?? STATUS_CONFIG.pending;
+  const service   = appointment.appointment_services?.[0]?.service_name ?? 'Appuntamento';
   const staffName = appointment.staff?.nickname ?? appointment.staff?.full_name ?? '';
+  const price     = appointment.total_price ?? appointment.appointment_services?.[0]?.price ?? null;
+  const isPast    = !date.isFuture;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05, ease: 'easeOut' }}
-      whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}
+      whileHover={{ y: -2, boxShadow: isPast ? '0 6px 20px rgba(0,0,0,0.06)' : '0 8px 28px rgba(124,58,237,0.1), 0 2px 8px rgba(0,0,0,0.04)' }}
       style={{
-        background: '#ffffff',
+        background: isPast ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(12px)',
         borderRadius: 16,
-        border: '1px solid rgba(0,0,0,0.04)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.02)',
+        border: isPast ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(168,85,247,0.1)',
+        boxShadow: isPast ? '0 1px 4px rgba(0,0,0,0.03)' : '0 2px 12px rgba(124,58,237,0.06)',
         overflow: 'hidden',
         display: 'flex',
+        opacity: isPast ? 0.85 : 1,
+        transition: 'opacity 0.2s',
       }}
     >
       {/* Colored left accent strip */}
-      <div className={theme.sidebar.background} style={{ width: 5, flexShrink: 0 }} />
+      <div
+        className={theme.sidebar.background}
+        style={{ width: 4, flexShrink: 0, opacity: isPast ? 0.45 : 1 }}
+      />
 
       {/* Content */}
-      <div style={{ flex: 1, padding: '14px 16px', display: 'flex', gap: 12 }}>
+      <div style={{ flex: 1, padding: '14px 16px', display: 'flex', gap: 14 }}>
 
         {/* Date block */}
-        <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 44 }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1a1a2e', lineHeight: 1 }}>
+        <div style={{
+          flexShrink: 0, textAlign: 'center', minWidth: 48,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          background: isPast ? 'rgba(0,0,0,0.03)' : 'rgba(124,58,237,0.06)',
+          borderRadius: 12, padding: '8px 10px',
+          border: isPast ? '1px solid rgba(0,0,0,0.04)' : '1px solid rgba(168,85,247,0.12)',
+        }}>
+          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: isPast ? '#6b7280' : '#4c1d95', lineHeight: 1 }}>
             {date.day}
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 500 }}>
+          <div style={{ fontSize: '0.65rem', color: isPast ? '#9ca3af' : '#7c3aed', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>
             {date.month}
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: 4 }}>
-            {date.time}
           </div>
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, background: 'rgba(0,0,0,0.06)', flexShrink: 0 }} />
+        <div style={{ width: 1, background: isPast ? 'rgba(0,0,0,0.05)' : 'rgba(168,85,247,0.1)', flexShrink: 0, alignSelf: 'stretch' }} />
 
         {/* Details */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1a1a2e', margin: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: isPast ? '#6b7280' : '#1a1a2e', margin: 0, lineHeight: 1.3 }}>
               {service}
             </h4>
-            <span
-              style={{
-                padding: '2px 8px',
-                borderRadius: 20,
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                background: status.bg,
-                color: status.color,
-                flexShrink: 0,
-              }}
-            >
+            <span style={{
+              padding: '2px 8px', borderRadius: 20, fontSize: '0.63rem', fontWeight: 700,
+              background: status.bg, color: status.color, flexShrink: 0, letterSpacing: '0.02em',
+            }}>
               {status.label}
             </span>
           </div>
 
           {staffName && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <User style={{ width: 12, height: 12, color: '#9ca3af' }} />
-              <span style={{ fontSize: '0.78rem', color: '#6b7280' }}>con {staffName}</span>
+              <User style={{ width: 11, height: 11, color: '#9ca3af' }} />
+              <span style={{ fontSize: '0.76rem', color: '#9ca3af' }}>con {staffName}</span>
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <CalendarDays style={{ width: 12, height: 12, color: '#9ca3af' }} />
-            <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>{date.dayName}</span>
-            <Clock style={{ width: 12, height: 12, color: '#9ca3af', marginLeft: 4 }} />
-            <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>{date.time}</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Clock style={{ width: 11, height: 11, color: '#9ca3af' }} />
+              <span style={{ fontSize: '0.76rem', color: '#9ca3af' }}>{date.dayName} · {date.time}</span>
+            </div>
+            {price != null && price > 0 && (
+              <span style={{
+                fontSize: '0.82rem', fontWeight: 700,
+                background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                flexShrink: 0,
+              }}>
+                €{price.toFixed(0)}
+              </span>
+            )}
           </div>
 
           {/* Actions */}
-          {(onCancel && date.isFuture) || onRebook ? (
-            <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-              {onCancel && date.isFuture && appointment.status !== 'cancelled' && (
+          {onCancel && date.isFuture && appointment.status !== 'cancelled' && (
+            <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+              {!showConfirm ? (
                 <>
-                  {!showConfirm ? (
+                  {onReschedule && (
                     <button
-                      onClick={() => setShowConfirm(true)}
-                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium"
-                      style={{ background: 'rgba(239,68,68,0.08)', color: '#dc2626', border: 'none', cursor: 'pointer' }}
+                      onClick={() => onReschedule(appointment)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px',
+                        borderRadius: 8, fontSize: '0.73rem', fontWeight: 600,
+                        background: 'rgba(124,58,237,0.07)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.18)', cursor: 'pointer',
+                      }}
                     >
-                      <X style={{ width: 12, height: 12 }} />
-                      Disdici
+                      <RefreshCw style={{ width: 11, height: 11 }} />
+                      Sposta
                     </button>
-                  ) : (
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button
-                        onClick={() => { onCancel(appointment.id); setShowConfirm(false); }}
-                        className="px-3 py-1 rounded-lg text-xs font-semibold text-white"
-                        style={{ background: '#dc2626', border: 'none', cursor: 'pointer' }}
-                      >
-                        Conferma
-                      </button>
-                      <button
-                        onClick={() => setShowConfirm(false)}
-                        className="px-3 py-1 rounded-lg text-xs font-medium"
-                        style={{ background: 'rgba(0,0,0,0.06)', color: '#6b7280', border: 'none', cursor: 'pointer' }}
-                      >
-                        Annulla
-                      </button>
-                    </div>
                   )}
+                  <button
+                    onClick={() => setShowConfirm(true)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px',
+                      borderRadius: 8, fontSize: '0.73rem', fontWeight: 600,
+                      background: 'rgba(239,68,68,0.07)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.15)', cursor: 'pointer',
+                    }}
+                  >
+                    <X style={{ width: 11, height: 11 }} />
+                    Disdici
+                  </button>
                 </>
-              )}
-
-              {onRebook && !date.isFuture && (
-                <button
-                  onClick={() => onRebook(appointment)}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium ${theme.header.accentColor}`}
-                  style={{ background: 'rgba(168,85,247,0.08)', border: 'none', cursor: 'pointer' }}
-                >
-                  <RefreshCw style={{ width: 12, height: 12 }} />
-                  Prenota di nuovo
-                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button
+                    onClick={() => { onCancel(appointment.id); setShowConfirm(false); }}
+                    style={{ padding: '5px 12px', borderRadius: 8, fontSize: '0.73rem', fontWeight: 700, background: '#dc2626', color: '#fff', border: 'none', cursor: 'pointer' }}
+                  >
+                    Conferma
+                  </button>
+                  <button
+                    onClick={() => setShowConfirm(false)}
+                    style={{ padding: '5px 12px', borderRadius: 8, fontSize: '0.73rem', fontWeight: 600, background: 'rgba(0,0,0,0.06)', color: '#6b7280', border: 'none', cursor: 'pointer' }}
+                  >
+                    Annulla
+                  </button>
+                </div>
               )}
             </div>
-          ) : null}
+          )}
+
+          {onRebook && isPast && (
+            <div style={{ marginTop: 4 }}>
+              <button
+                onClick={() => onRebook(appointment)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px',
+                  borderRadius: 8, fontSize: '0.73rem', fontWeight: 600,
+                  background: 'rgba(168,85,247,0.08)', color: '#7c3aed', border: '1px solid rgba(168,85,247,0.15)', cursor: 'pointer',
+                }}
+              >
+                <RefreshCw style={{ width: 11, height: 11 }} />
+                Prenota di nuovo
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

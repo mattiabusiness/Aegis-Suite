@@ -109,8 +109,8 @@ export function CustomerLayout({
           </div>
         </header>
 
-        {/* Page content — pt-[96px] = 68px header + 28px bubble overflow below */}
-        <main className="flex-1 pb-24 lg:pb-0 lg:pt-[96px]">
+        {/* Page content — pt-[64px] = desktop header height, pb-[60px] = mobile bottom nav */}
+        <main className="flex-1 pb-[60px] lg:pb-0 lg:pt-[64px]">
           {children}
         </main>
       </div>
