@@ -319,8 +319,9 @@ export function CustomerList({
             />
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             {/* Filter tabs */}
+            <div className="flex items-center gap-2 flex-wrap">
             {FILTERS.map(f => {
               const isActive = activeFilter === f.key;
               return (
@@ -339,7 +340,9 @@ export function CustomerList({
                 </button>
               );
             })}
-            <div className="w-px h-6 mx-1" style={{ background: 'rgba(0,0,0,0.06)' }} />
+            </div>
+            <div className="hidden sm:block w-px h-6 mx-1" style={{ background: 'rgba(0,0,0,0.06)' }} />
+            <div className="flex items-center gap-2 flex-wrap">
             {onExport && (
               <button
                 onClick={(e) => {
@@ -455,6 +458,7 @@ export function CustomerList({
                 <span className="relative z-10">Aggiungi cliente</span>
               </button>
             )}
+            </div>
           </div>
         </div>
       </div>

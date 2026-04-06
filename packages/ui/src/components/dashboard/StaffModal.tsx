@@ -387,6 +387,7 @@ export function StaffModal({
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
+      maxWidth="max-w-md"
       title={modalTitle}
       subtitle={isCompletingProfile ? 'Completa i dati per attivare il profilo' : isEditing ? 'Modifica i dettagli del membro' : 'Aggiungi un nuovo membro al tuo team'}
     >
@@ -792,16 +793,20 @@ export function StaffHoursModal({
 
                     {/* Times */}
                     {day.isOpen && (
-                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                        <input type="time" value={day.openTime1 || '09:00'} onChange={(e) => updateDay(i, 'openTime1', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
-                        <span className="text-xs text-gray-400">—</span>
-                        <input type="time" value={day.closeTime1 || '13:00'} onChange={(e) => updateDay(i, 'closeTime1', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
-                        {day.openTime2 ? (
-                          <>
-                            <span className="text-xs text-gray-300" style={{ margin: '0 8px' }}>|</span>
-                            <input type="time" value={day.openTime2} onChange={(e) => updateDay(i, 'openTime2', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                      <div className="flex flex-col gap-1 flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <input type="time" value={day.openTime1 || '09:00'} onChange={(e) => updateDay(i, 'openTime1', e.target.value)} className="px-2 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                          <span className="text-xs text-gray-400">—</span>
+                          <input type="time" value={day.closeTime1 || '13:00'} onChange={(e) => updateDay(i, 'closeTime1', e.target.value)} className="px-2 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                          {!day.openTime2 && (
+                            <button type="button" onClick={() => addSecondRange(i)} style={{ fontSize: 10, color: '#9333ea', fontWeight: 600, background: 'rgba(147,51,234,0.06)', border: '1px solid rgba(147,51,234,0.15)', borderRadius: 6, padding: '2px 7px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ pausa</button>
+                          )}
+                        </div>
+                        {day.openTime2 && (
+                          <div className="flex items-center gap-1.5">
+                            <input type="time" value={day.openTime2} onChange={(e) => updateDay(i, 'openTime2', e.target.value)} className="px-2 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
                             <span className="text-xs text-gray-400">—</span>
-                            <input type="time" value={day.closeTime2 || '19:00'} onChange={(e) => updateDay(i, 'closeTime2', e.target.value)} className="px-2.5 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                            <input type="time" value={day.closeTime2 || '19:00'} onChange={(e) => updateDay(i, 'closeTime2', e.target.value)} className="px-2 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
                             <button
                               type="button"
                               onClick={() => removeSecondRange(i)}
@@ -809,9 +814,7 @@ export function StaffHoursModal({
                               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#9ca3af'; }}
                               style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', lineHeight: 1, flexShrink: 0, transition: 'color 0.15s ease' }}
                             >✕</button>
-                          </>
-                        ) : (
-                          <button type="button" onClick={() => addSecondRange(i)} style={{ fontSize: 10, color: '#9333ea', fontWeight: 600, background: 'rgba(147,51,234,0.06)', border: '1px solid rgba(147,51,234,0.15)', borderRadius: 6, padding: '2px 7px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ pausa</button>
+                          </div>
                         )}
                       </div>
                     )}

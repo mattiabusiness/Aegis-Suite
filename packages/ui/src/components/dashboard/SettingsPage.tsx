@@ -364,8 +364,8 @@ function GeneralTab({
 
       {/* Logo — compact + info cards */}
       <Section title={`Logo del ${label}`} description="Personalizza la tua app" delay={80} compact iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}>
-        <div className="flex items-start gap-5" style={{ animation: 'stFadeUp 0.4s ease-out both' }}>
-          {/* Left: preview + upload */}
+        <div className="flex flex-col gap-4" style={{ animation: 'stFadeUp 0.4s ease-out both' }}>
+          {/* Top: preview + upload */}
           <div className="flex flex-col items-center flex-shrink-0">
             {form.logoUrl && (
               <div className="relative group mb-2">
@@ -422,8 +422,8 @@ onClick={triggerFileInput}>
               </p>
             )}
           </div>
-          {/* Right: info cards */}
-          <div className="flex-1 space-y-2" style={{ animation: 'stFadeUp 0.35s ease-out 0.1s both' }}>
+          {/* Bottom: info cards in row */}
+          <div className="flex gap-2" style={{ animation: 'stFadeUp 0.35s ease-out 0.1s both' }}>
             <div className="p-3 rounded-xl transition-all duration-200 cursor-default" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.08)' }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(124,58,237,0.06)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.04)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
@@ -647,25 +647,27 @@ function HoursTab({
                 <AnimatedToggle enabled={h.isOpen} onToggle={() => updateH(idx, 'isOpen', !h.isOpen)} />
                 <span className={`w-10 text-sm font-semibold transition-colors duration-200 ${h.isOpen ? 'text-gray-900' : 'text-gray-400'}`}>{h.dayLabel.slice(0, 3)}</span>
                 {h.isOpen ? (
-                  <div className="flex items-center gap-1.5 flex-1 flex-wrap">
-                    <AnimatedSelect value={h.openTime1} onChange={(v) => updateH(idx, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
-                    <span className="text-purple-300 text-xs">→</span>
-                    <AnimatedSelect value={h.closeTime1} onChange={(v) => updateH(idx, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
-                    {h.openTime2 || h.closeTime2 ? (
-                      <>
-                        <span className="text-purple-200 mx-0.5 text-xs">|</span>
+                  <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <AnimatedSelect value={h.openTime1} onChange={(v) => updateH(idx, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
+                      <span className="text-purple-300 text-xs">→</span>
+                      <AnimatedSelect value={h.closeTime1} onChange={(v) => updateH(idx, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
+                      {!h.openTime2 && !h.closeTime2 && (
+                        <button onClick={() => { updateH(idx, 'openTime2', '14:00'); updateH(idx, 'closeTime2', '15:00'); }}
+                          className="text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200"
+                          style={{ background: 'rgba(0,0,0,0.04)', color: '#9ca3af', border: '1px solid transparent' }}>
+                          + Pausa
+                        </button>
+                      )}
+                    </div>
+                    {(h.openTime2 || h.closeTime2) && (
+                      <div className="flex items-center gap-1.5">
                         <AnimatedSelect value={h.openTime2} onChange={(v) => updateH(idx, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                         <span className="text-purple-300 text-xs">→</span>
                         <AnimatedSelect value={h.closeTime2} onChange={(v) => updateH(idx, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                         <button onClick={() => { updateH(idx, 'openTime2', ''); updateH(idx, 'closeTime2', ''); }}
                           className="p-1 text-gray-400 hover:text-red-500 transition-colors"><X className="w-3.5 h-3.5" /></button>
-                      </>
-                    ) : (
-                      <button onClick={() => { updateH(idx, 'openTime2', '14:00'); updateH(idx, 'closeTime2', '15:00'); }}
-                        className="ml-auto text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200"
-                        style={{ background: 'rgba(0,0,0,0.04)', color: '#9ca3af', border: '1px solid transparent' }}>
-                        + Pausa
-                      </button>
+                      </div>
                     )}
                   </div>
                 ) : (

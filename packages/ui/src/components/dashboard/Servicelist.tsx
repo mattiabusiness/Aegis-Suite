@@ -332,7 +332,7 @@ function CategorySection({
 
             {showMenu && (
               <div
-                className="absolute right-0 top-full mt-1 w-40 py-1 z-50 rounded-xl overflow-hidden"
+                className="absolute right-0 bottom-full mb-1 w-40 py-1 z-[100] rounded-xl overflow-hidden"
                 style={{
                   background: 'rgba(255,255,255,0.98)',
                   backdropFilter: 'blur(12px)',

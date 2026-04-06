@@ -12,7 +12,7 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Bell, User } from 'lucide-react';
 import type { DashboardTheme } from './Themes';
 import type { SidebarMenuSection, SidebarMenuItem } from './Sidebar';
 
@@ -53,6 +53,11 @@ export interface DashboardMobileHeaderProps {
   businessLogo?: string;
   theme:         DashboardTheme;
   brandLabel?:   string;
+  userName?:     string;
+  userAvatar?:   string;
+  unreadCount?:  number;
+  onNotificationClick?: () => void;
+  onProfileClick?: () => void;
 }
 
 export function DashboardMobileHeader({
@@ -60,6 +65,11 @@ export function DashboardMobileHeader({
   businessLogo,
   theme,
   brandLabel = 'Aegis Beauty',
+  userName,
+  userAvatar,
+  unreadCount = 0,
+  onNotificationClick,
+  onProfileClick,
 }: DashboardMobileHeaderProps) {
   const [gFrom, gTo] = THEME_GRADIENT[theme.name] ?? THEME_GRADIENT.beauty;
 
@@ -103,8 +113,59 @@ export function DashboardMobileHeader({
         </span>
       </div>
 
-      {/* Right: Aegis brand */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+      {/* Right: notifications + avatar + Aegis icon */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* Notification bell */}
+        <button
+          onClick={onNotificationClick}
+          style={{
+            position: 'relative', width: 34, height: 34, borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.22)',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          aria-label="Notifiche"
+        >
+          <Bell style={{ width: 16, height: 16, color: '#fff' }} />
+          {unreadCount > 0 && (
+            <div style={{
+              position: 'absolute', top: 3, right: 3,
+              width: 8, height: 8, borderRadius: '50%',
+              background: '#ef4444',
+              border: '1.5px solid rgba(0,0,0,0.2)',
+            }} />
+          )}
+        </button>
+
+        {/* Profile avatar */}
+        <button
+          onClick={onProfileClick}
+          style={{
+            width: 34, height: 34, borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(255,255,255,0.18)',
+            border: '1.5px solid rgba(255,255,255,0.3)',
+            cursor: 'pointer',
+            overflow: 'hidden',
+            WebkitTapHighlightColor: 'transparent',
+            flexShrink: 0,
+          }}
+          aria-label="Profilo"
+        >
+          {userAvatar ? (
+            <img src={userAvatar} alt={userName || 'Profilo'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : userName ? (
+            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#fff', letterSpacing: '0.02em' }}>
+              {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+            </span>
+          ) : (
+            <User style={{ width: 16, height: 16, color: '#fff' }} />
+          )}
+        </button>
+
+        {/* Aegis brand icon only */}
         <div style={{
           width: 28, height: 28, borderRadius: 9,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -113,12 +174,6 @@ export function DashboardMobileHeader({
         }}>
           <AegisLogo />
         </div>
-        <span style={{
-          color: 'rgba(255,255,255,0.9)', fontSize: '0.88rem',
-          fontWeight: 700, letterSpacing: '-0.01em',
-        }}>
-          {brandLabel}
-        </span>
       </div>
     </header>
   );

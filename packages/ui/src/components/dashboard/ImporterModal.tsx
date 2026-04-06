@@ -836,15 +836,15 @@ function Step2({ counts, isCheckingDups, updateDuplicates, onUpdateDuplicatesCha
       <p className="text-sm font-semibold text-gray-700">Pronti per l'importazione:</p>
 
       {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+      <div className="grid grid-cols-3 gap-2">
         {stats.map(({ icon, label, sublabel, value, bg, border, borderHover, shadow, textColor, iconBg, iconColor, accentColor }, idx) => (
           <div
             key={label}
             style={{
               background: bg,
               border: `1px solid ${border}`,
-              borderRadius: 16,
-              padding: '14px 14px 16px',
+              borderRadius: 12,
+              padding: '10px 10px 12px',
               transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
               cursor: 'default',
               animation: `imp-fade-up 0.3s ease ${idx * 0.07}s both`,
@@ -864,17 +864,17 @@ function Step2({ counts, isCheckingDups, updateDuplicates, onUpdateDuplicatesCha
             {/* Top accent bar */}
             <div style={{ height: 2, borderRadius: 99, background: accentColor, marginBottom: 13 }} />
             {/* Icon */}
-            <div style={{ width: 30, height: 30, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 11, color: iconColor }}>
+            <div style={{ width: 26, height: 26, borderRadius: 8, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, color: iconColor }}>
               {icon}
             </div>
             {/* Value */}
-            <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.1, color: textColor, fontVariantNumeric: 'tabular-nums', marginBottom: 5 }}>
+            <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.1, color: textColor, fontVariantNumeric: 'tabular-nums', marginBottom: 4 }}>
               {value}
             </div>
             {/* Label */}
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', lineHeight: 1.3 }}>{label}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#374151', lineHeight: 1.3 }}>{label}</div>
             {/* Sublabel */}
-            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2, lineHeight: 1.3 }}>{sublabel}</div>
+            <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2, lineHeight: 1.3 }}>{sublabel}</div>
           </div>
         ))}
       </div>

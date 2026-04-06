@@ -253,7 +253,7 @@ function GuideModal({ guide, isOpen, onClose }: {
         opacity: mounted ? 1 : 0, transition: 'opacity 0.2s ease',
       }} />
       {/* Modal card */}
-      <div className="relative w-full max-w-lg" style={{
+      <div className="relative w-full max-w-md" style={{
         background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
         borderRadius: 24, border: '1px solid rgba(168,85,247,0.35)',
         boxShadow: mounted

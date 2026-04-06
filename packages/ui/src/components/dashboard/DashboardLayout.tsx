@@ -178,6 +178,11 @@ export function DashboardLayout({
         businessLogo={businessLogo}
         theme={theme}
         brandLabel={theme.displayName}
+        userName={userName}
+        userAvatar={userAvatar}
+        unreadCount={unreadCount}
+        onNotificationClick={onViewAllNotifications}
+        onProfileClick={onProfileClick}
       />
 
       {/* ── Main Content ─────────────────────────────────────────────────── */}

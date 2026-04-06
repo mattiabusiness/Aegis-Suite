@@ -569,9 +569,9 @@ function TopServicesSection({ services, currency, chartColors }: { services: Top
       {services.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-8">Nessun dato disponibile</p>
       ) : (
-        <div className="flex items-center gap-5">
+        <div className="flex flex-col sm:flex-row items-center gap-5">
           {/* Donut */}
-          <div className="w-44 h-44 flex-shrink-0 relative">
+          <div className="w-44 h-44 flex-shrink-0 relative self-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -609,7 +609,7 @@ function TopServicesSection({ services, currency, chartColors }: { services: Top
             </div>
           </div>
           {/* Legend */}
-          <div className="flex-1 space-y-2.5 min-w-0">
+          <div className="w-full sm:flex-1 space-y-2.5 min-w-0">
             {services.map((s, i) => {
               const pct = totalRevenue > 0 ? Math.round((s.revenue / totalRevenue) * 100) : 0;
               return (

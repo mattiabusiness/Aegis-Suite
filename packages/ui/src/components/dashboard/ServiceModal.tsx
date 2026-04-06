@@ -196,7 +196,7 @@ export function ServiceModal({
 
       {/* Modal card — identical glass style to QRCodeModal */}
       <div
-        className={`relative w-full max-w-lg ${shake ? 'sm-shake' : ''}`}
+        className={`relative w-full max-w-md ${shake ? 'sm-shake' : ''}`}
         style={{
           background: 'rgba(255,255,255,0.97)',
           backdropFilter: 'blur(24px)',

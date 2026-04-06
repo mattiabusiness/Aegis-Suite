@@ -205,21 +205,21 @@ function StaffCard({
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-sm text-gray-500">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 mt-0.5">
           {member.email && (
-            <span className="flex items-center gap-1.5 truncate">
-              <Mail className="w-3.5 h-3.5" />
-              {member.email}
+            <span className="flex items-center gap-1 min-w-0 max-w-[160px] truncate">
+              <Mail className="w-3 h-3 flex-shrink-0" />
+              <span className="truncate">{member.email}</span>
             </span>
           )}
           {member.phone && (
-            <span className="flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5" />
+            <span className="flex items-center gap-1 flex-shrink-0">
+              <Phone className="w-3 h-3" />
               {member.phone}
             </span>
           )}
           {typeof member.servicesCount === 'number' && (
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 flex-shrink-0">
               <Briefcase className="w-3 h-3" />
               {member.servicesCount} servizi
             </span>

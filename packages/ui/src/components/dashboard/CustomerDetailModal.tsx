@@ -199,14 +199,14 @@ function AppointmentRow({ apt, currency, delay }: {
           <span className="flex items-center gap-1"><Scissors className="w-3 h-3" />{apt.staffName}</span>
         </div>
       </div>
-      <div className="flex items-center gap-3 flex-shrink-0">
+      <div className="flex flex-col items-end gap-1 flex-shrink-0">
         <span className="text-sm font-bold text-gray-900">{formatCurrency(apt.price, currency)}</span>
         <div
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium"
+          className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium"
           style={{ background: status.bg, color: status.text }}
         >
           <StatusIcon className="w-3 h-3" />
-          {status.label}
+          <span className="hidden sm:inline">{status.label}</span>
         </div>
       </div>
     </div>
@@ -371,7 +371,7 @@ export function CustomerDetailModal({
           opacity: mounted ? 1 : 0,
           transform: mounted ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(8px)',
           transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-          maxHeight: 'calc(100vh - 2rem)',
+          maxHeight: 'calc(100dvh - 2rem)',
           overflow: 'hidden',
         }}
       >
@@ -394,10 +394,10 @@ export function CustomerDetailModal({
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-start gap-3">
             {/* Avatar */}
             <div
-              className="w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0"
+              className="w-12 h-12 rounded-full flex items-center justify-center text-white text-base font-bold flex-shrink-0 mt-0.5"
               style={{
                 background: `hsl(${customer.fullName.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360}, 65%, 55%)`,
                 boxShadow: `0 4px 12px hsla(${customer.fullName.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360}, 65%, 55%, 0.25)`,
@@ -581,7 +581,7 @@ export function CustomerDetailModal({
         </div>
 
         {/* ═══ TABS ═══ */}
-        <div className="flex items-center gap-1 px-6 flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+        <div className="flex items-center gap-1 px-4 flex-shrink-0 overflow-x-auto" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)', scrollbarWidth: 'none' }}>
           {TABS.map(tab => {
             const isActive = activeTab === tab.key;
             const TabIcon = tab.icon;
@@ -683,7 +683,7 @@ export function CustomerDetailModal({
                 style={{ background: 'rgba(0,0,0,0.015)', border: '1px solid rgba(0,0,0,0.04)' }}
               >
                 <h4 className="text-sm font-semibold text-gray-900 mb-3">Dettagli cliente</h4>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2 text-sm">
                   {customer.birthDate && (
                     <div><span className="text-gray-400">Data nascita:</span> <span className="text-gray-900 font-medium">{formatDate(customer.birthDate)}</span></div>
                   )}
