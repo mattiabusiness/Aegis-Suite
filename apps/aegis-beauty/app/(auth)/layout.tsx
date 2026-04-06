@@ -256,8 +256,12 @@ export default function AuthLayout({
           margin: 0;
         }
 
-        @media (max-width: 768px) {
-          .al-main { padding: 1.5rem 0.75rem; }
+        @media (max-width: 1023px) {
+          /* Lock viewport height so card + footer never overflow */
+          .authlayout { height: 100dvh; overflow: hidden; }
+          .al-main { padding: 0.5rem 0.75rem; align-items: stretch; }
+          /* Footer hidden on mobile — "Powered by" inside card provides attribution */
+          .al-footer { display: none; }
           .al-orb1 { width: 300px; height: 300px; }
           .al-orb2 { width: 260px; height: 260px; }
           .al-orb3 { width: 200px; height: 200px; }
