@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cat \"/c/Users/matti/Documents/aegis-suite/apps/aegis-beauty/app/\\(dashboard\\)/dashboard/clienti/CustomersContent.tsx\")"
+      "Bash(cat \"/c/Users/matti/Documents/aegis-suite/apps/aegis-beauty/app/\\(dashboard\\)/dashboard/clienti/CustomersContent.tsx\")",
+      "Bash(git -C \"/c/Users/matti/Documents/aegis-suite\" add packages/ui/src/components/dashboard/StaffModal.tsx packages/ui/src/components/dashboard/SettingsPage.tsx)",
+      "Bash(git -C /c/Users/matti/Documents/aegis-suite commit -m ':*)",
+      "Bash(git -C \"/c/Users/matti/Documents/aegis-suite\" push origin main)",
+      "Bash(pnpm tsc:*)",
+      "Bash(git -C \"/c/Users/matti/Documents/aegis-suite\" add packages/ui/src/components/dashboard/Calendar.tsx packages/ui/src/components/dashboard/SettingsPage.tsx)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)"
     ]
   }
 }
