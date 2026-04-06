@@ -90,6 +90,9 @@ export function Step1BusinessType({ businessId, initialValue }: Step1Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [shaking, setShaking] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [articlesAccepted, setArticlesAccepted] = useState(false);
+  const [articlesExpanded, setArticlesExpanded] = useState(false);
 
   // Ripple state
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -113,6 +116,11 @@ export function Step1BusinessType({ businessId, initialValue }: Step1Props) {
   const handleContinue = async (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!selected) {
       setError('Seleziona il tipo di attività');
+      triggerShake();
+      return;
+    }
+    if (!termsAccepted || !articlesAccepted) {
+      setError('Accetta tutti i termini per continuare');
       triggerShake();
       return;
     }
@@ -299,40 +307,131 @@ export function Step1BusinessType({ businessId, initialValue }: Step1Props) {
             })}
           </div>
 
+          {/* Legal acceptance */}
+          <div className="mt-6 space-y-3 p-4 rounded-xl" style={{ background: 'rgba(124,58,237,0.03)', border: '1.5px solid rgba(124,58,237,0.1)' }}>
+            {/* Checkbox 1: Terms + Privacy + DPA */}
+            <label className="flex items-start gap-3 cursor-pointer" onClick={() => { setTermsAccepted(v => !v); setError(''); }}>
+              <div
+                className="w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center mt-0.5 transition-all duration-200"
+                style={{
+                  background: termsAccepted ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'transparent',
+                  border: termsAccepted ? 'none' : '2px solid #d1d5db',
+                  boxShadow: termsAccepted ? '0 2px 6px rgba(168,85,247,0.3)' : 'none',
+                }}
+              >
+                {termsAccepted && (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"
+                      style={{ strokeDasharray: 24, strokeDashoffset: 0, animation: 's1Check 0.3s ease-out' }} />
+                  </svg>
+                )}
+              </div>
+              <span className="text-sm text-gray-600 leading-relaxed select-none">
+                Accetto i{' '}
+                <a href="https://aegisbeauty.app/legal#terms-manager" target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="text-purple-600 underline underline-offset-2 hover:text-purple-700">
+                  Termini di Servizio
+                </a>
+                , la{' '}
+                <a href="https://aegisbeauty.app/legal#privacy-manager" target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="text-purple-600 underline underline-offset-2 hover:text-purple-700">
+                  Privacy Policy
+                </a>
+                {' '}e il{' '}
+                <a href="https://aegisbeauty.app/legal#dpa" target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="text-purple-600 underline underline-offset-2 hover:text-purple-700">
+                  DPA
+                </a>
+              </span>
+            </label>
+
+            {/* Checkbox 2: Artt. 1341-1342 */}
+            <div>
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center mt-0.5 transition-all duration-200 cursor-pointer"
+                  onClick={() => { setArticlesAccepted(v => !v); setError(''); }}
+                  style={{
+                    background: articlesAccepted ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'transparent',
+                    border: articlesAccepted ? 'none' : '2px solid #d1d5db',
+                    boxShadow: articlesAccepted ? '0 2px 6px rgba(168,85,247,0.3)' : 'none',
+                  }}
+                >
+                  {articlesAccepted && (
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"
+                        style={{ strokeDasharray: 24, strokeDashoffset: 0, animation: 's1Check 0.3s ease-out' }} />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className="text-sm text-gray-600 cursor-pointer select-none"
+                      onClick={() => { setArticlesAccepted(v => !v); setError(''); }}
+                    >
+                      Accetto gli articoli 5; 8; 9; 15; 18; 21; 25
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setArticlesExpanded(v => !v)}
+                      className="flex items-center gap-0.5 transition-colors text-purple-500 hover:text-purple-700"
+                      style={{ fontSize: 11, fontWeight: 500, lineHeight: 1 }}
+                    >
+                      {articlesExpanded ? 'Riduci' : 'Espandi'}
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        style={{ transition: 'transform 0.2s', transform: articlesExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  {articlesExpanded && (
+                    <p className="mt-2 text-xs text-gray-500 leading-relaxed">
+                      Ai sensi e per gli effetti degli Artt. 1341 e 1342 del Codice Civile italiano, dichiaro di aver letto, compreso e di approvare specificamente le seguenti clausole dei Termini di Servizio, che riconosco come potenzialmente onerose: Art. 5 (Durata e gratuità della fase Beta — transizione al servizio a pagamento) — Art. 8 (Sospensione e risoluzione anticipata del contratto) — Art. 9 (Obblighi e livelli di servizio: fornitura "As Is", assenza di SLA garantiti, diritto di modifica delle funzionalità) — Art. 15 (Limitazione di responsabilità per danni diretti, indiretti e consequenziali) — Art. 18 (Diritto di Aegis Beauty di modificare unilateralmente i Termini con preavviso di 30 giorni) — Art. 21 (Cessione del contratto da parte di Aegis Beauty in caso di fusione o acquisizione) — Art. 25 (Foro esclusivamente competente: Tribunale di Torino).
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Continua button — ripple + shimmer */}
-          <div className="mt-8">
+          <div className="mt-6">
             <button
               ref={btnRef}
               onClick={handleContinue}
-              disabled={loading || !selected}
+              disabled={loading || !selected || !termsAccepted || !articlesAccepted}
               className="relative w-full h-12 rounded-xl font-semibold text-white text-base
                 transition-all duration-300 outline-none overflow-hidden
                 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2
                 disabled:opacity-50 disabled:cursor-not-allowed
                 flex items-center justify-center gap-2"
               style={{
-                background: selected
+                background: (selected && termsAccepted && articlesAccepted)
                   ? 'linear-gradient(135deg, #7c3aed, #a855f7)'
                   : '#d1d5db',
-                boxShadow: selected
+                boxShadow: (selected && termsAccepted && articlesAccepted)
                   ? '0 6px 20px rgba(124,58,237,0.3)'
                   : 'none',
               }}
               onMouseEnter={(e) => {
-                if (selected && !loading) {
+                if (selected && termsAccepted && articlesAccepted && !loading) {
                   e.currentTarget.style.boxShadow = '0 8px 28px rgba(124,58,237,0.4)';
                   e.currentTarget.style.transform = 'translateY(-1px)';
                 }
               }}
               onMouseLeave={(e) => {
-                if (selected && !loading) {
+                if (selected && termsAccepted && articlesAccepted && !loading) {
                   e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.3)';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
               {/* Shimmer sweep */}
-              {selected && !loading && (
+              {selected && termsAccepted && articlesAccepted && !loading && (
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{

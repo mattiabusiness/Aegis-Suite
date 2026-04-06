@@ -304,7 +304,7 @@ export function Step2BasicInfo({ businessId, businessType, initialData, currentS
             className="space-y-4"
           >
             {/* Row 1: Nome + Indirizzo */}
-            <div className="grid grid-cols-2 gap-4" style={{ animation: 's2FadeUp 0.35s ease-out both' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ animation: 's2FadeUp 0.35s ease-out both' }}>
               <div>
                 <GlassInput
                   label={`Nome del ${label}`}
@@ -335,7 +335,7 @@ export function Step2BasicInfo({ businessId, businessType, initialData, currentS
             </div>
 
             {/* Row 2: Città + CAP */}
-            <div className="grid grid-cols-5 gap-4" style={{ animation: 's2FadeUp 0.35s ease-out 0.06s both' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4" style={{ animation: 's2FadeUp 0.35s ease-out 0.06s both' }}>
               <div className="col-span-3">
                 <GlassInput
                   label="Città"
@@ -360,7 +360,7 @@ export function Step2BasicInfo({ businessId, businessType, initialData, currentS
             </div>
 
             {/* Row 3: Telefono + Email (asymmetric 2:3) */}
-            <div className="grid grid-cols-5 gap-4" style={{ animation: 's2FadeUp 0.35s ease-out 0.12s both' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4" style={{ animation: 's2FadeUp 0.35s ease-out 0.12s both' }}>
               <div className="col-span-2">
                 <GlassInput
                   label="Telefono"
