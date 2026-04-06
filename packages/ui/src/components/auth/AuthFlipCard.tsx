@@ -673,15 +673,85 @@ export function AuthFlipCard({
         .afc-powered { color: #c4c0d4; font-size: 0.85rem; letter-spacing: 0.03em; }
         .afc-pow-brand { color: var(--afc-a); font-weight: 600; opacity: 0.75; }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-          .afc-forms { grid-template-columns: 1fr; }
+        /* ===== RESPONSIVE — mobile/tablet-portrait < 1024px ===== */
+        @media (max-width: 1023px) {
+          /* Perspective parent for 3D flip */
+          .afc-root { perspective: 1200px; }
+
+          /* Card = flip element — overflow:hidden breaks preserve-3d, so move to faces */
+          .afc-card {
+            overflow: visible;
+            background: transparent;
+            box-shadow: none;
+            animation: none;
+            min-height: auto;
+            transform-style: preserve-3d;
+            transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1),
+                        transform 0.7s cubic-bezier(0.65,0,0.35,1);
+          }
+          /* Mount: same fade-in as desktop */
+          .afc-card.afc-in { opacity: 1; transform: translateY(0) scale(1); }
+          /* Flip: register mode — vertical flip (rotateX) */
+          .afc-card.afc-in.afc-reg-active { transform: rotateX(-180deg); }
+
+          /* Forms: overlapping grid — card height = tallest face */
+          .afc-forms {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto;
+            min-height: auto;
+          }
+
+          /* Front face — login */
+          .afc-form-left {
+            grid-column: 1; grid-row: 1;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 1.5rem; overflow: hidden;
+            background: #fff;
+            box-shadow:
+              0 0 0 2px rgba(var(--afc-r),0.2),
+              0 0 15px rgba(var(--afc-r),0.15),
+              0 10px 40px rgba(var(--afc-r),0.1),
+              0 25px 70px rgba(var(--afc-r),0.06);
+          }
+
+          /* Back face — register, pre-rotated 180° so it reads correctly when card flips */
+          .afc-form-right {
+            grid-column: 1; grid-row: 1;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform: rotateX(180deg);
+            border-radius: 1.5rem; overflow: hidden;
+            background: #fff;
+            box-shadow:
+              0 0 0 2px rgba(var(--afc-r),0.2),
+              0 0 15px rgba(var(--afc-r),0.15),
+              0 10px 40px rgba(var(--afc-r),0.1),
+              0 25px 70px rgba(var(--afc-r),0.06);
+          }
+
+          /* Shake: compose with face pre-rotation so transform isn't overwritten */
+          .afc-form-left.afc-shake { animation: shk-front 0.45s ease-in-out; }
+          @keyframes shk-front {
+            0%,100% { transform: rotateX(0deg) translateX(0); }
+            15%,55%,85% { transform: rotateX(0deg) translateX(-5px); }
+            35%,75% { transform: rotateX(0deg) translateX(5px); }
+          }
+          .afc-form-right.afc-shake { animation: shk-back 0.45s ease-in-out; }
+          @keyframes shk-back {
+            0%,100% { transform: rotateX(180deg) translateX(0); }
+            15%,55%,85% { transform: rotateX(180deg) translateX(-5px); }
+            35%,75% { transform: rotateX(180deg) translateX(5px); }
+          }
+
+          /* Hide desktop overlay panel */
           .afc-overlay { display: none; }
-          .afc-form-left { display: flex; }
-          .afc-form-right { display: none; }
-          .afc-reg-active .afc-form-left { display: none; }
-          .afc-reg-active .afc-form-right { display: flex; }
-          .afc-form-area { padding: 2rem 1.5rem; }
+
+          /* Form area padding */
+          .afc-form-area { padding: 2rem 1.5rem; display: flex; }
+
+          /* Show switch link */
           .afc-mobile-sw { display: flex; }
         }
       `}</style>
