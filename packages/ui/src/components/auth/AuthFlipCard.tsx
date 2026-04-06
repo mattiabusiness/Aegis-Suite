@@ -675,16 +675,17 @@ export function AuthFlipCard({
 
         /* ===== RESPONSIVE — mobile/tablet-portrait < 1024px ===== */
         @media (max-width: 1023px) {
-          .afc-root { padding: 1rem 0.75rem; }
+          .afc-root { padding: 0.75rem; }
 
-          /* Card: explicit height so both halves are equal */
+          /* Card: each half = 330px on a 660px card (iPhone 12+).
+             dvh cap ensures it never overflows the viewport. */
           .afc-card {
-            height: min(640px, calc(100dvh - 120px));
+            height: min(660px, calc(100dvh - 80px));
             min-height: 520px;
             overflow: hidden;
           }
 
-          /* Forms: fill card height, two equal rows (top = login, bottom = register) */
+          /* Forms: two equal rows filling the card */
           .afc-forms {
             grid-template-columns: 1fr;
             grid-template-rows: 1fr 1fr;
@@ -692,21 +693,37 @@ export function AuthFlipCard({
             min-height: 0;
           }
 
-          /* Each form area: top-aligned, scrollable if content overflows */
+          /* Form areas: compact padding, no visible scrollbar (safety net only) */
           .afc-form-area {
-            padding: 1.5rem;
+            padding: 1rem 1.25rem;
             overflow-y: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
             align-items: flex-start;
           }
+          .afc-form-area::-webkit-scrollbar { display: none; }
 
-          /* Compact form spacing */
-          .afc-form { gap: 0.65rem; }
-          .afc-title { font-size: 1.2rem; }
-          .afc-desc { margin-bottom: 0.9rem; }
+          /* Hide field labels (placeholder text is sufficient) and description
+             — this saves ~55px, making 4-field register form fit in 330px */
+          .afc-label {
+            position: absolute; width: 1px; height: 1px;
+            overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+          }
+          .afc-desc { display: none; }
+
+          /* Compact elements */
+          .afc-title { font-size: 1rem; margin: 0 0 0.6rem; }
+          .afc-form { gap: 0.3rem; }
+          .afc-field { gap: 0; }
+          .afc-input { padding: 0.55rem 2.25rem 0.55rem 0.8rem; font-size: 0.83rem; }
+          .afc-btn { height: 2.25rem; font-size: 0.85rem; margin-top: 0.15rem; }
+          .afc-check { margin-top: 0.1rem; }
+          .afc-check-text { font-size: 0.68rem; }
+          .afc-forgot { font-size: 0.72rem; }
 
           /* ── Overlay: vertical variant ──
-             Starts at BOTTOM half (covers register with welcome panel).
-             On register mode, slides UP to TOP half (covers login form). */
+             Login mode  → overlay at bottom (covers register area, shows welcome panel).
+             Register mode → overlay slides up (covers login area, shows welcome panel). */
           .afc-overlay {
             top: 50%; left: 0;
             width: 100%; height: 50%;
@@ -718,7 +735,7 @@ export function AuthFlipCard({
             border-radius: 1.4rem 1.4rem 0 0;
           }
 
-          /* Overlay inner: two panels stacked vertically (not side-by-side) */
+          /* Inner: two panels stacked vertically (vs. side-by-side on desktop) */
           .afc-overlay-inner {
             flex-direction: column;
             width: 100%; height: 200%;
@@ -726,21 +743,33 @@ export function AuthFlipCard({
           }
           .afc-reg-active .afc-overlay-inner { transform: translateY(-50%); }
 
-          /* Each panel: full width, half of inner height = one half of card */
+          /* Each panel fills one half */
           .afc-overlay-panel { width: 100%; height: 50%; flex-shrink: 0; }
 
-          /* Compact welcome content for mobile panels */
-          .afc-welcome-body { padding: 1.25rem; max-width: 100%; }
-          .afc-brand-name { font-size: 1.1rem; margin: 0 0 0.6rem; }
-          .afc-welcome-divider { margin: 0 auto 0.6rem; }
-          .afc-welcome-title { font-size: 1.25rem; margin: 0 0 0.3rem; }
-          .afc-welcome-sub { font-size: 0.78rem; margin: 0 0 0.75rem; }
-          .afc-deco { margin-bottom: 0.75rem; }
-          .afc-welcome-hint { font-size: 0.72rem; margin: 0 0 0.3rem; }
-          .afc-logo { margin-bottom: 0.4rem; }
+          /* Compact welcome panel content */
+          .afc-welcome-body { padding: 1rem; max-width: 100%; }
+          .afc-logo { margin-bottom: 0.35rem; }
+          .afc-brand-name { font-size: 1rem; margin: 0 0 0.5rem; }
+          .afc-welcome-divider { margin: 0 auto 0.5rem; }
+          .afc-welcome-title { font-size: 1.1rem; margin: 0 0 0.25rem; }
+          .afc-welcome-sub { font-size: 0.74rem; margin: 0 0 0.6rem; line-height: 1.5; }
+          .afc-deco { margin-bottom: 0.55rem; }
+          .afc-welcome-hint { font-size: 0.68rem; margin: 0 0 0.3rem; }
+          .afc-welcome-btn { padding: 0.5rem 1.25rem; font-size: 0.8rem; }
 
           /* Overlay button handles switching — hide text links */
           .afc-mobile-sw { display: none; }
+        }
+
+        /* Extra-small screens (iPhone SE, < 700px tall): further compress */
+        @media (max-width: 1023px) and (max-height: 699px) {
+          .afc-form-area { padding: 0.85rem 1.1rem; }
+          .afc-form { gap: 0.2rem; }
+          .afc-title { margin-bottom: 0.4rem; }
+          .afc-welcome-body { padding: 0.85rem; }
+          .afc-welcome-title { font-size: 1rem; }
+          .afc-welcome-sub { margin-bottom: 0.4rem; }
+          .afc-deco { margin-bottom: 0.35rem; }
         }
       `}</style>
     </div>
