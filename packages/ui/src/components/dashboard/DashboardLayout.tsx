@@ -179,10 +179,16 @@ export function DashboardLayout({
         theme={theme}
         brandLabel={theme.displayName}
         userName={userName}
+        userEmail={userEmail}
         userAvatar={userAvatar}
         unreadCount={unreadCount}
-        onNotificationClick={onViewAllNotifications}
+        notifications={notifications}
+        onNotificationItemClick={onNotificationClick}
+        onViewAllNotifications={onViewAllNotifications}
         onProfileClick={onProfileClick}
+        onSettingsClick={onSettingsClick}
+        onLogout={onLogout}
+        additionalMenuActions={additionalMenuActions}
       />
 
       {/* ── Main Content ─────────────────────────────────────────────────── */}

@@ -11,10 +11,12 @@
 'use client';
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MoreHorizontal, Bell, User } from 'lucide-react';
+import { MoreHorizontal, Bell, User, Settings, LogOut, type LucideIcon } from 'lucide-react';
 import type { DashboardTheme } from './Themes';
 import type { SidebarMenuSection, SidebarMenuItem } from './Sidebar';
+import type { HeaderNotification, HeaderUserMenuAction } from './Header';
 
 // ============================================================================
 // CONSTANTS
@@ -54,10 +56,16 @@ export interface DashboardMobileHeaderProps {
   theme:         DashboardTheme;
   brandLabel?:   string;
   userName?:     string;
+  userEmail?:    string;
   userAvatar?:   string;
   unreadCount?:  number;
-  onNotificationClick?: () => void;
+  notifications?: HeaderNotification[];
+  onNotificationItemClick?: (n: HeaderNotification) => void;
+  onViewAllNotifications?: () => void;
   onProfileClick?: () => void;
+  onSettingsClick?: () => void;
+  onLogout?: () => void;
+  additionalMenuActions?: HeaderUserMenuAction[];
 }
 
 export function DashboardMobileHeader({
@@ -66,116 +74,322 @@ export function DashboardMobileHeader({
   theme,
   brandLabel = 'Aegis Beauty',
   userName,
+  userEmail,
   userAvatar,
   unreadCount = 0,
-  onNotificationClick,
+  notifications = [],
+  onNotificationItemClick,
+  onViewAllNotifications,
   onProfileClick,
+  onSettingsClick,
+  onLogout,
+  additionalMenuActions = [],
 }: DashboardMobileHeaderProps) {
   const [gFrom, gTo] = THEME_GRADIENT[theme.name] ?? THEME_GRADIENT.beauty;
+  const [notifOpen, setNotifOpen] = React.useState(false);
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false);
+  const [domReady, setDomReady] = React.useState(false);
 
-  return (
-    <header
-      className="lg:hidden flex items-center justify-between px-4 sticky top-0 z-30"
+  React.useEffect(() => { setDomReady(true); }, []);
+
+  // Close on Escape
+  React.useEffect(() => {
+    if (!notifOpen && !userMenuOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setNotifOpen(false); setUserMenuOpen(false); }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [notifOpen, userMenuOpen]);
+
+  const closeAll = () => { setNotifOpen(false); setUserMenuOpen(false); };
+  const actualUnread = unreadCount || notifications.filter(n => !n.read).length;
+  const initials = userName ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '';
+
+  const menuItems: { icon: LucideIcon; label: string; onClick?: () => void; danger?: boolean }[] = [
+    ...additionalMenuActions.map(a => ({ icon: a.icon, label: a.label, onClick: a.onClick, danger: a.danger })),
+    { icon: Settings, label: 'Impostazioni', onClick: onSettingsClick },
+  ];
+
+  // ── Portal: backdrop ──
+  const backdrop = domReady && (notifOpen || userMenuOpen) ? createPortal(
+    <div
+      onClick={closeAll}
       style={{
-        height: DASH_MOBILE_HEADER_H,
-        background: `linear-gradient(135deg, ${gTo} 0%, ${gFrom} 100%)`,
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 2px 16px rgba(0,0,0,0.18)',
-        flexShrink: 0,
+        position: 'fixed', top: DASH_MOBILE_HEADER_H, left: 0, right: 0, bottom: 0,
+        zIndex: 9997,
+        background: 'rgba(0,0,0,0.35)',
+        backdropFilter: 'blur(2px)',
+        WebkitBackdropFilter: 'blur(2px)',
+      }}
+    />,
+    document.body
+  ) : null;
+
+  // ── Portal: notification panel ──
+  const notifPanel = domReady && notifOpen ? createPortal(
+    <div
+      style={{
+        position: 'fixed', top: DASH_MOBILE_HEADER_H + 8, left: 8, right: 8, zIndex: 9999,
+        background: 'rgba(255,255,255,0.98)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderRadius: 16,
+        border: '1px solid rgba(168,85,247,0.12)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(168,85,247,0.08)',
+        overflow: 'hidden',
+        maxHeight: '65vh',
+        display: 'flex', flexDirection: 'column',
+        animation: 'mhdr-drop 0.2s ease-out',
       }}
     >
-      {/* Left: business logo + name */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {businessLogo ? (
-          <img
-            src={businessLogo}
-            alt={businessName}
-            width={26}
-            height={26}
-            style={{
-              width: 26, height: 26, borderRadius: 8,
-              objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.3)',
-            }}
-          />
-        ) : (
-          <div style={{
-            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: 'rgba(255,255,255,0.2)',
-            border: '1.5px solid rgba(255,255,255,0.3)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.7rem', fontWeight: 800, color: '#fff',
-          }}>
-            {businessName.slice(0, 2).toUpperCase()}
-          </div>
+      {/* Header */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#111827' }}>Notifiche</span>
+        {actualUnread > 0 && (
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(168,85,247,0.1)', color: '#7c3aed' }}>
+            {actualUnread} nuove
+          </span>
         )}
-        <span style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff' }}>
-          {businessName}
-        </span>
       </div>
+      {/* List */}
+      <div style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'none' as const }}>
+        {notifications.length === 0 ? (
+          <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+            <Bell style={{ width: 28, height: 28, color: '#c084fc', display: 'block', margin: '0 auto 8px' }} />
+            <p style={{ fontSize: '0.85rem', color: '#9ca3af' }}>Nessuna notifica al momento</p>
+          </div>
+        ) : (
+          notifications.slice(0, 6).map(n => (
+            <div
+              key={n.id}
+              onClick={() => { onNotificationItemClick?.(n); closeAll(); }}
+              style={{
+                padding: '12px 16px',
+                borderBottom: '1px solid rgba(0,0,0,0.03)',
+                cursor: 'pointer',
+                background: !n.read ? 'rgba(168,85,247,0.025)' : 'transparent',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#111827', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</span>
+                {!n.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', flexShrink: 0 }} />}
+              </div>
+              <p style={{ fontSize: '0.78rem', color: '#6b7280', marginTop: 2, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{n.message}</p>
+              <p style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: 3 }}>{n.time}</p>
+            </div>
+          ))
+        )}
+      </div>
+      {notifications.length > 0 && (
+        <div style={{ padding: '10px 16px', borderTop: '1px solid rgba(0,0,0,0.05)', textAlign: 'center', flexShrink: 0 }}>
+          <button
+            onClick={() => { onViewAllNotifications?.(); closeAll(); }}
+            style={{ fontSize: '0.85rem', fontWeight: 700, color: '#9333ea', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            Vedi tutte le notifiche
+          </button>
+        </div>
+      )}
+    </div>,
+    document.body
+  ) : null;
 
-      {/* Right: notifications + avatar + Aegis icon */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {/* Notification bell */}
-        <button
-          onClick={onNotificationClick}
-          style={{
-            position: 'relative', width: 34, height: 34, borderRadius: 10,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(255,255,255,0.15)',
-            border: '1px solid rgba(255,255,255,0.22)',
-            cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-          aria-label="Notifiche"
-        >
-          <Bell style={{ width: 16, height: 16, color: '#fff' }} />
-          {unreadCount > 0 && (
-            <div style={{
-              position: 'absolute', top: 3, right: 3,
-              width: 8, height: 8, borderRadius: '50%',
-              background: '#ef4444',
-              border: '1.5px solid rgba(0,0,0,0.2)',
-            }} />
-          )}
-        </button>
-
-        {/* Profile avatar */}
-        <button
-          onClick={onProfileClick}
-          style={{
-            width: 34, height: 34, borderRadius: 10,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(255,255,255,0.18)',
-            border: '1.5px solid rgba(255,255,255,0.3)',
-            cursor: 'pointer',
-            overflow: 'hidden',
-            WebkitTapHighlightColor: 'transparent',
-            flexShrink: 0,
-          }}
-          aria-label="Profilo"
-        >
-          {userAvatar ? (
-            <img src={userAvatar} alt={userName || 'Profilo'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : userName ? (
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#fff', letterSpacing: '0.02em' }}>
-              {userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-            </span>
-          ) : (
-            <User style={{ width: 16, height: 16, color: '#fff' }} />
-          )}
-        </button>
-
-        {/* Aegis brand icon only */}
+  // ── Portal: user menu panel ──
+  const userPanel = domReady && userMenuOpen ? createPortal(
+    <div
+      style={{
+        position: 'fixed', top: DASH_MOBILE_HEADER_H + 8, right: 8, width: 248, zIndex: 9999,
+        background: 'rgba(255,255,255,0.98)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderRadius: 16,
+        border: '1px solid rgba(168,85,247,0.12)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(168,85,247,0.08)',
+        overflow: 'hidden',
+        animation: 'mhdr-drop 0.2s ease-out',
+      }}
+    >
+      {/* User info */}
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
-          width: 28, height: 28, borderRadius: 9,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(255,255,255,0.18)',
-          border: '1px solid rgba(255,255,255,0.28)',
+          width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+          background: userAvatar ? 'transparent' : 'linear-gradient(135deg, #a855f7, #7c3aed)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
         }}>
-          <AegisLogo />
+          {userAvatar ? (
+            <img src={userAvatar} alt={userName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#fff' }}>{initials}</span>
+          )}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontSize: '0.875rem', fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</p>
+          {userEmail && <p style={{ fontSize: '0.72rem', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail}</p>}
         </div>
       </div>
-    </header>
+      {/* Menu items */}
+      {menuItems.map((item, i) => (
+        <button
+          key={i}
+          onClick={() => { item.onClick?.(); closeAll(); }}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+            padding: '11px 16px', background: 'none', border: 'none', cursor: 'pointer',
+            color: item.danger ? '#dc2626' : '#4b5563',
+            fontSize: '0.875rem', fontWeight: 500, textAlign: 'left',
+            borderBottom: '1px solid rgba(0,0,0,0.03)',
+          }}
+        >
+          <item.icon style={{ width: 16, height: 16, flexShrink: 0 }} />
+          {item.label}
+        </button>
+      ))}
+      {/* Logout */}
+      {onLogout && (
+        <>
+          <div style={{ height: 1, background: 'rgba(0,0,0,0.06)', margin: '0 12px' }} />
+          <button
+            onClick={() => { onLogout?.(); closeAll(); }}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+              padding: '11px 16px', background: 'none', border: 'none', cursor: 'pointer',
+              color: '#dc2626', fontSize: '0.875rem', fontWeight: 500, textAlign: 'left',
+            }}
+          >
+            <LogOut style={{ width: 16, height: 16, flexShrink: 0 }} />
+            Esci
+          </button>
+        </>
+      )}
+    </div>,
+    document.body
+  ) : null;
+
+  return (
+    <>
+      <header
+        className="lg:hidden flex items-center justify-between px-4 sticky top-0 z-30"
+        style={{
+          height: DASH_MOBILE_HEADER_H,
+          background: `linear-gradient(135deg, ${gTo} 0%, ${gFrom} 100%)`,
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.18)',
+          flexShrink: 0,
+        }}
+      >
+        {/* Left: business logo + name */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: '1 1 auto', overflow: 'hidden' }}>
+          {businessLogo ? (
+            <img
+              src={businessLogo}
+              alt={businessName}
+              width={26}
+              height={26}
+              style={{
+                width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.3)',
+              }}
+            />
+          ) : (
+            <div style={{
+              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+              background: 'rgba(255,255,255,0.2)',
+              border: '1.5px solid rgba(255,255,255,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.7rem', fontWeight: 800, color: '#fff',
+            }}>
+              {businessName.slice(0, 2).toUpperCase()}
+            </div>
+          )}
+          <span style={{ fontWeight: 600, fontSize: '0.88rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {businessName}
+          </span>
+        </div>
+
+        {/* Right: notifications + avatar + Aegis brand */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          {/* Notification bell */}
+          <button
+            onClick={() => { setNotifOpen(!notifOpen); setUserMenuOpen(false); }}
+            style={{
+              position: 'relative', width: 34, height: 34, borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: notifOpen ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.15)',
+              border: `1px solid ${notifOpen ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.22)'}`,
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'all 0.15s ease',
+            }}
+            aria-label="Notifiche"
+          >
+            <Bell style={{ width: 16, height: 16, color: '#fff' }} />
+            {actualUnread > 0 && (
+              <div style={{
+                position: 'absolute', top: 3, right: 3,
+                width: 8, height: 8, borderRadius: '50%',
+                background: '#ef4444',
+                border: '1.5px solid rgba(0,0,0,0.2)',
+              }} />
+            )}
+          </button>
+
+          {/* Profile avatar */}
+          <button
+            onClick={() => { setUserMenuOpen(!userMenuOpen); setNotifOpen(false); }}
+            style={{
+              width: 34, height: 34, borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: userMenuOpen ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.18)',
+              border: `1.5px solid ${userMenuOpen ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.3)'}`,
+              cursor: 'pointer',
+              overflow: 'hidden',
+              WebkitTapHighlightColor: 'transparent',
+              flexShrink: 0,
+              transition: 'all 0.15s ease',
+            }}
+            aria-label="Profilo"
+          >
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName || 'Profilo'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : userName ? (
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#fff', letterSpacing: '0.02em' }}>
+                {initials}
+              </span>
+            ) : (
+              <User style={{ width: 16, height: 16, color: '#fff' }} />
+            )}
+          </button>
+
+          {/* Aegis brand: icon + label */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{
+              width: 24, height: 24, borderRadius: 7,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(255,255,255,0.18)',
+              border: '1px solid rgba(255,255,255,0.28)',
+              flexShrink: 0,
+            }}>
+              <AegisLogo />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: '0.7rem', color: 'rgba(255,255,255,0.92)', letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+              {brandLabel}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {backdrop}
+      {notifPanel}
+      {userPanel}
+
+      <style>{`
+        @keyframes mhdr-drop {
+          from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
+    </>
   );
 }
 

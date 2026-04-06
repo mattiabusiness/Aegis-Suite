@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat \"/c/Users/matti/Documents/aegis-suite/apps/aegis-beauty/app/\\(dashboard\\)/dashboard/clienti/CustomersContent.tsx\")"
+    ]
+  }
+}

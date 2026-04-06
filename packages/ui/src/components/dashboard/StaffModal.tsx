@@ -200,7 +200,7 @@ function ModalShell({
           opacity: mounted ? 1 : 0,
           transform: mounted ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(8px)',
           transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-          maxHeight: 'calc(100vh - 2rem)',
+          maxHeight: 'calc(100dvh - 2rem)',
           overflowY: 'auto',
           scrollbarWidth: 'none' as const,
         }}
@@ -723,7 +723,7 @@ export function StaffHoursModal({
       onClose={onClose}
       title={`Orari di ${staffName}`}
       subtitle="Configura la disponibilità settimanale"
-      maxWidth="max-w-[620px]"
+      maxWidth="max-w-md"
     >
       {({ handleClose }: { handleClose: () => void }) => (
         <>
@@ -789,7 +789,7 @@ export function StaffHoursModal({
                     </div>
 
                     {/* Day label */}
-                    <span className="text-xs font-medium text-gray-900 w-16 flex-shrink-0">{day.dayLabel}</span>
+                    <span className="text-xs font-medium text-gray-900 w-10 flex-shrink-0">{day.dayLabel}</span>
 
                     {/* Times */}
                     {day.isOpen && (

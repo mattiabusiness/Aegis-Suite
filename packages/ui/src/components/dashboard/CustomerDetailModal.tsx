@@ -581,7 +581,7 @@ export function CustomerDetailModal({
         </div>
 
         {/* ═══ TABS ═══ */}
-        <div className="flex items-center gap-1 px-4 flex-shrink-0 overflow-x-auto" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)', scrollbarWidth: 'none' }}>
+        <div className="flex items-stretch flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
           {TABS.map(tab => {
             const isActive = activeTab === tab.key;
             const TabIcon = tab.icon;
@@ -589,7 +589,7 @@ export function CustomerDetailModal({
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className="relative flex items-center gap-1.5 px-4 py-3 text-sm font-medium -mb-px"
+                className="relative flex flex-1 items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium -mb-px"
                 style={{
                   color: isActive ? '#9333ea' : '#9ca3af',
                   transition: 'color 0.15s ease',

@@ -661,7 +661,7 @@ function HoursTab({
                       )}
                     </div>
                     {(h.openTime2 || h.closeTime2) && (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <AnimatedSelect value={h.openTime2} onChange={(v) => updateH(idx, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                         <span className="text-purple-300 text-xs">→</span>
                         <AnimatedSelect value={h.closeTime2} onChange={(v) => updateH(idx, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
