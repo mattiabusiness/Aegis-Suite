@@ -17,7 +17,7 @@ interface OnboardingLayoutProps {
 export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
   return (
     <StepTransitionProvider>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-gray-50 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-gray-50 relative overflow-x-hidden">
         {/* Animated background */}
         <FloatingParticles />
 
