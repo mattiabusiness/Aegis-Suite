@@ -647,27 +647,26 @@ function HoursTab({
                 <AnimatedToggle enabled={h.isOpen} onToggle={() => updateH(idx, 'isOpen', !h.isOpen)} />
                 <span className={`w-10 text-sm font-semibold transition-colors duration-200 ${h.isOpen ? 'text-gray-900' : 'text-gray-400'}`}>{h.dayLabel.slice(0, 3)}</span>
                 {h.isOpen ? (
-                  <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <AnimatedSelect value={h.openTime1} onChange={(v) => updateH(idx, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <AnimatedSelect value={h.openTime1} onChange={(v) => updateH(idx, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} className="w-[70px]" />
                       <span className="text-purple-300 text-xs">→</span>
-                      <AnimatedSelect value={h.closeTime1} onChange={(v) => updateH(idx, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
-                      {!h.openTime2 && !h.closeTime2 && (
-                        <button onClick={() => { updateH(idx, 'openTime2', '14:00'); updateH(idx, 'closeTime2', '15:00'); }}
-                          className="text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200"
-                          style={{ background: 'rgba(0,0,0,0.04)', color: '#9ca3af', border: '1px solid transparent' }}>
-                          + Pausa
-                        </button>
-                      )}
+                      <AnimatedSelect value={h.closeTime1} onChange={(v) => updateH(idx, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} className="w-[70px]" />
                     </div>
-                    {(h.openTime2 || h.closeTime2) && (
-                      <div className="flex items-center gap-1.5">
-                        <AnimatedSelect value={h.openTime2} onChange={(v) => updateH(idx, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
+                    {(h.openTime2 || h.closeTime2) ? (
+                      <div className="flex items-center gap-1">
+                        <AnimatedSelect value={h.openTime2} onChange={(v) => updateH(idx, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} className="w-[70px]" />
                         <span className="text-purple-300 text-xs">→</span>
-                        <AnimatedSelect value={h.closeTime2} onChange={(v) => updateH(idx, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
+                        <AnimatedSelect value={h.closeTime2} onChange={(v) => updateH(idx, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} className="w-[70px]" />
                         <button onClick={() => { updateH(idx, 'openTime2', ''); updateH(idx, 'closeTime2', ''); }}
                           className="p-1 text-gray-400 hover:text-red-500 transition-colors"><X className="w-3.5 h-3.5" /></button>
                       </div>
+                    ) : (
+                      <button onClick={() => { updateH(idx, 'openTime2', '14:00'); updateH(idx, 'closeTime2', '15:00'); }}
+                        className="text-[10px] font-semibold transition-all duration-200"
+                        style={{ color: '#9333ea', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '1px 0', width: 'fit-content' }}>
+                        + pausa
+                      </button>
                     )}
                   </div>
                 ) : (

@@ -697,6 +697,7 @@ export function StaffHoursModal({
   const [useBusinessHrs, setUseBusinessHrs] = React.useState(initialUseBusinessHours);
   const [hours, setHours] = React.useState<DayHours[]>(currentHours || businessHours);
   const [loading, setLoading] = React.useState(false);
+  const SEL_W = 'w-[70px]';
 
   React.useEffect(() => {
     if (isOpen) {
@@ -734,7 +735,7 @@ export function StaffHoursModal({
     >
       {({ handleClose }: { handleClose: () => void }) => (
         <>
-          <div className="px-6 py-4">
+          <div className="px-4 py-4">
             {error && (
               <div className="mb-3 p-3 rounded-xl text-sm text-red-700 flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)' }}>
                 <span className="text-red-500 font-bold">*</span> {error}
@@ -766,7 +767,7 @@ export function StaffHoursModal({
                 {hours.map((day, i) => (
                   <div
                     key={day.dayOfWeek}
-                    className="flex items-center gap-2 p-3 rounded-xl"
+                    className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
                     style={{
                       background: day.isOpen ? 'rgba(0,0,0,0.015)' : 'rgba(0,0,0,0.01)',
                       border: '1px solid rgba(0,0,0,0.04)',
@@ -801,27 +802,26 @@ export function StaffHoursModal({
                     {/* Times */}
                     {day.isOpen && (
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <AnimatedSelect value={day.openTime1 || '09:00'} onChange={(v) => updateDay(i, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
+                        <div className="flex items-center gap-1">
+                          <AnimatedSelect value={day.openTime1 || '09:00'} onChange={(v) => updateDay(i, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} className={SEL_W} />
                           <span className="text-xs text-gray-400">—</span>
-                          <AnimatedSelect value={day.closeTime1 || '13:00'} onChange={(v) => updateDay(i, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
-                          {!day.openTime2 && (
-                            <button type="button" onClick={() => addSecondRange(i)} style={{ fontSize: 10, color: '#9333ea', fontWeight: 600, background: 'rgba(147,51,234,0.06)', border: '1px solid rgba(147,51,234,0.15)', borderRadius: 6, padding: '2px 7px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ pausa</button>
-                          )}
+                          <AnimatedSelect value={day.closeTime1 || '13:00'} onChange={(v) => updateDay(i, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} className={SEL_W} />
                         </div>
-                        {day.openTime2 && (
-                          <div className="flex items-center gap-1.5">
-                            <AnimatedSelect value={day.openTime2} onChange={(v) => updateDay(i, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
+                        {day.openTime2 ? (
+                          <div className="flex items-center gap-1">
+                            <AnimatedSelect value={day.openTime2} onChange={(v) => updateDay(i, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} className={SEL_W} />
                             <span className="text-xs text-gray-400">—</span>
-                            <AnimatedSelect value={day.closeTime2 || '19:00'} onChange={(v) => updateDay(i, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
+                            <AnimatedSelect value={day.closeTime2 || '19:00'} onChange={(v) => updateDay(i, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} className={SEL_W} />
                             <button
                               type="button"
                               onClick={() => removeSecondRange(i)}
                               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
                               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#9ca3af'; }}
-                              style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', lineHeight: 1, flexShrink: 0, transition: 'color 0.15s ease' }}
+                              style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', padding: '1px 4px', lineHeight: 1, flexShrink: 0, transition: 'color 0.15s ease' }}
                             >✕</button>
                           </div>
+                        ) : (
+                          <button type="button" onClick={() => addSecondRange(i)} style={{ fontSize: 10, color: '#9333ea', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '1px 0', width: 'fit-content' }}>+ pausa</button>
                         )}
                       </div>
                     )}
