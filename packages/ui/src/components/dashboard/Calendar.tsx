@@ -181,6 +181,21 @@ function formatHeaderTitle(date: Date, view: CalendarView): string {
   return `${month} ${year}`;
 }
 
+function formatHeaderTitleMobile(date: Date, view: CalendarView): string {
+  const month = MONTHS_IT[date.getMonth()].slice(0, 3);
+  const year = `'${date.getFullYear().toString().slice(2)}`;
+  if (view === 'day') return `${date.getDate()} ${month}`;
+  if (view === 'week') {
+    const w = getWeekDays(date);
+    const sm = MONTHS_IT[w[0].getMonth()].slice(0, 3);
+    const em = MONTHS_IT[w[6].getMonth()].slice(0, 3);
+    return sm === em
+      ? `${w[0].getDate()}-${w[6].getDate()} ${sm}`
+      : `${w[0].getDate()} ${sm}-${w[6].getDate()} ${em}`;
+  }
+  return `${month} ${year}`;
+}
+
 // ============================================================================
 // EVENT LAYOUT — Side-by-side overlapping events
 // ============================================================================
@@ -434,16 +449,19 @@ function CurrentTimeIndicator({ startHour, endHour }: { startHour: number; endHo
 // ============================================================================
 
 function CalendarHeader({
-  date, view, onPrev, onNext, onToday, onViewChange, isMobile,
+  date, view, onPrev, onNext, onToday, onViewChange,
 }: {
   date: Date; view: CalendarView;
   onPrev: () => void; onNext: () => void; onToday: () => void;
   onViewChange: (view: CalendarView) => void;
   isMobile: boolean;
 }) {
+  const hoverIn = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.color = '#7c3aed'; };
+  const hoverOut = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; };
+
   return (
     <div
-      className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-5 py-2 sm:py-3.5 flex-shrink-0 gap-2"
+      className="flex items-center gap-1 sm:gap-3 px-2 sm:px-5 py-2 sm:py-3.5 flex-shrink-0"
       style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(12px)',
@@ -451,90 +469,52 @@ function CalendarHeader({
         borderBottom: '1px solid rgba(168,85,247,0.08)',
       }}
     >
-      <div className="flex items-center gap-2">
-        {/* Nav arrows */}
-        <div className="flex items-center gap-0.5">
-          <button onClick={onPrev}
-            className="p-1.5 sm:p-2 rounded-xl transition-all duration-150"
-            style={{ color: '#6b7280' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.color = '#7c3aed'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
-          >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-          <button onClick={onNext}
-            className="p-1.5 sm:p-2 rounded-xl transition-all duration-150"
-            style={{ color: '#6b7280' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.color = '#7c3aed'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
-          >
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-        </div>
+      {/* Nav arrows + title */}
+      <div className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-1">
+        <button onClick={onPrev} className="p-1.5 sm:p-2 rounded-xl transition-all duration-150 flex-shrink-0" style={{ color: '#6b7280' }} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+        <button onClick={onNext} className="p-1.5 sm:p-2 rounded-xl transition-all duration-150 flex-shrink-0" style={{ color: '#6b7280' }} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+        <h2 className="font-bold text-gray-900 tracking-tight truncate min-w-0 flex-1 ml-0.5 sm:ml-1">
+          <span className="hidden sm:inline text-lg">{formatHeaderTitle(date, view)}</span>
+          <span className="sm:hidden text-xs">{formatHeaderTitleMobile(date, view)}</span>
+        </h2>
+      </div>
 
-        {/* Title */}
-        <h2 className="text-sm sm:text-lg font-bold text-gray-900 tracking-tight truncate flex-1 min-w-0">{formatHeaderTitle(date, view)}</h2>
-
-        {/* Today button */}
+      {/* Oggi + View tabs */}
+      <div className="flex items-center gap-1 flex-shrink-0">
         <button onClick={onToday}
-          className="relative px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold overflow-hidden flex-shrink-0"
-          style={{
-            background: 'linear-gradient(135deg, rgba(147,51,234,0.08), rgba(168,85,247,0.04))',
-            color: '#7c3aed',
-            border: '1px solid rgba(168,85,247,0.15)',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(147,51,234,0.12), rgba(168,85,247,0.08))';
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.15)';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(147,51,234,0.08), rgba(168,85,247,0.04))';
-            e.currentTarget.style.boxShadow = 'none';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
+          className="relative px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-sm font-semibold overflow-hidden flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.08), rgba(168,85,247,0.04))', color: '#7c3aed', border: '1px solid rgba(168,85,247,0.15)', transition: 'all 0.2s ease' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(147,51,234,0.12), rgba(168,85,247,0.08))'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.15)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(147,51,234,0.08), rgba(168,85,247,0.04))'; e.currentTarget.style.boxShadow = 'none'; }}
         >
           Oggi
         </button>
-      </div>
 
-      {/* View tabs — gradient selection */}
-      <div
-        className="flex items-center gap-1 p-1 rounded-xl self-start sm:self-auto"
-        style={{
-          background: 'rgba(0,0,0,0.03)',
-          border: '1px solid rgba(0,0,0,0.04)',
-        }}
-      >
-        {(['day', 'week', 'month'] as CalendarView[]).map((v) => {
-          const isActive = view === v;
-          const label = v === 'day' ? 'Giorno' : v === 'week' ? 'Settimana' : 'Mese';
-          const shortLabel = v === 'day' ? 'Giorno' : v === 'week' ? 'Sett.' : 'Mese';
-          return (
-            <button
-              key={v}
-              onClick={() => onViewChange(v)}
-              className="relative px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200"
-              style={{
-                background: isActive ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'transparent',
-                color: isActive ? '#fff' : '#6b7280',
-                boxShadow: isActive ? '0 2px 8px rgba(147,51,234,0.25)' : 'none',
-              }}
-              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = '#7c3aed'; }}
-              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = '#6b7280'; }}
-            >
-              {isActive && (
-                <div className="absolute inset-0 rounded-lg pointer-events-none" style={{
-                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
-                  animation: 'cal-shimmer 2.5s ease-in-out infinite',
-                }} />
-              )}
-              <span className="relative z-10 hidden sm:inline">{label}</span>
-              <span className="relative z-10 sm:hidden">{shortLabel}</span>
-            </button>
-          );
-        })}
+        <div className="flex items-center gap-0.5 p-0.5 sm:p-1 rounded-xl" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.04)' }}>
+          {(['day', 'week', 'month'] as CalendarView[]).map((v) => {
+            const isActive = view === v;
+            const label = v === 'day' ? 'Giorno' : v === 'week' ? 'Settimana' : 'Mese';
+            const shortLabel = v === 'day' ? 'G' : v === 'week' ? 'S' : 'M';
+            return (
+              <button
+                key={v}
+                onClick={() => onViewChange(v)}
+                className="relative px-1.5 sm:px-3.5 py-0.5 sm:py-1.5 rounded-lg text-[10px] sm:text-sm font-medium transition-all duration-200 flex-shrink-0"
+                style={{ background: isActive ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'transparent', color: isActive ? '#fff' : '#6b7280', boxShadow: isActive ? '0 2px 8px rgba(147,51,234,0.25)' : 'none' }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = '#7c3aed'; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = '#6b7280'; }}
+              >
+                {isActive && <div className="absolute inset-0 rounded-lg pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)', animation: 'cal-shimmer 2.5s ease-in-out infinite' }} />}
+                <span className="relative z-10 hidden sm:inline">{label}</span>
+                <span className="relative z-10 sm:hidden">{shortLabel}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -725,7 +705,7 @@ function WeekView({
       {/* Days area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Days header — matched to content scrollbar gutter */}
-        <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', overflowY: 'auto', scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'transparent transparent' }}>
+        <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
           <div className="flex flex-1">
             {visibleDays.map((day) => {
               const holiday = getHolidayName(day);
@@ -916,7 +896,7 @@ function MonthView({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Day names header */}
-      <div className="flex flex-shrink-0 pr-[17px]" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+      <div className="flex flex-shrink-0 pr-0 sm:pr-[17px]" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
         {(isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']).map((day, idx) => (
           <div key={idx}
             className="flex-1 h-8 sm:h-10 flex items-center justify-center"
@@ -1023,13 +1003,7 @@ export function Calendar({
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  React.useEffect(() => {
-    if (isMobile && !controlledView && internalView === 'week') {
-      setInternalView('day');
-    }
-  }, [isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const view = controlledView ?? internalView;
+const view = controlledView ?? internalView;
   const selectedDate = controlledDate ?? internalDate;
 
   const handleViewChange = (newView: CalendarView) => {

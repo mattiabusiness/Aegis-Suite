@@ -633,7 +633,7 @@ function HoursTab({
     <div className="space-y-6">
       {/* Orari — Step4 style rows */}
       <Section title="Orari di apertura" description={`Gli orari settimanali del tuo ${label}`} delay={0} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 22, height: 22 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 -mx-6 px-0">
           {hours.map((h, idx) => (
             <div key={h.dayOfWeek} className="rounded-xl overflow-hidden" style={{ animation: `stFadeUp 0.3s ease-out ${idx * 40}ms both` }}>
               <div className="flex items-center gap-2.5 px-3 py-2.5 transition-all duration-200" style={{
