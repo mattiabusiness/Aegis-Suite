@@ -648,7 +648,7 @@ function HoursTab({
                 <span className={`w-10 text-sm font-semibold transition-colors duration-200 ${h.isOpen ? 'text-gray-900' : 'text-gray-400'}`}>{h.dayLabel.slice(0, 3)}</span>
                 {h.isOpen ? (
                   <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-1.5">
                       <AnimatedSelect value={h.openTime1} onChange={(v) => updateH(idx, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                       <span className="text-purple-300 text-xs">→</span>
                       <AnimatedSelect value={h.closeTime1} onChange={(v) => updateH(idx, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
@@ -661,7 +661,7 @@ function HoursTab({
                       )}
                     </div>
                     {(h.openTime2 || h.closeTime2) && (
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1.5">
                         <AnimatedSelect value={h.openTime2} onChange={(v) => updateH(idx, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                         <span className="text-purple-300 text-xs">→</span>
                         <AnimatedSelect value={h.closeTime2} onChange={(v) => updateH(idx, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />

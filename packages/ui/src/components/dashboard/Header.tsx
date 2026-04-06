@@ -17,6 +17,7 @@ import {
   CheckCircle,
   AlertTriangle,
   XCircle,
+  ScrollText,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -212,10 +213,11 @@ function UserDropdown({
 }) {
   const handleClick = (cb?: () => void) => { cb?.(); onClose(); };
 
-  const items: { icon: LucideIcon; label: string; onClick?: () => void; danger?: boolean }[] = [
+  const items: { icon: LucideIcon; label: string; onClick?: () => void; href?: string; danger?: boolean }[] = [
     { icon: User, label: 'Il mio profilo', onClick: onProfileClick },
     { icon: Settings, label: 'Impostazioni', onClick: onSettingsClick },
     ...(additionalActions?.map(a => ({ icon: a.icon, label: a.label, onClick: a.onClick, danger: a.danger })) || []),
+    { icon: ScrollText, label: 'ToS & Privacy Policy', href: 'https://aegisbeauty.app/legal' },
   ];
 
   return (
@@ -252,39 +254,59 @@ function UserDropdown({
 
       {/* Menu items */}
       <div className="py-1">
-        {items.map((item, i) => (
-          <button
-            key={i}
-            type="button"
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm"
-            style={{
-              color: item.danger ? '#dc2626' : '#4b5563',
-              transition: 'all 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = item.danger ? 'rgba(239,68,68,0.06)' : 'rgba(168,85,247,0.06)';
-              e.currentTarget.style.paddingLeft = '20px';
-              const icon = e.currentTarget.querySelector('svg');
-              if (icon) {
-                (icon as unknown as HTMLElement).style.transform = item.danger ? 'rotate(12deg) scale(1.15)' : 'rotate(-12deg) scale(1.15)';
-                (icon as unknown as HTMLElement).style.color = item.danger ? '#dc2626' : '#9333ea';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.paddingLeft = '16px';
-              const icon = e.currentTarget.querySelector('svg');
-              if (icon) {
-                (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)';
-                (icon as unknown as HTMLElement).style.color = '';
-              }
-            }}
-            onClick={() => handleClick(item.onClick)}
-          >
-            <item.icon className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
-            {item.label}
-          </button>
-        ))}
+        {items.map((item, i) => {
+          const sharedStyle: React.CSSProperties = { color: item.danger ? '#dc2626' : '#4b5563', transition: 'all 0.15s ease' };
+          const hoverIn = (e: React.MouseEvent<HTMLElement>) => {
+            e.currentTarget.style.background = item.danger ? 'rgba(239,68,68,0.06)' : 'rgba(168,85,247,0.06)';
+            e.currentTarget.style.paddingLeft = '20px';
+            const icon = e.currentTarget.querySelector('svg');
+            if (icon) {
+              (icon as unknown as HTMLElement).style.transform = item.danger ? 'rotate(12deg) scale(1.15)' : 'rotate(-12deg) scale(1.15)';
+              (icon as unknown as HTMLElement).style.color = item.danger ? '#dc2626' : '#9333ea';
+            }
+          };
+          const hoverOut = (e: React.MouseEvent<HTMLElement>) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.paddingLeft = '16px';
+            const icon = e.currentTarget.querySelector('svg');
+            if (icon) {
+              (icon as unknown as HTMLElement).style.transform = 'rotate(0) scale(1)';
+              (icon as unknown as HTMLElement).style.color = '';
+            }
+          };
+          if (item.href) {
+            return (
+              <a
+                key={i}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm"
+                style={{ ...sharedStyle, textDecoration: 'none', display: 'flex' }}
+                onMouseEnter={hoverIn}
+                onMouseLeave={hoverOut}
+                onClick={onClose}
+              >
+                <item.icon className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
+                {item.label}
+              </a>
+            );
+          }
+          return (
+            <button
+              key={i}
+              type="button"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm"
+              style={sharedStyle}
+              onMouseEnter={hoverIn}
+              onMouseLeave={hoverOut}
+              onClick={() => handleClick(item.onClick)}
+            >
+              <item.icon className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
+              {item.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Divider */}

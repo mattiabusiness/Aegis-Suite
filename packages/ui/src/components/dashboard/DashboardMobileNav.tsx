@@ -13,7 +13,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MoreHorizontal, Bell, User, Settings, LogOut, type LucideIcon } from 'lucide-react';
+import { MoreHorizontal, Bell, User, Settings, LogOut, ScrollText, type LucideIcon } from 'lucide-react';
 import type { DashboardTheme } from './Themes';
 import type { SidebarMenuSection, SidebarMenuItem } from './Sidebar';
 import type { HeaderNotification, HeaderUserMenuAction } from './Header';
@@ -89,6 +89,7 @@ export function DashboardMobileHeader({
   const [notifOpen, setNotifOpen] = React.useState(false);
   const [userMenuOpen, setUserMenuOpen] = React.useState(false);
   const [domReady, setDomReady] = React.useState(false);
+  const [bellAnim, setBellAnim] = React.useState(false);
 
   React.useEffect(() => { setDomReady(true); }, []);
 
@@ -106,9 +107,11 @@ export function DashboardMobileHeader({
   const actualUnread = unreadCount || notifications.filter(n => !n.read).length;
   const initials = userName ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '';
 
-  const menuItems: { icon: LucideIcon; label: string; onClick?: () => void; danger?: boolean }[] = [
-    ...additionalMenuActions.map(a => ({ icon: a.icon, label: a.label, onClick: a.onClick, danger: a.danger })),
+  const menuItems: { icon: LucideIcon; label: string; onClick?: () => void; href?: string; danger?: boolean }[] = [
+    { icon: User, label: 'Il mio profilo', onClick: onProfileClick },
     { icon: Settings, label: 'Impostazioni', onClick: onSettingsClick },
+    ...additionalMenuActions.map(a => ({ icon: a.icon, label: a.label, onClick: a.onClick, danger: a.danger })),
+    { icon: ScrollText, label: 'ToS & Privacy Policy', href: 'https://aegisbeauty.app/legal' },
   ];
 
   // ── Portal: backdrop ──
@@ -229,7 +232,24 @@ export function DashboardMobileHeader({
         </div>
       </div>
       {/* Menu items */}
-      {menuItems.map((item, i) => (
+      {menuItems.map((item, i) => item.href ? (
+        <a
+          key={i}
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={closeAll}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+            padding: '11px 16px', background: 'none', cursor: 'pointer',
+            color: '#4b5563', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none',
+            borderBottom: '1px solid rgba(0,0,0,0.03)',
+          }}
+        >
+          <item.icon style={{ width: 16, height: 16, flexShrink: 0 }} />
+          {item.label}
+        </a>
+      ) : (
         <button
           key={i}
           onClick={() => { item.onClick?.(); closeAll(); }}
@@ -311,7 +331,14 @@ export function DashboardMobileHeader({
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {/* Notification bell */}
           <button
-            onClick={() => { setNotifOpen(!notifOpen); setUserMenuOpen(false); }}
+            onClick={() => {
+              if (!notifOpen && notifications.length === 0) {
+                setBellAnim(true);
+                setTimeout(() => setBellAnim(false), 500);
+              }
+              setNotifOpen(!notifOpen);
+              setUserMenuOpen(false);
+            }}
             style={{
               position: 'relative', width: 34, height: 34, borderRadius: 10,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -323,7 +350,10 @@ export function DashboardMobileHeader({
             }}
             aria-label="Notifiche"
           >
-            <Bell style={{ width: 16, height: 16, color: '#fff' }} />
+            <Bell style={{
+              width: 16, height: 16, color: '#fff',
+              animation: bellAnim ? 'mhdr-bell-wiggle 0.5s ease' : 'none',
+            }} />
             {actualUnread > 0 && (
               <div style={{
                 position: 'absolute', top: 3, right: 3,
@@ -364,7 +394,7 @@ export function DashboardMobileHeader({
           {/* Aegis brand: icon + label */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{
-              width: 24, height: 24, borderRadius: 7,
+              width: 34, height: 34, borderRadius: 10,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'rgba(255,255,255,0.18)',
               border: '1px solid rgba(255,255,255,0.28)',
@@ -372,7 +402,7 @@ export function DashboardMobileHeader({
             }}>
               <AegisLogo />
             </div>
-            <span style={{ fontWeight: 700, fontSize: '0.7rem', color: 'rgba(255,255,255,0.92)', letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
+            <span style={{ fontWeight: 700, fontSize: '0.78rem', color: 'rgba(255,255,255,0.92)', letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
               {brandLabel}
             </span>
           </div>
@@ -387,6 +417,13 @@ export function DashboardMobileHeader({
         @keyframes mhdr-drop {
           from { opacity: 0; transform: translateY(-8px) scale(0.97); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes mhdr-bell-wiggle {
+          0%, 100% { transform: rotate(0); }
+          20% { transform: rotate(6deg); }
+          40% { transform: rotate(-6deg); }
+          60% { transform: rotate(4deg); }
+          80% { transform: rotate(-2deg); }
         }
       `}</style>
     </>

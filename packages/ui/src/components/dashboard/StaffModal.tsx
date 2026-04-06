@@ -801,7 +801,7 @@ export function StaffHoursModal({
                     {/* Times */}
                     {day.isOpen && (
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
+                        <div className="flex items-center gap-1.5">
                           <AnimatedSelect value={day.openTime1 || '09:00'} onChange={(v) => updateDay(i, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                           <span className="text-xs text-gray-400">—</span>
                           <AnimatedSelect value={day.closeTime1 || '13:00'} onChange={(v) => updateDay(i, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
@@ -810,7 +810,7 @@ export function StaffHoursModal({
                           )}
                         </div>
                         {day.openTime2 && (
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                          <div className="flex items-center gap-1.5">
                             <AnimatedSelect value={day.openTime2} onChange={(v) => updateDay(i, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                             <span className="text-xs text-gray-400">—</span>
                             <AnimatedSelect value={day.closeTime2 || '19:00'} onChange={(v) => updateDay(i, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
