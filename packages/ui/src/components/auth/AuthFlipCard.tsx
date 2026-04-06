@@ -675,91 +675,86 @@ export function AuthFlipCard({
 
         /* ===== RESPONSIVE — mobile/tablet-portrait < 1024px ===== */
         @media (max-width: 1023px) {
-          /* Root fills al-main height (layout stretches it) */
-          .afc-root { padding: 0.5rem 0.75rem; flex: 1; max-width: none; gap: 0.3rem; }
+          /* Perspective parent for 3D diagonal flip */
+          .afc-root { perspective: 1400px; padding: 0.5rem 0.75rem; gap: 0.3rem; }
 
-          /* Card: fills remaining root space after "Powered by", capped at 700px */
-          .afc-card { flex: 1; min-height: 0; max-height: 700px; overflow: hidden; }
+          /* Card: 3D flip container — shadow/bg/radius moved to each face */
+          .afc-card {
+            overflow: visible;
+            min-height: 0;
+            background: transparent;
+            box-shadow: none;
+            animation: none;
+            transform-style: preserve-3d;
+            transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1),
+                        transform 0.78s cubic-bezier(0.76,0,0.24,1);
+          }
+          .afc-card.afc-in { opacity: 1; transform: none; }
+          /* Diagonal flip: rotate around (1,1,0) axis — corner-flip effect */
+          .afc-card.afc-in.afc-reg-active { transform: rotate3d(1, 1, 0, 180deg); }
 
-          /* Forms: fill card, two equal rows */
-          .afc-forms {
-            grid-template-columns: 1fr;
-            grid-template-rows: 1fr 1fr;
-            height: 100%; min-height: 0;
+          /* Forms: grid overlap so card sizes to tallest face (register) */
+          .afc-forms { grid-template-columns: 1fr; min-height: 0; }
+
+          /* Front face — login */
+          .afc-form-left {
+            grid-column: 1; grid-row: 1;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 1.5rem; overflow: hidden;
+            background: #fff;
+            box-shadow:
+              0 0 0 2px rgba(var(--afc-r),0.2),
+              0 0 15px rgba(var(--afc-r),0.15),
+              0 10px 40px rgba(var(--afc-r),0.1),
+              0 25px 70px rgba(var(--afc-r),0.06);
+            animation: borderGlow 3s ease-in-out infinite;
           }
 
-          /* Form areas: default justify-content:center kept → content vertically centered */
-          .afc-form-area {
-            padding: 1rem 1.25rem;
-            overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none;
+          /* Back face — register, pre-rotated so content reads correctly when card flips */
+          .afc-form-right {
+            grid-column: 1; grid-row: 1;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform: rotate3d(1, 1, 0, 180deg);
+            border-radius: 1.5rem; overflow: hidden;
+            background: #fff;
+            box-shadow:
+              0 0 0 2px rgba(var(--afc-r),0.2),
+              0 0 15px rgba(var(--afc-r),0.15),
+              0 10px 40px rgba(var(--afc-r),0.1),
+              0 25px 70px rgba(var(--afc-r),0.06);
+            animation: borderGlow 3s ease-in-out infinite;
           }
-          .afc-form-area::-webkit-scrollbar { display: none; }
 
-          /* Hide labels (saves ~55px, register 4-field form fits) and desc */
-          .afc-label {
-            position: absolute; width: 1px; height: 1px;
-            overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+          /* Shake: compose transform with face pre-rotation so it is not overwritten */
+          .afc-form-left.afc-shake { animation: shk-front-d 0.45s ease-in-out; }
+          @keyframes shk-front-d {
+            0%,100% { transform: rotate3d(1,1,0,0deg) translateX(0); }
+            15%,55%,85% { transform: rotate3d(1,1,0,0deg) translateX(-5px); }
+            35%,75% { transform: rotate3d(1,1,0,0deg) translateX(5px); }
           }
-          .afc-desc { display: none; }
-
-          /* Compact but breathable */
-          .afc-title { font-size: 1rem; margin: 0 0 0.5rem; }
-          .afc-form { gap: 0.55rem; }
-          .afc-field { gap: 0; }
-          .afc-input { padding: 0.55rem 2.25rem 0.55rem 0.8rem; font-size: 0.83rem; }
-          .afc-btn { height: 2.25rem; font-size: 0.85rem; margin-top: 0.2rem; }
-          .afc-check { margin-top: 0.15rem; }
-          .afc-check-text { font-size: 0.68rem; }
-          .afc-forgot { font-size: 0.72rem; }
-
-          /* ── Overlay: vertical variant ──
-             Login mode  → at bottom half (welcome panel over register).
-             Register mode → slides up to top half (welcome panel over login). */
-          .afc-overlay {
-            top: 50%; left: 0; width: 100%; height: 50%;
-            border-radius: 0 0 1.4rem 1.4rem;
-            transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
+          .afc-form-right.afc-shake { animation: shk-back-d 0.45s ease-in-out; }
+          @keyframes shk-back-d {
+            0%,100% { transform: rotate3d(1,1,0,180deg) translateX(0); }
+            15%,55%,85% { transform: rotate3d(1,1,0,180deg) translateX(-5px); }
+            35%,75% { transform: rotate3d(1,1,0,180deg) translateX(5px); }
           }
-          .afc-reg-active .afc-overlay {
-            transform: translateY(-100%);
-            border-radius: 1.4rem 1.4rem 0 0;
-          }
-          .afc-overlay-inner {
-            flex-direction: column; width: 100%; height: 200%;
-            transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
-          }
-          .afc-reg-active .afc-overlay-inner { transform: translateY(-50%); }
-          .afc-overlay-panel { width: 100%; height: 50%; flex-shrink: 0; }
 
-          /* Compact welcome content */
-          .afc-welcome-body { padding: 1rem; max-width: 100%; }
-          .afc-logo { margin-bottom: 0.35rem; }
-          .afc-brand-name { font-size: 1rem; margin: 0 0 0.45rem; }
-          .afc-welcome-divider { margin: 0 auto 0.45rem; }
-          .afc-welcome-title { font-size: 1.1rem; margin: 0 0 0.25rem; }
-          .afc-welcome-sub { font-size: 0.74rem; line-height: 1.5; margin: 0 0 0.55rem; }
-          .afc-deco { margin-bottom: 0.5rem; }
-          .afc-welcome-hint { font-size: 0.68rem; margin: 0 0 0.3rem; }
-          .afc-welcome-btn { padding: 0.5rem 1.25rem; font-size: 0.8rem; }
+          /* Hide desktop overlay — not used on mobile */
+          .afc-overlay { display: none; }
 
-          .afc-mobile-sw { display: none; }
+          /* Show switch links */
+          .afc-mobile-sw { display: flex; }
+
+          /* Standard form area padding */
+          .afc-form-area { padding: 2rem 1.5rem; }
         }
 
-        /* iPhone SE / very small screens (< 700px tall): extra compression */
-        @media (max-width: 1023px) and (max-height: 699px) {
-          .afc-root { padding: 0.35rem 0.75rem; }
-          .afc-form-area { padding: 0.8rem 1rem; }
-          .afc-form { gap: 0.3rem; }
-          .afc-title { margin-bottom: 0.35rem; }
-          .afc-welcome-body { padding: 0.75rem; }
-          .afc-welcome-title { font-size: 0.95rem; }
-          .afc-welcome-sub { margin-bottom: 0.35rem; }
-          .afc-deco { margin-bottom: 0.3rem; }
-        }
-      `}</style>
-    </div>
-  );
-}
+`}</style>
+      </div>
+    );
+  }
 
 // ============================================================================
 // UTILITY
