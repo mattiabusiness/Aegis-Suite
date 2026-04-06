@@ -760,7 +760,7 @@ export function CustomerDetailModal({
             </div>
           ) : (
             /* ═══ NOTES TAB ═══ */
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Notes */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-900">

@@ -434,15 +434,16 @@ function CurrentTimeIndicator({ startHour, endHour }: { startHour: number; endHo
 // ============================================================================
 
 function CalendarHeader({
-  date, view, onPrev, onNext, onToday, onViewChange,
+  date, view, onPrev, onNext, onToday, onViewChange, isMobile,
 }: {
   date: Date; view: CalendarView;
   onPrev: () => void; onNext: () => void; onToday: () => void;
   onViewChange: (view: CalendarView) => void;
+  isMobile: boolean;
 }) {
   return (
     <div
-      className="flex items-center justify-between px-5 py-3.5 flex-shrink-0"
+      className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-5 py-2 sm:py-3.5 flex-shrink-0 gap-2"
       style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(12px)',
@@ -450,33 +451,33 @@ function CalendarHeader({
         borderBottom: '1px solid rgba(168,85,247,0.08)',
       }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Nav arrows */}
         <div className="flex items-center gap-0.5">
           <button onClick={onPrev}
-            className="p-2 rounded-xl transition-all duration-150"
+            className="p-1.5 sm:p-2 rounded-xl transition-all duration-150"
             style={{ color: '#6b7280' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.color = '#7c3aed'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
           <button onClick={onNext}
-            className="p-2 rounded-xl transition-all duration-150"
+            className="p-1.5 sm:p-2 rounded-xl transition-all duration-150"
             style={{ color: '#6b7280' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.color = '#7c3aed'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {/* Title */}
-        <h2 className="text-lg font-bold text-gray-900 tracking-tight">{formatHeaderTitle(date, view)}</h2>
+        <h2 className="text-sm sm:text-lg font-bold text-gray-900 tracking-tight truncate flex-1 min-w-0">{formatHeaderTitle(date, view)}</h2>
 
         {/* Today button */}
         <button onClick={onToday}
-          className="relative px-3.5 py-1.5 rounded-xl text-sm font-semibold overflow-hidden"
+          className="relative px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold overflow-hidden flex-shrink-0"
           style={{
             background: 'linear-gradient(135deg, rgba(147,51,234,0.08), rgba(168,85,247,0.04))',
             color: '#7c3aed',
@@ -500,7 +501,7 @@ function CalendarHeader({
 
       {/* View tabs — gradient selection */}
       <div
-        className="flex items-center gap-1 p-1 rounded-xl"
+        className="flex items-center gap-1 p-1 rounded-xl self-start sm:self-auto"
         style={{
           background: 'rgba(0,0,0,0.03)',
           border: '1px solid rgba(0,0,0,0.04)',
@@ -509,11 +510,12 @@ function CalendarHeader({
         {(['day', 'week', 'month'] as CalendarView[]).map((v) => {
           const isActive = view === v;
           const label = v === 'day' ? 'Giorno' : v === 'week' ? 'Settimana' : 'Mese';
+          const shortLabel = v === 'day' ? 'Giorno' : v === 'week' ? 'Sett.' : 'Mese';
           return (
             <button
               key={v}
               onClick={() => onViewChange(v)}
-              className="relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
+              className="relative px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200"
               style={{
                 background: isActive ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'transparent',
                 color: isActive ? '#fff' : '#6b7280',
@@ -528,7 +530,8 @@ function CalendarHeader({
                   animation: 'cal-shimmer 2.5s ease-in-out infinite',
                 }} />
               )}
-              <span className="relative z-10">{label}</span>
+              <span className="relative z-10 hidden sm:inline">{label}</span>
+              <span className="relative z-10 sm:hidden">{shortLabel}</span>
             </button>
           );
         })}
@@ -601,10 +604,10 @@ function DayView({
       {/* Content */}
       <div className="flex flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }}>
         {/* Time column */}
-        <div className="w-16 flex-shrink-0" style={{ minHeight: totalHeight, background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="w-12 sm:w-16 flex-shrink-0" style={{ minHeight: totalHeight, background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
           {hours.map((hour, idx) => (
             <div key={hour} className="relative" style={{ height: HOUR_HEIGHT }}>
-              <span className="absolute right-2 text-[11px] font-medium text-gray-400"
+              <span className="absolute right-1 sm:right-2 text-[9px] sm:text-[11px] font-medium text-gray-400"
                 style={{ top: idx === 0 ? 2 : 0, transform: idx === 0 ? 'none' : 'translateY(-50%)' }}
               >
                 {`${hour.toString().padStart(2, '0')}:00`}
@@ -676,15 +679,19 @@ function DayView({
 // ============================================================================
 
 function WeekView({
-  date, events, businessHours, closures, onEventClick, onSlotClick, onDayClick,
+  date, events, businessHours, closures, onEventClick, onSlotClick, onDayClick, isMobile,
 }: {
   date: Date; events: CalendarEventData[];
   businessHours?: BusinessHoursData[]; closures?: ClosureData[];
   onEventClick?: (event: CalendarEventData) => void;
   onSlotClick?: (date: Date, hour: number, minutes: number) => void;
   onDayClick?: (date: Date) => void;
+  isMobile?: boolean;
 }) {
   const weekDays = getWeekDays(date);
+  const selectedIdx = weekDays.findIndex(d => isSameDay(d, date));
+  const mobileStart = Math.min(Math.max(selectedIdx === -1 ? 0 : selectedIdx, 0), weekDays.length - 3);
+  const visibleDays = isMobile ? weekDays.slice(mobileStart, mobileStart + 3) : weekDays;
   const hours = getDisplayHours(businessHours);
   const startHour = hours[0];
   const totalHeight = hours.length * HOUR_HEIGHT;
@@ -698,13 +705,13 @@ function WeekView({
   return (
     <div className="flex h-full overflow-hidden">
       {/* Time column */}
-      <div className="w-16 flex-shrink-0 flex flex-col" style={{ background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
+      <div className="w-12 sm:w-16 flex-shrink-0 flex flex-col" style={{ background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
         <div className="h-14 flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }} />
         <div ref={timeColumnRef} className="flex-1 overflow-y-hidden">
           <div style={{ height: totalHeight }}>
             {hours.map((hour, idx) => (
               <div key={hour} className="relative" style={{ height: HOUR_HEIGHT }}>
-                <span className="absolute right-2 text-[11px] font-medium text-gray-400"
+                <span className="absolute right-1 sm:right-2 text-[9px] sm:text-[11px] font-medium text-gray-400"
                   style={{ top: idx === 0 ? 2 : 0, transform: idx === 0 ? 'none' : 'translateY(-50%)' }}
                 >
                   {`${hour.toString().padStart(2, '0')}:00`}
@@ -720,7 +727,7 @@ function WeekView({
         {/* Days header — matched to content scrollbar gutter */}
         <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', overflowY: 'auto', scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'transparent transparent' }}>
           <div className="flex flex-1">
-            {weekDays.map((day) => {
+            {visibleDays.map((day) => {
               const holiday = getHolidayName(day);
               const closure = isClosedForDate(closures, day);
               const dayBH = getBusinessHoursForDay(businessHours, day);
@@ -759,7 +766,7 @@ function WeekView({
         {/* Content */}
         <div className="flex-1 overflow-y-scroll" style={{ scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }} onScroll={handleScroll}>
           <div className="flex" style={{ height: totalHeight }}>
-            {weekDays.map((day) => {
+            {visibleDays.map((day) => {
               const dayBH = getBusinessHoursForDay(businessHours, day);
               const closure = isClosedForDate(closures, day);
               const isClosed = closure !== null || (dayBH !== null && !dayBH.is_open);
@@ -895,12 +902,13 @@ function MonthEventPill({ event, onClick }: { event: CalendarEventData; onClick?
 }
 
 function MonthView({
-  date, events, businessHours, closures, onEventClick, onDayClick,
+  date, events, businessHours, closures, onEventClick, onDayClick, isMobile,
 }: {
   date: Date; events: CalendarEventData[];
   businessHours?: BusinessHoursData[]; closures?: ClosureData[];
   onEventClick?: (event: CalendarEventData) => void;
   onDayClick?: (date: Date) => void;
+  isMobile?: boolean;
 }) {
   const monthDays = getMonthDays(date);
   const currentMonth = date.getMonth();
@@ -909,11 +917,11 @@ function MonthView({
     <div className="flex flex-col h-full overflow-hidden">
       {/* Day names header */}
       <div className="flex flex-shrink-0 pr-[17px]" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((day, idx) => (
-          <div key={day}
-            className="flex-1 h-10 flex items-center justify-center"
+        {(isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']).map((day, idx) => (
+          <div key={idx}
+            className="flex-1 h-8 sm:h-10 flex items-center justify-center"
             style={{
-              fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.04em',
+              fontSize: isMobile ? 10 : 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.04em',
               background: 'rgba(0,0,0,0.015)',
               borderRight: idx < 6 ? '1px solid rgba(0,0,0,0.04)' : 'none',
             }}
@@ -935,11 +943,11 @@ function MonthView({
             const dayBH = getBusinessHoursForDay(businessHours, day);
             const isClosed = closure !== null || (dayBH !== null && !dayBH.is_open);
             const isLastInRow = (idx + 1) % 7 === 0;
-            const maxEvents = 2;
+            const maxEvents = isMobile ? 1 : 2;
 
             return (
               <div key={idx}
-                className="min-h-[100px] p-1.5 cursor-pointer transition-all duration-150 overflow-hidden"
+                className="min-h-[60px] sm:min-h-[100px] p-1 sm:p-1.5 cursor-pointer transition-all duration-150 overflow-hidden"
                 style={{
                   background: !isCurrentMonth ? 'rgba(0,0,0,0.01)' : todayDate ? 'rgba(147,51,234,0.03)' : isClosed ? 'rgba(239,68,68,0.03)' : '#fff',
                   borderBottom: '1px solid rgba(0,0,0,0.04)',
@@ -1006,6 +1014,20 @@ export function Calendar({
 }: CalendarProps) {
   const [internalView, setInternalView] = React.useState<CalendarView>('week');
   const [internalDate, setInternalDate] = React.useState<Date>(new Date());
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  React.useEffect(() => {
+    if (isMobile && !controlledView && internalView === 'week') {
+      setInternalView('day');
+    }
+  }, [isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const view = controlledView ?? internalView;
   const selectedDate = controlledDate ?? internalDate;
@@ -1059,15 +1081,16 @@ export function Calendar({
         onPrev={handlePrev} onNext={handleNext}
         onToday={() => { handleDateChange(new Date()); handleViewChange('day'); }}
         onViewChange={handleViewChange}
+        isMobile={isMobile}
       />
 
       <div className="flex-1 overflow-hidden">
         {view === 'day' ? (
           <DayView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onSlotClick={onSlotClick} />
         ) : view === 'week' ? (
-          <WeekView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onSlotClick={onSlotClick} onDayClick={handleDayClick} />
+          <WeekView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onSlotClick={onSlotClick} onDayClick={handleDayClick} isMobile={isMobile} />
         ) : (
-          <MonthView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onDayClick={handleDayClick} />
+          <MonthView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onDayClick={handleDayClick} isMobile={isMobile} />
         )}
       </div>
 

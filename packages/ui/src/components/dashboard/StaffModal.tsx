@@ -99,6 +99,13 @@ const COLOR_OPTIONS = [
 ];
 
 // ============================================================================
+// TIME OPTIONS (for AnimatedSelect)
+// ============================================================================
+
+const TIME_OPTIONS: string[] = [];
+for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 15) TIME_OPTIONS.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+
+// ============================================================================
 // SHARED STYLES
 // ============================================================================
 
@@ -794,19 +801,19 @@ export function StaffHoursModal({
                     {/* Times */}
                     {day.isOpen && (
                       <div className="flex flex-col gap-1 flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <input type="time" value={day.openTime1 || '09:00'} onChange={(e) => updateDay(i, 'openTime1', e.target.value)} className="px-2 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <AnimatedSelect value={day.openTime1 || '09:00'} onChange={(v) => updateDay(i, 'openTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                           <span className="text-xs text-gray-400">—</span>
-                          <input type="time" value={day.closeTime1 || '13:00'} onChange={(e) => updateDay(i, 'closeTime1', e.target.value)} className="px-2 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                          <AnimatedSelect value={day.closeTime1 || '13:00'} onChange={(v) => updateDay(i, 'closeTime1', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                           {!day.openTime2 && (
                             <button type="button" onClick={() => addSecondRange(i)} style={{ fontSize: 10, color: '#9333ea', fontWeight: 600, background: 'rgba(147,51,234,0.06)', border: '1px solid rgba(147,51,234,0.15)', borderRadius: 6, padding: '2px 7px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ pausa</button>
                           )}
                         </div>
                         {day.openTime2 && (
-                          <div className="flex items-center gap-1.5">
-                            <input type="time" value={day.openTime2} onChange={(e) => updateDay(i, 'openTime2', e.target.value)} className="px-2 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <AnimatedSelect value={day.openTime2} onChange={(v) => updateDay(i, 'openTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                             <span className="text-xs text-gray-400">—</span>
-                            <input type="time" value={day.closeTime2 || '19:00'} onChange={(e) => updateDay(i, 'closeTime2', e.target.value)} className="px-2 py-1.5 text-xs text-gray-900 outline-none" style={{ ...inputStyle, fontSize: '0.75rem' }} />
+                            <AnimatedSelect value={day.closeTime2 || '19:00'} onChange={(v) => updateDay(i, 'closeTime2', v)} options={TIME_OPTIONS} compact maxVisible={7} />
                             <button
                               type="button"
                               onClick={() => removeSecondRange(i)}
