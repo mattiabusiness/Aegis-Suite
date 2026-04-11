@@ -671,7 +671,7 @@ function WeekView({
   const weekDays = getWeekDays(date);
   const selectedIdx = weekDays.findIndex(d => isSameDay(d, date));
   const mobileStart = Math.min(Math.max(selectedIdx === -1 ? 0 : selectedIdx, 0), weekDays.length - 3);
-  const visibleDays = isMobile ? weekDays.slice(mobileStart, mobileStart + 3) : weekDays;
+  const visibleDays = weekDays;
   const hours = getDisplayHours(businessHours);
   const startHour = hours[0];
   const totalHeight = hours.length * HOUR_HEIGHT;

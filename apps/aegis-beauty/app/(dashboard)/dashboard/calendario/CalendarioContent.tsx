@@ -863,32 +863,37 @@ export function CalendarioContent({
       </div>
 
       {/* ============================================================== */}
-      {/* MOBILE TOP BAR (lg:hidden) — floats over calendar               */}
+      {/* MOBILE FABs (lg:hidden) — float over calendar bottom-right      */}
       {/* ============================================================== */}
-      <div
-        className="fixed top-0 left-0 right-0 z-30 lg:hidden flex items-center justify-between px-3 py-2 cal-mobile-bar"
-        style={{ top: 56, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(168,85,247,0.08)', height: 48 }}
-      >
-        <h1 className="text-base font-bold text-gray-900">Calendario</h1>
-        <div className="flex items-center gap-2">
-          {/* Filter badge */}
-          {(selectedStaff || selectedServiceFilter) && (
-            <button onClick={() => { setSelectedStaff(null); setSelectedServiceFilter(null); }}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold"
-              style={{ background: 'rgba(147,51,234,0.08)', color: '#7c3aed' }}>
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              Filtri attivi
-            </button>
-          )}
-          {/* New appointment */}
-          <button onClick={handleNewClick} className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-white text-xs font-semibold" style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)' }}>
-            <Plus className="w-3.5 h-3.5" />Nuovo
-          </button>
-          {/* Drawer toggle */}
-          <button onClick={() => setShowDrawer(true)} className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold" style={{ background: 'rgba(147,51,234,0.08)', color: '#7c3aed' }}>
-            <CalendarIcon className="w-3.5 h-3.5" />Info
-          </button>
-        </div>
+      <div className="fixed z-40 lg:hidden flex flex-col items-end gap-2" style={{ bottom: 76, right: 16 }}>
+        {/* Drawer toggle FAB */}
+        <button
+          onClick={() => setShowDrawer(v => !v)}
+          className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all duration-200"
+          style={{
+            background: showDrawer ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.95)',
+            border: '1px solid rgba(168,85,247,0.2)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            color: '#7c3aed',
+          }}
+        >
+          {showDrawer
+            ? <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            : <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          }
+        </button>
+        {/* New appointment FAB */}
+        <button
+          onClick={handleNewClick}
+          className="w-13 h-13 rounded-full flex items-center justify-center shadow-xl"
+          style={{
+            width: 52, height: 52,
+            background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+            boxShadow: '0 6px 20px rgba(147,51,234,0.4)',
+          }}
+        >
+          <Plus className="w-5 h-5 text-white" />
+        </button>
       </div>
 
       {/* Event detail modal */}
@@ -943,10 +948,15 @@ export function CalendarioContent({
           .cal-outer {
             margin: -1rem -1rem 0 -1rem;
             width: calc(100% + 2rem);
-            height: calc(100dvh - 56px - 48px - 60px) !important;
+            height: calc(100dvh - 56px - 60px) !important;
           }
           .cal-right {
             gap: 0;
+          }
+          /* Remove border/radius from calendar on mobile */
+          .cal-right > * {
+            border-radius: 0 !important;
+            border: none !important;
           }
         }
       `}</style>
