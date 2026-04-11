@@ -126,6 +126,7 @@ export function CalendarioContent({
   const [showStaffFilter, setShowStaffFilter] = useState(false);
   const [showServiceFilter, setShowServiceFilter] = useState(false);
   const [btnRipple, setBtnRipple] = useState<{ x: number; y: number; id: number } | null>(null);
+  const [showDrawer, setShowDrawer] = useState(false);
   const staffList = initialStaff;
 
   // Modal state
@@ -482,6 +483,7 @@ export function CalendarioContent({
         {/* ============================================================== */}
         <div className="hidden lg:flex w-72 flex-shrink-0 flex-col gap-2 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.1) transparent' }}>
 
+
           {/* Page title — same format as other pages */}
           <div className="pb-0.5">
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Calendario</h1>
@@ -687,21 +689,7 @@ export function CalendarioContent({
         {/* ============================================================== */}
         {/* RIGHT - CALENDAR (full remaining space)                         */}
         {/* ============================================================== */}
-        <div className="flex-1 min-w-0 flex flex-col gap-3">
-          {/* Mobile compact bar — lg:hidden */}
-          <div className="flex lg:hidden items-center justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Calendario</h1>
-            </div>
-            <button
-              onClick={handleNewClick}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-sm font-semibold"
-              style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)', boxShadow: '0 2px 8px rgba(147,51,234,0.3)', flexShrink: 0 }}
-            >
-              <Plus className="w-4 h-4" />
-              Nuovo
-            </button>
-          </div>
+        <div className="cal-right flex-1 min-w-0 flex flex-col">
           <Calendar
             view={view}
             onViewChange={setView}
@@ -714,6 +702,192 @@ export function CalendarioContent({
             closures={closures}
             className="flex-1 min-h-0"
           />
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* MOBILE BOTTOM DRAWER                                            */}
+      {/* ============================================================== */}
+
+      {/* Drawer backdrop */}
+      {showDrawer && (
+        <div
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', animation: 'calC-fadeIn 0.2s ease-out both' }}
+          onClick={() => setShowDrawer(false)}
+        />
+      )}
+
+      {/* Drawer panel */}
+      <div
+        className="fixed left-0 right-0 z-50 lg:hidden flex flex-col"
+        style={{
+          bottom: 60,
+          maxHeight: 'calc(100dvh - 56px - 60px - 1rem)',
+          background: 'rgba(255,255,255,0.97)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '20px 20px 0 0',
+          borderTop: '1px solid rgba(168,85,247,0.15)',
+          boxShadow: '0 -8px 40px rgba(0,0,0,0.12)',
+          transform: showDrawer ? 'translateY(0)' : 'translateY(100%)',
+          transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(0,0,0,0.15)' }} />
+        </div>
+
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-4 pb-3 flex-shrink-0">
+          <h2 className="text-base font-bold text-gray-900">Calendario</h2>
+          <button onClick={() => setShowDrawer(false)} className="p-1.5 rounded-xl" style={{ color: 'rgba(0,0,0,0.35)' }}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        {/* Drawer scrollable body */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3" style={{ scrollbarWidth: 'none' }}>
+
+          {/* Nuovo appuntamento */}
+          <button
+            onClick={() => { setShowDrawer(false); handleNewClick(); }}
+            className="relative w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-white text-sm font-semibold overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)', boxShadow: '0 4px 16px rgba(147,51,234,0.3)' }}
+          >
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%)', animation: 'calC-shimmer 2.5s ease-in-out infinite' }} />
+            <Plus className="w-4.5 h-4.5 relative z-10" />
+            <span className="relative z-10">Nuovo appuntamento</span>
+          </button>
+
+          {/* Filtri */}
+          <div className="rounded-2xl p-3" style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(168,85,247,0.08)' }}>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Filtri</p>
+            <div className="flex gap-2">
+              {(!permissions.isStaff || permissions.canSeeBusinessCalendar) && (
+                <button
+                  onClick={() => { setShowStaffFilter(!showStaffFilter); setShowServiceFilter(false); }}
+                  className="flex-1 flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
+                  style={{ background: selectedStaff || showStaffFilter ? 'rgba(147,51,234,0.08)' : 'rgba(255,255,255,0.8)', color: selectedStaff || showStaffFilter ? '#7c3aed' : '#6b7280', border: `1px solid ${selectedStaff || showStaffFilter ? 'rgba(147,51,234,0.15)' : 'rgba(0,0,0,0.06)'}` }}
+                >
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />{selectedStaffName || 'Staff'}</span>
+                  <ChevronDown className="w-3 h-3" style={{ transform: showStaffFilter ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
+              )}
+              <button
+                onClick={() => { setShowServiceFilter(!showServiceFilter); setShowStaffFilter(false); }}
+                className="flex-1 flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
+                style={{ background: selectedServiceFilter || showServiceFilter ? 'rgba(147,51,234,0.08)' : 'rgba(255,255,255,0.8)', color: selectedServiceFilter || showServiceFilter ? '#7c3aed' : '#6b7280', border: `1px solid ${selectedServiceFilter || showServiceFilter ? 'rgba(147,51,234,0.15)' : 'rgba(0,0,0,0.06)'}` }}
+              >
+                <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" />{selectedServiceName || 'Servizio'}</span>
+                <ChevronDown className="w-3 h-3" style={{ transform: showServiceFilter ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+            </div>
+            {showStaffFilter && (
+              <div className="mt-2 space-y-0.5 max-h-40 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                <button onClick={() => handleStaffFilter(null)} className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium" style={{ background: !selectedStaff ? 'rgba(147,51,234,0.08)' : 'transparent', color: !selectedStaff ? '#7c3aed' : '#374151' }}>Tutti</button>
+                {staffList.map(s => (
+                  <button key={s.id} onClick={() => handleStaffFilter(s.id)} className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2" style={{ background: selectedStaff === s.id ? 'rgba(147,51,234,0.08)' : 'transparent', color: selectedStaff === s.id ? '#7c3aed' : '#374151' }}>
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color || '#9333ea' }} />{s.full_name}
+                  </button>
+                ))}
+              </div>
+            )}
+            {showServiceFilter && (
+              <div className="mt-2 space-y-0.5 max-h-40 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                <button onClick={() => handleServiceFilter(null)} className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium" style={{ background: !selectedServiceFilter ? 'rgba(147,51,234,0.08)' : 'transparent', color: !selectedServiceFilter ? '#7c3aed' : '#374151' }}>Tutti</button>
+                {initialServices.map(s => (
+                  <button key={s.id} onClick={() => handleServiceFilter(s.id)} className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between" style={{ background: selectedServiceFilter === s.id ? 'rgba(147,51,234,0.08)' : 'transparent', color: selectedServiceFilter === s.id ? '#7c3aed' : '#374151' }}>
+                    <span className="truncate">{s.name}</span><span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">{s.duration}min</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Prossimi appuntamenti */}
+          <div className="rounded-2xl p-3" style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(168,85,247,0.08)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Prossimi</p>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: upcomingEvents.length > 0 ? 'rgba(147,51,234,0.08)' : 'rgba(0,0,0,0.03)', color: upcomingEvents.length > 0 ? '#7c3aed' : '#9ca3af' }}>{upcomingEvents.length}</span>
+            </div>
+            {upcomingEvents.length > 0 ? (
+              <div className="space-y-1">
+                {upcomingEvents.map((event, i) => {
+                  const statusColor = event.status === 'confirmed' ? '#10b981' : event.status === 'pending' ? '#f59e0b' : event.status === 'cancelled' ? '#ef4444' : '#6b7280';
+                  return (
+                    <div key={event.id} className="flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer" style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(0,0,0,0.04)', animation: `calC-listItem 0.2s ease-out ${i * 40}ms both` }}
+                      onClick={() => { setShowDrawer(false); handleEventClick(event); }}>
+                      <div className="w-0.5 h-7 rounded-full flex-shrink-0" style={{ background: statusColor }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold text-gray-900 truncate">{event.title}</p>
+                        <p className="text-[9px] text-gray-400 truncate">{event.customerName}{event.staffName ? ` · ${event.staffName}` : ''}</p>
+                      </div>
+                      <p className="text-[9px] font-semibold flex-shrink-0" style={{ color: '#7c3aed' }}>{formatUpcomingDate(new Date(event.startTime))}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-4">
+                <CalendarIcon className="w-5 h-5 mb-1" style={{ color: '#c4b5fd' }} />
+                <p className="text-[10px] text-gray-400">Nessun prossimo appuntamento</p>
+              </div>
+            )}
+          </div>
+
+          {/* Statistiche */}
+          <div className="rounded-2xl p-3" style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(168,85,247,0.08)' }}>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Statistiche</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              <div className="text-center py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
+                <p className="text-sm font-bold text-gray-900">{events.length}</p>
+                <p className="text-[9px] text-gray-400">Totali</p>
+              </div>
+              <div className="text-center py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
+                <p className="text-sm font-bold" style={{ color: '#6d28d9' }}>{events.filter(e => e.status === 'confirmed').length}</p>
+                <p className="text-[9px] text-gray-400">Confermati</p>
+              </div>
+              <div className="text-center py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
+                <p className="text-sm font-bold" style={{ color: '#047857' }}>{events.filter(e => e.status === 'completed').length}</p>
+                <p className="text-[9px] text-gray-400">Completati</p>
+              </div>
+              <div className="text-center py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
+                <p className="text-sm font-bold" style={{ color: '#4b5563' }}>{events.filter(e => e.status === 'no_show').length}</p>
+                <p className="text-[9px] text-gray-400">No-show</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* MOBILE TOP BAR (lg:hidden) — floats over calendar               */}
+      {/* ============================================================== */}
+      <div
+        className="fixed top-0 left-0 right-0 z-30 lg:hidden flex items-center justify-between px-3 py-2 cal-mobile-bar"
+        style={{ top: 56, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(168,85,247,0.08)', height: 48 }}
+      >
+        <h1 className="text-base font-bold text-gray-900">Calendario</h1>
+        <div className="flex items-center gap-2">
+          {/* Filter badge */}
+          {(selectedStaff || selectedServiceFilter) && (
+            <button onClick={() => { setSelectedStaff(null); setSelectedServiceFilter(null); }}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold"
+              style={{ background: 'rgba(147,51,234,0.08)', color: '#7c3aed' }}>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              Filtri attivi
+            </button>
+          )}
+          {/* New appointment */}
+          <button onClick={handleNewClick} className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-white text-xs font-semibold" style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)' }}>
+            <Plus className="w-3.5 h-3.5" />Nuovo
+          </button>
+          {/* Drawer toggle */}
+          <button onClick={() => setShowDrawer(true)} className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold" style={{ background: 'rgba(147,51,234,0.08)', color: '#7c3aed' }}>
+            <CalendarIcon className="w-3.5 h-3.5" />Info
+          </button>
         </div>
       </div>
 
@@ -765,8 +939,14 @@ export function CalendarioContent({
         @keyframes calC-ripple { 0% { width: 4px; height: 4px; opacity: 0.5; } 100% { width: 300px; height: 300px; opacity: 0; } }
         @keyframes calC-listItem { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @media (max-width: 1023px) {
+          /* Full-bleed: cancel p-4 from dashboard wrapper */
           .cal-outer {
-            height: calc(100dvh - 56px - 60px - 2rem) !important;
+            margin: -1rem -1rem 0 -1rem;
+            width: calc(100% + 2rem);
+            height: calc(100dvh - 56px - 48px - 60px) !important;
+          }
+          .cal-right {
+            gap: 0;
           }
         }
       `}</style>

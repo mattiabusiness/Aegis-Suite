@@ -853,6 +853,15 @@ export function AppointmentModal({
   const [mounted, setMounted] = React.useState(false);
   const [closing, setClosing] = React.useState(false);
   const [shake, setShake] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // Form state
   const [formData, setFormData] = React.useState<AppointmentFormData>({
@@ -1128,7 +1137,7 @@ export function AppointmentModal({
   if (!isOpen && !closing) return null;
 
   const content = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <div className={`fixed inset-0 z-[9999] flex ${isMobile ? 'items-end' : 'items-center justify-center p-4'}`}>
       {/* Backdrop */}
       <div className="absolute inset-0" onClick={handleClose}
         style={{
@@ -1139,20 +1148,27 @@ export function AppointmentModal({
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-xl flex flex-col"
+        className={`relative w-full ${isMobile ? '' : 'max-w-xl'} flex flex-col`}
         style={{
           background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-          borderRadius: 24, border: '1px solid rgba(168,85,247,0.35)',
+          borderRadius: isMobile ? '20px 20px 0 0' : 24,
+          border: '1px solid rgba(168,85,247,0.35)',
           boxShadow: mounted
             ? '0 24px 80px rgba(0,0,0,0.12), 0 8px 32px rgba(147,51,234,0.12), 0 0 0 1px rgba(168,85,247,0.2), 0 0 40px rgba(168,85,247,0.18)'
             : '0 8px 32px rgba(0,0,0,0.08)',
           opacity: mounted ? 1 : 0,
-          transform: mounted ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(8px)',
-          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-          maxHeight: 'calc(100vh - 2rem)', overflow: 'hidden',
+          transform: isMobile
+            ? (mounted ? 'translateY(0)' : 'translateY(100%)')
+            : (mounted ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(8px)'),
+          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          maxHeight: isMobile ? '92dvh' : 'calc(100vh - 2rem)',
+          overflow: 'hidden',
           animation: shake ? 'apm-shake 0.4s ease-in-out' : undefined,
         }}
       >
+        {isMobile && (
+          <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-0 flex-shrink-0" style={{ background: 'rgba(0,0,0,0.15)' }} />
+        )}
         {/* Ambient glow */}
         <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none"
           style={{ width: 200, height: 100, background: 'radial-gradient(ellipse, rgba(168,85,247,0.1) 0%, transparent 70%)', filter: 'blur(30px)' }}
