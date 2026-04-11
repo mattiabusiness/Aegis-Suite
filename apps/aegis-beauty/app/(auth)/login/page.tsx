@@ -155,7 +155,7 @@ function LoginContent() {
     window.location.href = redirectParam || '/dashboard';
   };
 
-  const handleRegister = async (data: { fullName: string; email: string; phone: string; password: string }) => {
+  const handleRegister = async (data: { fullName: string; email: string; phone: string; password: string; termsAcceptedAt: string }) => {
     setRegisterError(''); setRegisterSuccess('');
 
     if (inviteData.isInvite) {
@@ -169,7 +169,7 @@ function LoginContent() {
             password: data.password,
             options: {
               emailRedirectTo: `${appUrl}/auth/callback`,
-              data: { full_name: data.fullName, phone: data.phone, staff_id: inviteData.staffId, invite_type: 'staff' },
+              data: { full_name: data.fullName, phone: data.phone, staff_id: inviteData.staffId, invite_type: 'staff', terms_accepted_at: data.termsAcceptedAt },
             },
           });
           console.log('[SignUp] result:', { userId: signUpData?.user?.id, hasSession: !!signUpData?.session, emailConfirmed: signUpData?.user?.email_confirmed_at });
@@ -199,7 +199,7 @@ function LoginContent() {
       // Email invite — user already authenticated via magic link
       try {
         const { error: ue } = await supabase.auth.updateUser({
-          password: data.password, data: { full_name: data.fullName, phone: data.phone },
+          password: data.password, data: { full_name: data.fullName, phone: data.phone, terms_accepted_at: data.termsAcceptedAt },
         });
         if (ue) { setRegisterError(ue.message); throw new Error(ue.message); }
         const { data: { user } } = await supabase.auth.getUser();
@@ -222,6 +222,7 @@ function LoginContent() {
       fullName: data.fullName,
       phone: data.phone,
       redirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+      termsAcceptedAt: data.termsAcceptedAt,
     });
     if (!result.success) { setRegisterError(result.error || 'Errore'); throw new Error(result.error); }
     setRegisterSuccess("Registrazione completata! Controlla la tua email per confermare l'account.");

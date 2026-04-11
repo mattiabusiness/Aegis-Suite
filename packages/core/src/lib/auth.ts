@@ -40,6 +40,7 @@ export interface SignUpData {
   fullName: string;
   phone?: string;
   redirectTo?: string;
+  termsAcceptedAt?: string;
 }
 
 export interface SignInData {
@@ -67,6 +68,7 @@ export async function signUp(
         data: {
           full_name: data.fullName,
           phone: data.phone,
+          ...(data.termsAcceptedAt ? { terms_accepted_at: data.termsAcceptedAt } : {}),
         },
       },
     });

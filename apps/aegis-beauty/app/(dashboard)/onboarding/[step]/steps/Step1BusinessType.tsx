@@ -130,9 +130,12 @@ export function Step1BusinessType({ businessId, initialValue }: Step1Props) {
     setError('');
 
     try {
+      const now = new Date().toISOString();
       const updateData: BusinessUpdate = {
         business_type: selected,
         onboarding_step: 2,
+        terms_accepted_at: now,
+        articles_1341_accepted_at: now,
       };
 
       const { error: updateError } = await supabase

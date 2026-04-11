@@ -85,6 +85,9 @@ export interface Business {
   onboarding_step: number;
   workstations: number;
   roi_data: ROIData;
+  // Legal consent (gestore)
+  terms_accepted_at: string | null;
+  articles_1341_accepted_at: string | null;
 }
 
 export interface Subscription {
@@ -260,6 +263,9 @@ export interface Customer {
   last_visit_at: string | null;
   accepts_marketing: boolean;
   marketing_consent_at: string | null;
+  // Legal consent (cliente)
+  terms_accepted_at: string | null;
+  privacy_accepted_at: string | null;
   source: string | null;
   referred_by: string | null;
   invited_at: string | null;

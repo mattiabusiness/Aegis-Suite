@@ -47,6 +47,7 @@ export interface AuthFlipRegisterData {
   email: string;
   phone: string;
   password: string;
+  termsAcceptedAt: string;
 }
 
 // ============================================================================
@@ -213,7 +214,7 @@ export function AuthFlipCard({
     if (!regTerms) { setRegFormError('Accetta i Termini di Servizio'); doShake('reg'); return; }
     setRegLoading(true);
     try {
-      await onRegister({ fullName: regName, email: regEmail, phone: regPhone, password: regPassword });
+      await onRegister({ fullName: regName, email: regEmail, phone: regPhone, password: regPassword, termsAcceptedAt: new Date().toISOString() });
     } catch {
       if (!regFormError && !registerError) setRegFormError('Errore durante la registrazione.');
       doShake('reg');
