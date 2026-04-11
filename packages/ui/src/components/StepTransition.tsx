@@ -14,7 +14,7 @@ import { createContext, useContext, useState, useCallback, useRef } from 'react'
 
 interface StepTransitionContextType {
   /** Show the checkmark overlay, call onComplete when ready to navigate */
-  showTransition: (label: string, onComplete: () => void) => void;
+  showTransition: (label: string, onComplete: () => void, hideSubtitle?: boolean) => void;
 }
 
 const StepTransitionContext = createContext<StepTransitionContextType>({
@@ -36,15 +36,17 @@ interface StepTransitionProviderProps {
 export function StepTransitionProvider({ children }: StepTransitionProviderProps) {
   const [visible, setVisible] = useState(false);
   const [label, setLabel] = useState('');
+  const [noSubtitle, setNoSubtitle] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'enter' | 'show' | 'reverse' | 'exit'>('idle');
   const busyRef = useRef(false);
 
   const showTransition = useCallback(
-    (completedStepLabel: string, onComplete: () => void) => {
+    (completedStepLabel: string, onComplete: () => void, hideSubtitle?: boolean) => {
       if (busyRef.current) return;
       busyRef.current = true;
 
       setLabel(completedStepLabel);
+      setNoSubtitle(!!hideSubtitle);
       setVisible(true);
       setPhase('enter');
 
@@ -175,21 +177,23 @@ export function StepTransitionProvider({ children }: StepTransitionProviderProps
                 >
                   {label}
                 </p>
-                <p
-                  className="text-sm text-gray-400 mt-1.5"
-                  style={{
-                    opacity: phase === 'show' ? 1 : phase === 'reverse' ? 0.3 : 0,
-                    transform: phase === 'show' ? 'translateY(0)' : 'translateY(10px)',
-                    filter: phase === 'reverse' ? 'blur(4px)' : phase === 'exit' ? 'blur(8px)' : 'blur(0px)',
-                    transition: phase === 'reverse'
-                      ? 'all 1s ease-in 0.15s'
-                      : phase === 'exit'
-                        ? 'all 0.3s ease-in'
-                        : 'all 0.45s ease-out 0.65s',
-                  }}
-                >
-                  Passaggio al prossimo step...
-                </p>
+                {!noSubtitle && (
+                  <p
+                    className="text-sm text-gray-400 mt-1.5"
+                    style={{
+                      opacity: phase === 'show' ? 1 : phase === 'reverse' ? 0.3 : 0,
+                      transform: phase === 'show' ? 'translateY(0)' : 'translateY(10px)',
+                      filter: phase === 'reverse' ? 'blur(4px)' : phase === 'exit' ? 'blur(8px)' : 'blur(0px)',
+                      transition: phase === 'reverse'
+                        ? 'all 1s ease-in 0.15s'
+                        : phase === 'exit'
+                          ? 'all 0.3s ease-in'
+                          : 'all 0.45s ease-out 0.65s',
+                    }}
+                  >
+                    Passaggio al prossimo step...
+                  </p>
+                )}
               </div>
             </div>
           </div>
