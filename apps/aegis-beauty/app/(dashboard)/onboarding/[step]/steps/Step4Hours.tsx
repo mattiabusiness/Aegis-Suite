@@ -183,9 +183,8 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
   const [hours, setHours] = useState<DayHours[]>(() => getDefaultHours(businessType));
   const [holidays, setHolidays] = useState<Holiday[]>(DEFAULT_HOLIDAYS);
   const [globalBreak, setGlobalBreak] = useState(() => {
-    const isMixed = businessType === 'mixed';
     const isBC = businessType === 'beauty_center';
-    return { enabled: !isMixed, start: '13:00', end: isBC ? '15:00' : '14:30' };
+    return { enabled: true, start: '13:00', end: isBC ? '15:00' : '14:30' };
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -207,9 +206,8 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
   useEffect(() => {
     let cancelled = false;
     const defaults = getDefaultHours(businessType);
-    const isMixed = businessType === 'mixed';
     const isBC = businessType === 'beauty_center';
-    const breakEnabled = !isMixed;
+    const breakEnabled = true;
     const breakStart = '13:00';
     const breakEnd = isBC ? '15:00' : '14:30';
 
@@ -415,7 +413,7 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
           <div className="space-y-1.5 mb-4">
             {hours.map((day, index) => (
               <div key={day.day} className="rounded-xl overflow-hidden" style={{ animation: `s4FadeUp 0.3s ease-out ${index * 0.04}s both` }}>
-                <div className="flex items-center gap-2.5 px-3 py-2.5 transition-all duration-200" style={{
+                <div className="s4-day-row flex items-center gap-2.5 px-3 py-2.5 transition-all duration-200" style={{
                   background: day.isOpen ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.015)',
                   borderLeft: day.isOpen ? '3px solid #a855f7' : '3px solid #e5e7eb',
                   backdropFilter: 'blur(4px)',
@@ -430,7 +428,7 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
                   </span>
 
                   {day.isOpen ? (
-                    <div className="flex items-center gap-1.5 flex-1 flex-wrap">
+                    <div className="s4-day-selects flex items-center gap-1.5 flex-1 flex-wrap">
                       <AnimatedSelect value={day.openTime1} onChange={(v) => updateDay(index, { openTime1: v })} options={TIME_OPTIONS} compact />
                       <span className="text-purple-300 text-xs">→</span>
                       <AnimatedSelect
@@ -487,7 +485,7 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
               </div>
               <span className="text-sm font-medium text-gray-800">Chiusura festività</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {holidays.map(holiday => (
                 <button key={holiday.id} type="button" onClick={() => toggleHoliday(holiday.id)}
                   className="flex items-center gap-2.5 p-2.5 rounded-xl text-left transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
@@ -558,6 +556,10 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
         @keyframes s4Ripple { 0%{transform:scale(0);opacity:1} 100%{transform:scale(6);opacity:0} }
         @keyframes s4Shimmer { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
         @keyframes s4Check { from{stroke-dashoffset:24} to{stroke-dashoffset:0} }
+        @media (max-width: 639px) {
+          .s4-day-row { align-items: flex-start; padding-top: 0.625rem; padding-bottom: 0.625rem; }
+          .s4-day-selects { width: 100%; margin-top: 0.25rem; }
+        }
       `}</style>
     </div>
   );
