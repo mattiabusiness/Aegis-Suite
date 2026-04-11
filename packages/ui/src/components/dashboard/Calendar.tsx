@@ -582,7 +582,7 @@ function DayView({
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }}>
+      <div className="flex flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent', WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'], touchAction: 'pan-y' }}>
         {/* Time column */}
         <div className="w-12 sm:w-16 flex-shrink-0" style={{ minHeight: totalHeight, background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
           {hours.map((hour, idx) => (
@@ -744,7 +744,7 @@ function WeekView({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-scroll" style={{ scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }} onScroll={handleScroll}>
+        <div className="flex-1 overflow-y-scroll" style={{ scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent', WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'], touchAction: 'pan-y' }} onScroll={handleScroll}>
           <div className="flex" style={{ height: totalHeight }}>
             {visibleDays.map((day) => {
               const dayBH = getBusinessHoursForDay(businessHours, day);

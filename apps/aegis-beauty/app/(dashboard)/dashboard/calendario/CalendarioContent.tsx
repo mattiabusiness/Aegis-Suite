@@ -127,6 +127,8 @@ export function CalendarioContent({
   const [showServiceFilter, setShowServiceFilter] = useState(false);
   const [btnRipple, setBtnRipple] = useState<{ x: number; y: number; id: number } | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [drawerMounted, setDrawerMounted] = useState(false);
+  const [drawerAnimated, setDrawerAnimated] = useState(false);
   const staffList = initialStaff;
 
   // Modal state
@@ -352,6 +354,18 @@ export function CalendarioContent({
     }
     return true;
   });
+
+  // Drawer open/close with mount animation
+  useEffect(() => {
+    if (showDrawer) {
+      setDrawerMounted(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setDrawerAnimated(true)));
+    } else {
+      setDrawerAnimated(false);
+      const t = setTimeout(() => setDrawerMounted(false), 320);
+      return () => clearTimeout(t);
+    }
+  }, [showDrawer]);
 
   // Next 5 upcoming events — only confirmed/pending (to be served)
   const now = new Date();
@@ -710,26 +724,34 @@ export function CalendarioContent({
       {/* ============================================================== */}
 
       {/* Drawer backdrop */}
-      {showDrawer && (
+      {drawerMounted && (
         <div
           className="fixed inset-0 z-40 lg:hidden"
-          style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', animation: 'calC-fadeIn 0.2s ease-out both' }}
+          style={{
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            opacity: drawerAnimated ? 1 : 0,
+            transition: 'opacity 0.25s ease',
+          }}
           onClick={() => setShowDrawer(false)}
         />
       )}
 
       {/* Drawer panel */}
+      {drawerMounted && (
       <div
         className="fixed left-0 right-0 z-50 lg:hidden flex flex-col"
         style={{
           bottom: 60,
           maxHeight: 'calc(100dvh - 56px - 60px - 1rem)',
           background: 'rgba(255,255,255,0.97)',
-          backdropFilter: 'blur(20px)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
           borderRadius: '20px 20px 0 0',
-          borderTop: '1px solid rgba(168,85,247,0.15)',
-          boxShadow: '0 -8px 40px rgba(0,0,0,0.12)',
-          transform: showDrawer ? 'translateY(0)' : 'translateY(100%)',
+          border: '1px solid rgba(168,85,247,0.35)',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.12), 0 8px 32px rgba(147,51,234,0.12), 0 0 0 1px rgba(168,85,247,0.2), 0 0 40px rgba(168,85,247,0.18)',
+          transform: drawerAnimated ? 'translateY(0)' : 'translateY(100%)',
           transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
@@ -748,17 +770,6 @@ export function CalendarioContent({
 
         {/* Drawer scrollable body */}
         <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3" style={{ scrollbarWidth: 'none' }}>
-
-          {/* Nuovo appuntamento */}
-          <button
-            onClick={() => { setShowDrawer(false); handleNewClick(); }}
-            className="relative w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-white text-sm font-semibold overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #9333ea, #7c3aed)', boxShadow: '0 4px 16px rgba(147,51,234,0.3)' }}
-          >
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%)', animation: 'calC-shimmer 2.5s ease-in-out infinite' }} />
-            <Plus className="w-4.5 h-4.5 relative z-10" />
-            <span className="relative z-10">Nuovo appuntamento</span>
-          </button>
 
           {/* Filtri */}
           <div className="rounded-2xl p-3" style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(168,85,247,0.08)' }}>
@@ -861,6 +872,7 @@ export function CalendarioContent({
 
         </div>
       </div>
+      )}
 
       {/* ============================================================== */}
       {/* MOBILE FABs (lg:hidden) — float over calendar bottom-right      */}
