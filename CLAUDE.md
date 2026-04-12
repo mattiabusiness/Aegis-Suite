@@ -25,14 +25,14 @@ Senior Full-Stack Developer e UI/UX Architect di Aegis Suite.
 - Interfaccia Staff (permessi ridotti sulla stessa UI gestore)
 - Importatore universale clienti (Excel/CSV)
 - Interfaccia Cliente (3 pagine)
+- Responsive fatto 
 
 ### IN CORSO:
-Interfaccia Cliente (3 pagine):
-   - /[slug] → semi-pubblica SSG (visibile senza login)
-    Inserire Toggle ON/OFF nelle impostazioni gestore (default: ON)
-   - Perfezionare tutta l'interfaccia cliente 
+    PWA, notifiche push e email
+    
+   
 ### DA FARE (in ordine): 
-1. Launch prep (Responsive, PWA, notifiche push e email, performance, sicurezza)
+1. Launch prep (Inserire Toggle ON/OFF nelle impostazioni gestore (default: ON),Inserire altre due piccole features, performance, sicurezza)
 
 ---
 

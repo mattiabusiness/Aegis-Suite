@@ -65,15 +65,13 @@ L'area dedicata all'utente finale del salone. **Mobile-First strict.**
 ## 6. ACTIVE BACKLOG (Prioritized)
 
 ### P0 — CLIENT INTERFACE NOW (Sessione corrente)
-- [ ] `/[slug]` — Business landing semi-pubblica (SSG)
-  Inserire Toggle visibilità nelle impostazioni gestore (default: ON)
-- [ ] Perfezionamento pagina cliente
+- PWA: manifest, service worker, installabile, notifiche push e email transazionali (ZeptoMail) + notifiche: conferma, reminder 24h, notifica gestore
+  
+
 
 ### P1 — LAUNCH PREP
-- [ ] Email transazionali (Resend) + notifiche: conferma, reminder 24h, notifica gestore
-- [ ] PWA: manifest, service worker, installabile
+- Inserire Toggle ON/OFF nelle impostazioni gestore (default: ON),Inserire altre due piccole features
 - [ ] Lighthouse > 90 su tutte le pagine
-- [ ] Legal pages: Privacy Policy, T&C, Cookie Policy
 - [ ] Security audit finale (RLS, API routes, input sanitization)
 - [ ] Performance: bundle analysis, lazy loading, image optimization
 
