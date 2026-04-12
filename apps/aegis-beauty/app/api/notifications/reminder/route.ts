@@ -23,6 +23,11 @@ interface AppointmentReminder extends Appointment {
   businesses: { name: string; slug: string } | null;
 }
 
+// pg_net sends POST — same logic, shared handler
+export async function POST(req: Request): Promise<NextResponse> {
+  return GET(req);
+}
+
 export async function GET(req: Request): Promise<NextResponse> {
   // Security: only allow Vercel Cron or internal calls
   const authHeader = req.headers.get('authorization') ?? '';
