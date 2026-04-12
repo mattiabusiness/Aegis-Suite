@@ -2,7 +2,7 @@
   "name": "Aegis Beauty",
   "short_name": "Aegis Beauty",
   "description": "Prenota i tuoi appuntamenti di bellezza",
-  "start_url": "/dashboard",
+  "start_url": "/start",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#7c3aed",

@@ -32,7 +32,7 @@ const CUSTOMER_PROTECTED_SUBPATHS = ['account', 'prenota'];
 const KNOWN_ROOT_PREFIXES = [
   '/dashboard', '/onboarding', '/login', '/register',
   '/forgot-password', '/reset-password', '/auth', '/api', '/_next',
-  '/demo', '/legal', // marketing routes — not customer slugs
+  '/demo', '/legal', '/start', // marketing routes + PWA start — not customer slugs
 ];
 
 function isCustomerProtectedRoute(pathname: string): boolean {
