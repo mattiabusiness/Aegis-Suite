@@ -5,8 +5,9 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@aegis/core';
-import { notify } from '@aegis/core';
-import type { PushPayload, EmailFallbackData } from '@aegis/core';
+import type { PushPayload } from '@aegis/core';
+import { notify } from '@/lib/notify';
+import type { EmailFallbackData } from '@/lib/email';
 
 interface SendBody {
   userId: string;

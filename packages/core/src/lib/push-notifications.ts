@@ -1,6 +1,7 @@
 // ============================================================================
-// AEGIS SUITE - PUSH NOTIFICATIONS
+// AEGIS SUITE - PUSH NOTIFICATIONS (client-safe)
 // File: packages/core/src/lib/push-notifications.ts
+// Only browser-safe code here — no Node.js modules.
 // ============================================================================
 
 // ============================================================================
@@ -63,7 +64,7 @@ export async function subscribeToPush(
 
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
+      applicationServerKey: urlBase64ToArrayBuffer(publicVapidKey),
     });
 
     return subscription;
@@ -86,56 +87,10 @@ export async function unsubscribeFromPush(): Promise<boolean> {
 }
 
 // ============================================================================
-// SERVER-SIDE — send push notification via web-push
-// ============================================================================
-
-export async function sendPushNotification(
-  subscription: PushSubscriptionData,
-  payload: PushPayload
-): Promise<boolean> {
-  // Dynamic import so this module doesn't break on the client
-  const webpush = await import('web-push');
-
-  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-  const vapidSubject = process.env.VAPID_SUBJECT ?? 'mailto:support@aegisbeauty.app';
-
-  if (!vapidPublicKey || !vapidPrivateKey) {
-    console.error('[push] VAPID keys not configured');
-    return false;
-  }
-
-  webpush.default.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-
-  const pushPayload: PushPayload = {
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png',
-    ...payload,
-  };
-
-  try {
-    await webpush.default.sendNotification(
-      {
-        endpoint: subscription.endpoint,
-        keys: {
-          p256dh: subscription.p256dh,
-          auth: subscription.auth_key,
-        },
-      },
-      JSON.stringify(pushPayload)
-    );
-    return true;
-  } catch (err) {
-    console.error('[push] send failed:', err);
-    return false;
-  }
-}
-
-// ============================================================================
 // INTERNAL UTIL
 // ============================================================================
 
-function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
+function urlBase64ToArrayBuffer(base64String: string): ArrayBuffer {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = atob(base64);

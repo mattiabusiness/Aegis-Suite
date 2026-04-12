@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@aegis/core';
-import { notify } from '@aegis/core';
+import { notify } from '@/lib/notify';
 import type { PushPayload } from '@aegis/core';
 import { cookies } from 'next/headers';
 import type { Business, BusinessMember } from '@aegis/types';

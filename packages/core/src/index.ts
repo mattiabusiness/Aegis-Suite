@@ -107,16 +107,15 @@ export type {
 export { resolveStaffPermissions, getCurrentStaffPermissions } from './lib/staff-permissions';
 export type { StaffPermissions } from './lib/staff-permissions';
 
-// Push Notifications
+// Push Notifications (client-safe)
 export {
   subscribeToPush,
   unsubscribeFromPush,
   isPushSupported,
   getNotificationPermission,
-  sendPushNotification,
 } from './lib/push-notifications';
 export type { PushSubscriptionData, PushPayload } from './lib/push-notifications';
 
-// Notify (push + email fallback)
-export { notify } from './lib/notify';
-export type { EmailFallbackData } from './lib/notify';
+// notify and sendPushNotification are server-only (use web-push/zeptomail).
+// Import them directly in API routes via relative path, NOT from this index.
+// export { notify } from './lib/notify';  ← intentionally omitted

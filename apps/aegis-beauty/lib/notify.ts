@@ -5,10 +5,10 @@
 // ============================================================================
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { sendPushNotification } from './push-notifications.server';
-import type { PushPayload, PushSubscriptionData } from './push-notifications';
-import { sendReminderEmail, sendReminderHourEmail } from './email';
-import type { EmailFallbackData } from './email';
+import { sendPushNotification } from '@/lib/push-notifications.server';
+import type { PushPayload, PushSubscriptionData } from '@aegis/core';
+import { sendReminderEmail, sendReminderHourEmail } from '@/lib/email';
+import type { EmailFallbackData } from '@/lib/email';
 
 export type { EmailFallbackData };
 

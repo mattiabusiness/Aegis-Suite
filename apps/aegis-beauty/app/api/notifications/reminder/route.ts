@@ -5,8 +5,9 @@
 
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@aegis/core';
-import { notify } from '@aegis/core';
-import type { EmailFallbackData, PushPayload } from '@aegis/core';
+import { notify } from '@/lib/notify';
+import type { EmailFallbackData } from '@/lib/email';
+import type { PushPayload } from '@aegis/core';
 import { cookies } from 'next/headers';
 import type { Appointment } from '@aegis/types';
 
