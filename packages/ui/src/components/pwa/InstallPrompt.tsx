@@ -128,7 +128,12 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
       onInstalled?.();
     });
 
-    if (shouldShow(showAfterBooking)) {
+    // After booking: bypass all localStorage checks — just show it
+    const shouldDisplay = showAfterBooking
+      ? !isInStandaloneMode() && localStorage.getItem(KEYS.isInstalled) !== 'true'
+      : shouldShow(false);
+
+    if (shouldDisplay) {
       const t = setTimeout(() => setVisible(true), showAfterBooking ? 1500 : 800);
       return () => {
         clearTimeout(t);
