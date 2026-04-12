@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Share, Download } from 'lucide-react';
 
@@ -149,7 +150,7 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
     ? `Installa l'app per avere il massimo controllo sui tuoi appuntamenti e non dimenticartene mai.`
     : `Non perdere il prossimo appuntamento — installa l'app e attiva i promemoria automatici in un tap.`;
 
-  return (
+  const prompt = (
     <AnimatePresence>
       {visible && (
         <motion.div
@@ -227,4 +228,7 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(prompt, document.body);
 }
