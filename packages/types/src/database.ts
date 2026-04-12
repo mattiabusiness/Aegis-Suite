@@ -558,6 +558,11 @@ export interface Database {
         Insert: Omit<Review, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Review, 'id' | 'business_id' | 'created_at' | 'updated_at'>>;
       };
+      push_subscriptions: {
+        Row: PushSubscriptionRow;
+        Insert: Omit<PushSubscriptionRow, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<PushSubscriptionRow, 'id' | 'user_id' | 'created_at'>>;
+      };
     };
     Views: {
       staff_with_services: {
@@ -668,4 +673,20 @@ export interface DashboardStats {
     appointments: number;
     revenue: number;
   }>;
+}
+
+// ============================================================================
+// PUSH SUBSCRIPTIONS
+// ============================================================================
+
+export interface PushSubscriptionRow {
+  id: string;
+  user_id: string;
+  business_id: string | null;
+  endpoint: string;
+  p256dh: string;
+  auth_key: string;
+  user_agent: string | null;
+  created_at: string;
+  updated_at: string;
 }

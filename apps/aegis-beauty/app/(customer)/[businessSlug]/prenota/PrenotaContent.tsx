@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { FloatingParticles, BookingCarousel } from '@aegis/ui';
+import { FloatingParticles, BookingCarousel, InstallPrompt } from '@aegis/ui';
 import type { BookingState, FetchSlotsFn } from '@aegis/ui';
 import type { Business, Service, Staff, BusinessHours, Customer, ServiceCategory } from '@aegis/types';
 
@@ -85,6 +85,16 @@ function downloadIcs(summary: BookedSummary) {
 
 function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string }) {
   const router = useRouter();
+  // Show PWA install prompt after successful booking
+  return (
+    <>
+      <InstallPrompt showAfterBooking businessName={summary.businessName} />
+      <SuccessScreenContent summary={summary} slug={slug} router={router} />
+    </>
+  );
+}
+
+function SuccessScreenContent({ summary, slug, router }: { summary: BookedSummary; slug: string; router: ReturnType<typeof useRouter> }) {
 
   const dateLabel = summary.date.toLocaleDateString('it-IT', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',

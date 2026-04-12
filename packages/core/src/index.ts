@@ -106,3 +106,17 @@ export type {
 // Staff Permissions
 export { resolveStaffPermissions, getCurrentStaffPermissions } from './lib/staff-permissions';
 export type { StaffPermissions } from './lib/staff-permissions';
+
+// Push Notifications
+export {
+  subscribeToPush,
+  unsubscribeFromPush,
+  isPushSupported,
+  getNotificationPermission,
+  sendPushNotification,
+} from './lib/push-notifications';
+export type { PushSubscriptionData, PushPayload } from './lib/push-notifications';
+
+// Notify (push + email fallback)
+export { notify } from './lib/notify';
+export type { EmailFallbackData } from './lib/notify';

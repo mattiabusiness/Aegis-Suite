@@ -76,6 +76,12 @@ export const metadata: Metadata = {
     canonical: 'https://aegisbeauty.app',
   },
   themeColor: '#7C3AED',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Aegis Beauty',
+  },
 };
 
 const jsonLd = {
@@ -119,6 +125,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it" className={inter.variable}>
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-180x180.png" />
+        <meta name="theme-color" content="#7c3aed" />
+      </head>
       <body>
         <script
           type="application/ld+json"

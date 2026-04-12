@@ -8,20 +8,22 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
-import { CustomerLayout } from '@aegis/ui';
-import type { CustomerLayoutProps } from '@aegis/ui';
+import { CustomerLayout, InstallPrompt } from '@aegis/ui';
+import type { CustomerLayoutProps, CustomerLayoutBusiness } from '@aegis/ui';
 
 type WrapperProps = Omit<CustomerLayoutProps, 'currentPath' | 'onNavigate'>;
 
-export function CustomerLayoutWrapper({ children, ...props }: WrapperProps) {
+export function CustomerLayoutWrapper({ children, business, ...props }: WrapperProps & { business: CustomerLayoutBusiness }) {
   const pathname = usePathname();
   const router = useRouter();
 
   return (
     <>
       <Toaster position="top-center" richColors />
+      <InstallPrompt businessName={business.name} />
       <CustomerLayout
         {...props}
+        business={business}
         currentPath={pathname}
         onNavigate={(href) => router.push(href)}
       >
