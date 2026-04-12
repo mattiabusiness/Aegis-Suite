@@ -15,6 +15,12 @@ export function usePushSubscription() {
   useEffect(() => {
     if (!isPushSupported()) return;
 
+    // Only request permission when running as installed PWA
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    if (!isStandalone) return;
+
     // Don't ask again if already subscribed this session
     if (sessionStorage.getItem(STORAGE_KEY) === 'true') return;
 
