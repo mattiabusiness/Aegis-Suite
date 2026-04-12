@@ -14,6 +14,8 @@ import {
   createServerSupabaseClient,
   getCurrentUser,
 } from '@aegis/core';
+import { notify } from '@/lib/notify';
+import type { PushPayload } from '@aegis/core';
 
 function createAdminClient() {
   return createClient(
@@ -233,6 +235,44 @@ export async function POST(request: NextRequest) {
     if (serviceInsertError) {
       // Non-critical: appointment is already created, just log the error
       console.error('[bookings/create] appointment_services insert error:', serviceInsertError);
+    }
+
+    // ========================================================================
+    // STEP 7: Notify gestore of new booking (fire-and-forget)
+    // ========================================================================
+
+    try {
+      const { data: ownerRow } = await admin
+        .from('business_members')
+        .select('user_id')
+        .eq('business_id', businessId)
+        .eq('role', 'owner')
+        .eq('is_active', true)
+        .single();
+
+      const { data: businessRow } = await admin
+        .from('businesses')
+        .select('name, slug')
+        .eq('id', businessId)
+        .single();
+
+      if (ownerRow?.user_id && businessRow) {
+        const startLabel = startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        const dateLabel  = startTime.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+
+        const payload: PushPayload = {
+          title: 'Nuova prenotazione',
+          body: `${(service as { name: string }).name} — ${dateLabel} alle ${startLabel}`,
+          url: `/${(businessRow as { slug: string }).slug}/dashboard/calendario`,
+          actions: [{ action: 'view', title: 'Vedi calendario' }],
+          tag: `new-booking-${appointmentId}`,
+        };
+
+        await notify(ownerRow.user_id, payload, admin);
+      }
+    } catch (notifyErr) {
+      // Non-critical — booking is confirmed regardless
+      console.error('[bookings/create] notify gestore failed:', notifyErr);
     }
 
     return NextResponse.json({ success: true, appointmentId });

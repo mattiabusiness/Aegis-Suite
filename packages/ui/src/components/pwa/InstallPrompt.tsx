@@ -26,6 +26,20 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 // ============================================================================
+// GLOBAL DEFERRED PROMPT — captured at module level so late-mounting
+// components (e.g. SuccessScreen) don't miss the beforeinstallprompt event
+// ============================================================================
+
+let _globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    _globalDeferredPrompt = e as BeforeInstallPromptEvent;
+  });
+}
+
+// ============================================================================
 // STORAGE KEYS
 // ============================================================================
 
@@ -97,23 +111,24 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
   useEffect(() => {
     setIos(isIOS());
 
-    // Capture Android install prompt
+    // Use global deferred prompt (captured at module load) + keep listening for future events
+    if (_globalDeferredPrompt) setDeferredPrompt(_globalDeferredPrompt);
+
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
+      _globalDeferredPrompt = e as BeforeInstallPromptEvent;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // Track app installed
     window.addEventListener('appinstalled', () => {
       localStorage.setItem(KEYS.isInstalled, 'true');
+      _globalDeferredPrompt = null;
       setVisible(false);
       onInstalled?.();
     });
 
-    // Decide visibility
     if (shouldShow(showAfterBooking)) {
-      // Small delay so it doesn't pop immediately
       const t = setTimeout(() => setVisible(true), showAfterBooking ? 1500 : 800);
       return () => {
         clearTimeout(t);
