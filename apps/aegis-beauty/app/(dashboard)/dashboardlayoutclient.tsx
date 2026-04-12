@@ -13,6 +13,7 @@ import {
   ContentThemeProvider,
   beautyContentTheme,
   InstallPrompt,
+  NotificationPrompt,
 } from '@aegis/ui';
 import type { SidebarMenuItem } from '@aegis/ui';
 import { createClient } from '@aegis/core';
@@ -99,6 +100,7 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
       <ContentThemeProvider theme={beautyContentTheme}>
         <Toaster position="top-right" richColors />
         <InstallPrompt businessName={data.business.name} />
+        <NotificationPrompt />
         <DashboardLayout
           theme={beautyTheme}
           platformLogo={<AegisLogo />}

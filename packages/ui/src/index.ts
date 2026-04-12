@@ -9,6 +9,7 @@
 
 export { InstallPrompt } from './components/pwa/InstallPrompt';
 export type { InstallPromptProps } from './components/pwa/InstallPrompt';
+export { NotificationPrompt } from './components/pwa/NotificationPrompt';
 
 // ============================================================================
 // UI COMPONENTS

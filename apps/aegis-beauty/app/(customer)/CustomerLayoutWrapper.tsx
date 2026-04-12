@@ -8,7 +8,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
-import { CustomerLayout, InstallPrompt } from '@aegis/ui';
+import { CustomerLayout, InstallPrompt, NotificationPrompt } from '@aegis/ui';
 import type { CustomerLayoutProps, CustomerLayoutBusiness } from '@aegis/ui';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
 
@@ -24,6 +24,7 @@ export function CustomerLayoutWrapper({ children, business, ...props }: WrapperP
     <>
       <Toaster position="top-center" richColors />
       <InstallPrompt businessName={business.name} />
+      <NotificationPrompt />
       <CustomerLayout
         {...props}
         business={business}
