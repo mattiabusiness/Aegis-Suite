@@ -19,6 +19,7 @@ import { createClient } from '@aegis/core';
 import type { StaffPermissions } from '@aegis/core';
 import { getMenuForRole, getActiveMenuId } from '@/config/menu';
 import { StaffPermissionsProvider } from '@/lib/staff-permissions-context';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
 
 // ============================================================================
 // TYPES
@@ -67,6 +68,8 @@ function AegisLogo() {
 export function DashboardLayoutClient({ data, permissions, children }: DashboardLayoutClientProps) {
   const pathname = usePathname();
   const router = useRouter();
+
+  usePushSubscription();
 
   // Se siamo in onboarding, non mostrare il layout dashboard
   if (pathname.startsWith('/onboarding')) {

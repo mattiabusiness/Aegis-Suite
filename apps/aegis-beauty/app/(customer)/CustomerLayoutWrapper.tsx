@@ -10,12 +10,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
 import { CustomerLayout, InstallPrompt } from '@aegis/ui';
 import type { CustomerLayoutProps, CustomerLayoutBusiness } from '@aegis/ui';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
 
 type WrapperProps = Omit<CustomerLayoutProps, 'currentPath' | 'onNavigate'>;
 
 export function CustomerLayoutWrapper({ children, business, ...props }: WrapperProps & { business: CustomerLayoutBusiness }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  usePushSubscription();
 
   return (
     <>
