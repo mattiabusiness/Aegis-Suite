@@ -560,7 +560,7 @@ function DayView({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Day header */}
       <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
         <div className="w-16 flex-shrink-0" style={{ background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
@@ -683,7 +683,7 @@ function WeekView({
   };
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex h-full min-h-0 overflow-hidden">
       {/* Time column */}
       <div className="w-12 sm:w-16 flex-shrink-0 flex flex-col" style={{ background: 'rgba(0,0,0,0.015)', borderRight: '1px solid rgba(0,0,0,0.06)' }}>
         <div className="h-14 flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }} />
@@ -1058,7 +1058,7 @@ const view = controlledView ?? internalView;
         isMobile={isMobile}
       />
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {view === 'day' ? (
           <DayView date={selectedDate} events={events} businessHours={businessHours} closures={closures} onEventClick={onEventClick} onSlotClick={onSlotClick} />
         ) : view === 'week' ? (

@@ -11,7 +11,8 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Calendar,
   AppointmentModal,
@@ -723,55 +724,63 @@ export function CalendarioContent({
       {/* MOBILE BOTTOM DRAWER                                            */}
       {/* ============================================================== */}
 
-      {/* Drawer backdrop */}
-      {drawerMounted && (
-        <div
-          className="fixed inset-0 z-40 lg:hidden"
-          style={{
-            background: 'rgba(0,0,0,0.55)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            opacity: drawerAnimated ? 1 : 0,
-            transition: 'opacity 0.25s ease',
-          }}
-          onClick={() => setShowDrawer(false)}
-        />
-      )}
+      {/* ── Portal: Drawer + FABs (escape transform stacking context) ────── */}
+      {typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Drawer backdrop */}
+          {drawerMounted && (
+            <div
+              className="fixed inset-0 lg:hidden"
+              style={{
+                zIndex: 48,
+                background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                opacity: drawerAnimated ? 1 : 0,
+                transition: 'opacity 0.25s ease',
+              }}
+              onClick={() => setShowDrawer(false)}
+            />
+          )}
 
-      {/* Drawer panel */}
-      {drawerMounted && (
-      <div
-        className="fixed left-0 right-0 z-50 lg:hidden flex flex-col"
-        style={{
-          bottom: 60,
-          maxHeight: 'calc(100dvh - 56px - 60px - 1rem)',
-          background: 'rgba(255,255,255,0.97)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          borderRadius: '20px 20px 0 0',
-          border: '1px solid rgba(168,85,247,0.35)',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.12), 0 8px 32px rgba(147,51,234,0.12), 0 0 0 1px rgba(168,85,247,0.2), 0 0 40px rgba(168,85,247,0.18)',
-          transform: drawerAnimated ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(0,0,0,0.15)' }} />
-        </div>
+          {/* Drawer panel */}
+          {drawerMounted && (
+            <div
+              className="fixed left-0 right-0 lg:hidden flex flex-col"
+              style={{
+                zIndex: 49,
+                bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))',
+                maxHeight: 'calc(100dvh - 56px - 60px - 2rem)',
+                background: 'rgba(255,255,255,0.97)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                borderRadius: '20px 20px 0 0',
+                borderTop: '1px solid rgba(168,85,247,0.35)',
+                borderLeft: 'none',
+                borderRight: 'none',
+                borderBottom: 'none',
+                boxShadow: '0 -8px 40px rgba(0,0,0,0.12), 0 -2px 0 rgba(168,85,247,0.2), 0 0 60px rgba(147,51,234,0.1)',
+                transform: drawerAnimated ? 'translateY(0)' : 'translateY(100%)',
+                transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(0,0,0,0.15)' }} />
+              </div>
 
-        {/* Drawer header */}
-        <div className="flex items-center justify-between px-4 pb-3 flex-shrink-0">
-          <h2 className="text-base font-bold text-gray-900">Calendario</h2>
-          <button onClick={() => setShowDrawer(false)} className="p-1.5 rounded-xl" style={{ color: 'rgba(0,0,0,0.35)' }}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
+              {/* Drawer header */}
+              <div className="flex items-center justify-between px-4 pb-3 flex-shrink-0">
+                <h2 className="text-base font-bold text-gray-900">Calendario</h2>
+                <button onClick={() => setShowDrawer(false)} className="p-1.5 rounded-xl" style={{ color: 'rgba(0,0,0,0.35)' }}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
 
-        {/* Drawer scrollable body */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3" style={{ scrollbarWidth: 'none' }}>
+              {/* Drawer scrollable body */}
+              <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3" style={{ scrollbarWidth: 'none' }}>
 
-          {/* Filtri */}
+                {/* Filtri */}
           <div className="rounded-2xl p-3" style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(168,85,247,0.08)' }}>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Filtri</p>
             <div className="flex gap-2">
@@ -870,43 +879,55 @@ export function CalendarioContent({
             </div>
           </div>
 
-        </div>
-      </div>
-      )}
+              </div>
+            </div>
+          )}
 
-      {/* ============================================================== */}
-      {/* MOBILE FABs (lg:hidden) — float over calendar bottom-right      */}
-      {/* ============================================================== */}
-      <div className="fixed z-40 lg:hidden flex flex-col items-end gap-2" style={{ bottom: 76, right: 16 }}>
-        {/* Drawer toggle FAB */}
-        <button
-          onClick={() => setShowDrawer(v => !v)}
-          className="w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all duration-200"
-          style={{
-            background: showDrawer ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.95)',
-            border: '1px solid rgba(168,85,247,0.2)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-            color: '#7c3aed',
-          }}
-        >
-          {showDrawer
-            ? <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            : <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-          }
-        </button>
-        {/* New appointment FAB */}
-        <button
-          onClick={handleNewClick}
-          className="w-13 h-13 rounded-full flex items-center justify-center shadow-xl"
-          style={{
-            width: 52, height: 52,
-            background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
-            boxShadow: '0 6px 20px rgba(147,51,234,0.4)',
-          }}
-        >
-          <Plus className="w-5 h-5 text-white" />
-        </button>
-      </div>
+          {/* FABs */}
+          <div
+            className="fixed lg:hidden flex flex-col items-center gap-2.5"
+            style={{ zIndex: 50, bottom: 'calc(60px + env(safe-area-inset-bottom, 0px) + 10px)', right: 16 }}
+          >
+            {/* Drawer toggle — pill with icon */}
+            <button
+              onClick={() => setShowDrawer(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 44, height: 44, borderRadius: 14,
+                background: showDrawer
+                  ? 'linear-gradient(135deg, rgba(147,51,234,0.15), rgba(168,85,247,0.1))'
+                  : 'rgba(255,255,255,0.96)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: showDrawer ? '1.5px solid rgba(168,85,247,0.4)' : '1.5px solid rgba(168,85,247,0.2)',
+                boxShadow: showDrawer
+                  ? '0 4px 16px rgba(147,51,234,0.25), 0 0 0 3px rgba(168,85,247,0.08)'
+                  : '0 4px 16px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06)',
+                color: '#7c3aed',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
+              {showDrawer
+                ? <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                : <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
+              }
+            </button>
+            {/* New appointment FAB */}
+            <button
+              onClick={handleNewClick}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 52, height: 52, borderRadius: 16,
+                background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+                boxShadow: '0 6px 20px rgba(147,51,234,0.45), 0 2px 8px rgba(0,0,0,0.12)',
+              }}
+            >
+              <Plus style={{ width: 22, height: 22, color: '#fff', strokeWidth: 2.5 }} />
+            </button>
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* Event detail modal */}
       <EventDetailModal
