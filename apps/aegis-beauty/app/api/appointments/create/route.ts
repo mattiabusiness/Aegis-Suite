@@ -6,9 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerSupabaseClient, getCurrentUser } from '@aegis/core';
-import { createClient } from '@supabase/supabase-js';
-
+import { createServerSupabaseClient, getCurrentUser, createAdminSupabaseClient } from '@aegis/core';
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -27,22 +25,6 @@ interface CreateAppointmentRequest {
   time: string;
   notes: string;
   businessId: string;
-}
-
-// ============================================================================
-// HELPER: Create Supabase Admin Client (for sending invites)
-// ============================================================================
-
-function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
 }
 
 // ============================================================================
@@ -146,7 +128,7 @@ export async function POST(request: NextRequest) {
         // Send invite email if requested
         if (sendInvite) {
           try {
-            const adminClient = createAdminClient();
+            const adminClient = createAdminSupabaseClient();
             
             const { data: business } = await supabase
               .from('businesses')

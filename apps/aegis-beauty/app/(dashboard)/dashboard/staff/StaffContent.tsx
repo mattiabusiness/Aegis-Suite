@@ -425,7 +425,7 @@ export function StaffContent({
     // Fetch current staff hours
     const { data: staffHours } = await supabase
       .from('staff_hours')
-      .select('*')
+      .select('staff_id, day_of_week, is_working, start_time_1, end_time_1, start_time_2, end_time_2')
       .eq('staff_id', member.id) as { data: StaffHoursData[] | null };
 
     const useBusinessHours = !staffHours || staffHours.length === 0;

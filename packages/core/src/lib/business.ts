@@ -260,7 +260,7 @@ export async function getCurrentUserBusiness(
 
     const { data: business } = await supabase
       .from('businesses')
-      .select('*')
+      .select('id, slug, name, vertical, email, phone, website, address_street, address_city, address_province, address_postal_code, address_country, latitude, longitude, logo_url, cover_image_url, primary_color, secondary_color, timezone, currency, booking_advance_min, booking_advance_max, cancellation_policy_hours, auto_confirm_bookings, description, short_description, owner_id, is_active, is_verified, created_at, updated_at, business_type, onboarding_completed, onboarding_step, workstations, roi_data, terms_accepted_at, articles_1341_accepted_at')
       .eq('id', data.business_id)
       .single();
 
@@ -280,7 +280,7 @@ export async function getBusinessBySlug(
   try {
     const { data } = await supabase
       .from('businesses')
-      .select('*')
+      .select('id, slug, name, vertical, email, phone, website, address_street, address_city, address_province, address_postal_code, address_country, latitude, longitude, logo_url, cover_image_url, primary_color, secondary_color, timezone, currency, booking_advance_min, booking_advance_max, cancellation_policy_hours, auto_confirm_bookings, description, short_description, owner_id, is_active, is_verified, created_at, updated_at, business_type, onboarding_completed, onboarding_step, workstations, roi_data, terms_accepted_at, articles_1341_accepted_at')
       .eq('slug', slug)
       .eq('is_active', true)
       .single();
@@ -302,7 +302,7 @@ export async function getCustomerByUserId(
   try {
     const { data } = await supabase
       .from('customers')
-      .select('*')
+      .select('id, user_id, business_id, full_name, email, phone, is_active, created_at, last_visit_at, total_visits, total_spent, notes, tags, preferences')
       .eq('user_id', userId)
       .eq('business_id', businessId)
       .eq('is_active', true)

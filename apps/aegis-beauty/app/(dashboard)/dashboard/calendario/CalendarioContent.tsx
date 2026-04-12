@@ -179,15 +179,15 @@ export function CalendarioContent({
   // DYNAMIC APPOINTMENT FETCHING
   // ========================================================================
 
-  const fetchAppointments = useCallback(async (date: Date, currentView: CalendarView) => {
+  const fetchAppointments = useCallback(async (date: Date, currentView: CalendarView, force = false, silent = false) => {
     const range = getDateRange(date, currentView);
     const rangeKey = `${range.start}_${range.end}`;
 
-    // Skip if already fetched this range
-    if (rangeKey === lastFetchedRange.current) return;
+    // Skip if already fetched this range (unless forced by polling)
+    if (!force && rangeKey === lastFetchedRange.current) return;
     lastFetchedRange.current = rangeKey;
 
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const query = supabase
         .from('appointments')
@@ -234,13 +234,36 @@ export function CalendarioContent({
     } catch (err) {
       console.error('Error fetching appointments:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [businessId, supabase, permissions]);
 
   // Fetch when date or view changes
   useEffect(() => {
     fetchAppointments(selectedDate, view);
+  }, [selectedDate, view, fetchAppointments]);
+
+  // Poll for new appointments every 60s — silent (no spinner), only when tab is visible
+  useEffect(() => {
+    const poll = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAppointments(selectedDate, view, true, true);
+      }
+    };
+
+    const intervalId = setInterval(poll, 60_000);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAppointments(selectedDate, view, true, true);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [selectedDate, view, fetchAppointments]);
 
   // ========================================================================
@@ -316,38 +339,38 @@ export function CalendarioContent({
   // HANDLERS
   // ========================================================================
 
-  const handleNewClick = () => {
+  const handleNewClick = useCallback(() => {
     setModalInitialDate(selectedDate);
     setModalInitialTime(undefined);
     setAvailableSlots([]);
     refreshBusinessHours();
     setIsModalOpen(true);
-  };
+  }, [selectedDate, refreshBusinessHours]);
 
-  const handleSlotClick = (date: Date, hour: number, minutes: number) => {
+  const handleSlotClick = useCallback((date: Date, hour: number, minutes: number) => {
     setModalInitialDate(date);
     setModalInitialTime(`${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
     setAvailableSlots([]);
     refreshBusinessHours();
     setIsModalOpen(true);
-  };
+  }, [refreshBusinessHours]);
 
-  const handleEventClick = (event: CalendarEventData) => {
+  const handleEventClick = useCallback((event: CalendarEventData) => {
     setSelectedEvent(event);
-  };
+  }, []);
 
-  const handleStaffFilter = (staffId: string | null) => {
+  const handleStaffFilter = useCallback((staffId: string | null) => {
     setSelectedStaff(staffId);
     setShowStaffFilter(false);
-  };
+  }, []);
 
-  const handleServiceFilter = (serviceId: string | null) => {
+  const handleServiceFilter = useCallback((serviceId: string | null) => {
     setSelectedServiceFilter(serviceId);
     setShowServiceFilter(false);
-  };
+  }, []);
 
   // Filter events by selected staff AND service
-  const filteredEvents = events.filter(e => {
+  const filteredEvents = useMemo(() => events.filter(e => {
     // Staff filter
     if (selectedStaff) {
       const ext = e as CalendarEventData & { staffId?: string };
@@ -364,7 +387,7 @@ export function CalendarioContent({
       if (svc && e.title !== svc.name) return false;
     }
     return true;
-  });
+  }), [events, selectedStaff, selectedServiceFilter, staffList, initialServices]);
 
   // Drawer open/close with mount animation
   useEffect(() => {
@@ -379,14 +402,16 @@ export function CalendarioContent({
   }, [showDrawer]);
 
   // Next 5 upcoming events — only confirmed/pending (to be served)
-  const now = new Date();
-  const upcomingEvents = events
-    .filter(e => {
-      const start = new Date(e.startTime);
-      return start >= now && (e.status === 'confirmed' || e.status === 'pending');
-    })
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-    .slice(0, 5);
+  const upcomingEvents = useMemo(() => {
+    const now = new Date();
+    return events
+      .filter(e => {
+        const start = new Date(e.startTime);
+        return start >= now && (e.status === 'confirmed' || e.status === 'pending');
+      })
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+      .slice(0, 5);
+  }, [events]);
 
   // ========================================================================
   // STATUS UPDATES
@@ -482,8 +507,8 @@ export function CalendarioContent({
   // RENDER HELPERS
   // ========================================================================
 
-  const selectedStaffName = selectedStaff ? staffList.find(s => s.id === selectedStaff)?.full_name : null;
-  const selectedServiceName = selectedServiceFilter ? initialServices.find(s => s.id === selectedServiceFilter)?.name : null;
+  const selectedStaffName = useMemo(() => selectedStaff ? staffList.find(s => s.id === selectedStaff)?.full_name : null, [selectedStaff, staffList]);
+  const selectedServiceName = useMemo(() => selectedServiceFilter ? initialServices.find(s => s.id === selectedServiceFilter)?.name : null, [selectedServiceFilter, initialServices]);
 
   const formatUpcomingDate = (d: Date) => {
     const today = new Date();

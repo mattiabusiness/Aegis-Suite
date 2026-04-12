@@ -243,11 +243,6 @@ export async function GET(request: NextRequest) {
       console.error('[Availability] Errore fetch staff_hours:', (staffHoursResult as { error?: unknown }).error);
     }
 
-    console.log(`[Availability] date=${date} staffHoursCount=${staffHours.length} activeStaff=${activeStaffIds.length}`);
-    if (staffHours.length > 0) {
-      console.log('[Availability] staffHours sample:', JSON.stringify(staffHours.slice(0, 3)));
-    }
-
     const slots = getAvailableSlots(availabilityConfig);
 
     return NextResponse.json({

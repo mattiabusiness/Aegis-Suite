@@ -14,8 +14,30 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@aegis/ui", "@aegis/core", "@aegis/types"],
   serverExternalPackages: ["web-push", "zeptomail"],
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 3600,
+  },
+  experimental: {
+    optimizePackageImports: [
+      "framer-motion",
+      "recharts",
+      "lucide-react",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-select",
+      "@radix-ui/react-tabs",
+    ],
+  },
   async headers() {
     return [
+      {
+        // Next.js hashed static assets — safe to cache forever (browser cache)
+        source: "/_next/static/(.*)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [

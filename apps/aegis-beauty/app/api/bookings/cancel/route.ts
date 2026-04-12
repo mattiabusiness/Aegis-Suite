@@ -9,16 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
-import { createServerSupabaseClient, getCurrentUser } from '@aegis/core';
-
-function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
-}
+import { createServerSupabaseClient, getCurrentUser, createAdminSupabaseClient } from '@aegis/core';
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const admin = createAdminClient() as any;
+    const admin = createAdminSupabaseClient() as any;
 
     // Verify ownership + fetch what's needed for policy check
     const { data: appointment, error: lookupError } = await admin

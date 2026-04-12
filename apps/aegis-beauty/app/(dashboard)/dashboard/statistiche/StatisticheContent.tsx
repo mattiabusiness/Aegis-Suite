@@ -6,10 +6,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import ExcelJS from 'exceljs';
 import { toast } from 'sonner';
 import {
-  StatsPage,
   type KPICard,
   type ChartDataPoint,
   type TopService,
@@ -24,6 +24,11 @@ import {
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
 import { useStaffPermissions } from '@/lib/staff-permissions-context';
+
+const StatsPage = dynamic(
+  () => import('@aegis/ui').then((m) => ({ default: m.StatsPage })),
+  { ssr: false }
+);
 import {
   Euro,
   Calendar,

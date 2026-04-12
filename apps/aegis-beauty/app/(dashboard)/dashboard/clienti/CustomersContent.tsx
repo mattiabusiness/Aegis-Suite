@@ -6,13 +6,13 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import ExcelJS from 'exceljs';
 import { useRouter } from 'next/navigation';
 import {
   CustomerList,
   CustomerDetailModal,
   AppointmentModal,
-  ImporterModal,
   EmptyCustomers,
   type CustomerListItem,
   type CustomerFilter,
@@ -27,10 +27,16 @@ import {
   type BusinessHoursData,
   type ClosureData,
   type SlotInfo,
+  type ImporterModalProps,
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
 import { useStaffPermissions } from '@/lib/staff-permissions-context';
 import { toast } from 'sonner';
+
+const ImporterModal = dynamic<ImporterModalProps>(
+  () => import('@aegis/ui').then((m) => ({ default: m.ImporterModal })),
+  { ssr: false }
+);
 
 // ============================================================================
 // TYPES

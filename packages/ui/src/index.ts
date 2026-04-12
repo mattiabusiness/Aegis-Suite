@@ -20,10 +20,6 @@ export type { AnimatedSelectProps, AnimatedSelectOption } from './components/ui/
 export { FloatingParticles } from './components/FloatingParticles';
 export { StepTransitionProvider, useStepTransition } from './components/StepTransition';
 
-export { Button } from './components/ui/button';
-export { Input } from './components/ui/input';
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './components/ui/card';
-export { Alert } from './components/ui/alert';
 export { ProgressBar } from './components/ui/progress-bar';
 
 // ============================================================================
@@ -113,10 +109,6 @@ export {
 // UI TYPES
 // ============================================================================
 
-export type { ButtonProps } from './components/ui/button';
-export type { InputProps } from './components/ui/input';
-export type { CardProps } from './components/ui/card';
-export type { AlertProps } from './components/ui/alert';
 export type { ProgressBarProps } from './components/ui/progress-bar';
 
 // ============================================================================

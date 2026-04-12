@@ -121,62 +121,46 @@ export default async function ClientiPage() {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const sevenDaysAgoStr = sevenDaysAgo.toISOString();
 
-  // Active count (visited in last 30 days)
-  const { count: activeCount } = await supabase
-    .from('customers')
-    .select('id', { count: 'exact', head: true })
-    .eq('business_id', businessId)
-    .gte('last_visit_at', thirtyDaysAgoStr) as { count: number | null };
+  // Count queries in parallelo
+  const [activeResult, newResult, inactiveResult] = await Promise.all([
+    supabase.from('customers').select('id', { count: 'exact', head: true }).eq('business_id', businessId).gte('last_visit_at', thirtyDaysAgoStr),
+    supabase.from('customers').select('id', { count: 'exact', head: true }).eq('business_id', businessId).gte('created_at', sevenDaysAgoStr),
+    supabase.from('customers').select('id', { count: 'exact', head: true }).eq('business_id', businessId).or(`last_visit_at.is.null,last_visit_at.lt.${thirtyDaysAgoStr}`),
+  ]);
+  const activeCount = activeResult.count;
+  const newCount = newResult.count;
+  const inactiveCount = inactiveResult.count;
 
-  // New count (created in last 7 days)
-  const { count: newCount } = await supabase
-    .from('customers')
-    .select('id', { count: 'exact', head: true })
-    .eq('business_id', businessId)
-    .gte('created_at', sevenDaysAgoStr) as { count: number | null };
+  // Fetch staff (con staff_services join), services, hours e closures in parallelo
+  const [staffResult, servicesResult, hoursResult, closuresResult] = await Promise.all([
+    supabase.from('staff').select('id, full_name, color, staff_services(service_id)').eq('business_id', businessId).eq('is_active', true),
+    supabase.from('services').select('id, name, duration_minutes, price, category:service_categories(id, name)').eq('business_id', businessId).eq('is_active', true).order('name'),
+    supabase.from('business_hours').select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2').eq('business_id', businessId),
+    supabase.from('business_closures').select('date, reason').eq('business_id', businessId),
+  ]);
 
-  // Inactive count (no visit in 30+ days or never visited)
-  const { count: inactiveCount } = await supabase
-    .from('customers')
-    .select('id', { count: 'exact', head: true })
-    .eq('business_id', businessId)
-    .or(`last_visit_at.is.null,last_visit_at.lt.${thirtyDaysAgoStr}`) as { count: number | null };
+  const staffWithServices = (staffResult.data || []) as Array<{
+    id: string; full_name: string; color: string | null;
+    staff_services: Array<{ service_id: string }> | null;
+  }>;
+  const staffList = staffWithServices.map(({ staff_services: _ss, ...s }) => s);
+  const staffServices = staffWithServices.flatMap(s =>
+    (s.staff_services || []).map(ss => ({ staff_id: s.id, service_id: ss.service_id }))
+  );
 
-  // Fetch staff
-  const { data: staffList } = await supabase
-    .from('staff')
-    .select('id, full_name, color')
-    .eq('business_id', businessId)
-    .eq('is_active', true) as { data: Array<{ id: string; full_name: string; color: string | null }> | null };
-
-  // Fetch services for appointment modal
-  const { data: services } = await supabase
-    .from('services')
-    .select('id, name, duration_minutes, price, category:service_categories(id, name)')
-    .eq('business_id', businessId)
-    .eq('is_active', true)
-    .order('name') as { data: { id: string; name: string; duration_minutes: number; price: number; category: { id: string; name: string } | null }[] | null };
-
-  // Fetch staff_services
-  const { data: staffServices } = await supabase
-    .from('staff_services')
-    .select('staff_id, service_id')
-    .in('staff_id', (staffList || []).map(s => s.id)) as { data: { staff_id: string; service_id: string }[] | null };
-
-  // Fetch business hours
-  const { data: businessHours } = await supabase
-    .from('business_hours')
-    .select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
-    .eq('business_id', businessId) as { data: Array<{ day_of_week: string; is_open: boolean; open_time_1: string | null; close_time_1: string | null; open_time_2: string | null; close_time_2: string | null }> | null };
-
-  // Fetch closures
-  const { data: closures } = await supabase
-    .from('business_closures')
-    .select('date, reason')
-    .eq('business_id', businessId) as { data: Array<{ date: string; reason: string }> | null };
+  const services = (servicesResult.data || []) as Array<{
+    id: string; name: string; duration_minutes: number; price: number;
+    category: { id: string; name: string } | null;
+  }>;
+  const businessHours = (hoursResult.data || []) as Array<{
+    day_of_week: string; is_open: boolean;
+    open_time_1: string | null; close_time_1: string | null;
+    open_time_2: string | null; close_time_2: string | null;
+  }>;
+  const closures = (closuresResult.data || []) as Array<{ date: string; reason: string }>;
 
   // Transform services for modal
-  const servicesForModal = (services || []).map(s => ({
+  const servicesForModal = services.map(s => ({
     id: s.id,
     name: s.name,
     duration: s.duration_minutes,
@@ -195,11 +179,11 @@ export default async function ClientiPage() {
         new: newCount || 0,
         inactive: inactiveCount || 0,
       }}
-      staffList={staffList || []}
+      staffList={staffList}
       servicesList={servicesForModal}
-      staffServices={staffServices || []}
-      businessHours={businessHours || []}
-      closures={closures || []}
+      staffServices={staffServices}
+      businessHours={businessHours}
+      closures={closures}
       businessId={businessId}
     />
   );

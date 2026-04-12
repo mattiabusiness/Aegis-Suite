@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { createBrowserClient, createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@aegis/types';
 
 // ============================================================================
@@ -20,6 +21,18 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export function createClient() {
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+}
+
+// ============================================================================
+// ADMIN CLIENT (service role — bypassa RLS, usare solo in API routes server-side)
+// ============================================================================
+
+export function createAdminSupabaseClient() {
+  return createSupabaseClient<Database>(
+    supabaseUrl,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
 }
 
 // ============================================================================

@@ -4,7 +4,7 @@
 // ============================================================================
 
 // Supabase client
-export { createClient, createServerSupabaseClient } from './lib/supabase';
+export { createClient, createServerSupabaseClient, createAdminSupabaseClient } from './lib/supabase';
 
 // Auth functions
 export {

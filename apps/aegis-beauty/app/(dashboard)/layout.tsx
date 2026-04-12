@@ -5,7 +5,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient, getCurrentUser, getCurrentStaffPermissions, resolveStaffPermissions } from '@aegis/core';
+import { createServerSupabaseClient, getCurrentUser, resolveStaffPermissions } from '@aegis/core';
 import { DashboardLayoutClient } from './dashboardlayoutclient';
 
 // ============================================================================
@@ -14,6 +14,16 @@ import { DashboardLayoutClient } from './dashboardlayoutclient';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+}
+
+interface BusinessMemberData {
+  business_id: string;
+  role: string;
+  can_see_business_calendar: boolean;
+  can_see_business_stats: boolean;
+  can_manage_team_bookings: boolean;
+  team_booking_staff_ids: string[];
+  can_manage_settings: boolean;
 }
 
 interface BusinessData {
@@ -41,14 +51,13 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     redirect('/login');
   }
 
-  // Ottieni business member — solo owner/admin/staff, mai customer
-  // Usa limit(2) + client-side priority per evitare errore .single() se l'utente ha ruoli multipli
+  // Ottieni business member con tutte le colonne permessi in un'unica query
   const { data: staffMembers } = await supabase
     .from('business_members')
-    .select('business_id, role')
+    .select('business_id, role, can_see_business_calendar, can_see_business_stats, can_manage_team_bookings, team_booking_staff_ids, can_manage_settings')
     .eq('user_id', user.id)
     .eq('is_active', true)
-    .in('role', ['owner', 'admin', 'staff']) as { data: Array<{ business_id: string; role: string }> | null };
+    .in('role', ['owner', 'admin', 'staff']) as { data: BusinessMemberData[] | null };
 
   // Priorità: owner > admin > staff
   let businessMember = staffMembers?.find((m) => m.role === 'owner')
@@ -72,7 +81,16 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
       if (setupRes.ok) {
         const parsed = JSON.parse(setupBody) as { businessId: string; role: string };
-        businessMember = { business_id: parsed.businessId, role: parsed.role } as unknown as typeof businessMember;
+        // Owner default permissions per i nuovi setup
+        businessMember = {
+          business_id: parsed.businessId,
+          role: parsed.role,
+          can_see_business_calendar: true,
+          can_see_business_stats: true,
+          can_manage_team_bookings: true,
+          team_booking_staff_ids: [],
+          can_manage_settings: true,
+        };
       }
     } catch (e) {
       console.error('[Layout] setup API error:', e);
@@ -84,26 +102,36 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     }
   }
 
-  // Ottieni dati business
-  const { data: business } = await supabase
-    .from('businesses')
-    .select('id, name, logo_url, onboarding_completed')
-    .eq('id', (businessMember as { business_id: string }).business_id)
-    .single() as { data: BusinessData | null };
+  const businessId = businessMember.business_id;
 
+  // Parallelizza: business + profilo utente + staff record (per permissions)
+  const [businessResult, profileResult, staffResult] = await Promise.all([
+    supabase
+      .from('businesses')
+      .select('id, name, logo_url, onboarding_completed')
+      .eq('id', businessId)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('staff')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('business_id', businessId)
+      .maybeSingle(),
+  ]);
+
+  const business = businessResult.data as BusinessData | null;
   if (!business) {
     redirect('/login?reason=no_access');
   }
 
-  // Ottieni profilo utente
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('full_name, email')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError) {
-    console.error('Profile error message:', profileError.message);
+  const profile = profileResult.data as ProfileData | null;
+  if (profileResult.error) {
+    console.error('Profile error message:', profileResult.error.message);
   }
 
   const dashboardData = {
@@ -115,18 +143,24 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     },
     user: {
       id: user.id,
-      name: (profile as ProfileData | null)?.full_name || 'Utente',
-      email: (profile as ProfileData | null)?.email || user.email || '',
+      name: profile?.full_name || 'Utente',
+      email: profile?.email || user.email || '',
     },
   };
 
-  // Calcola permessi staff server-side
-  const businessId = (businessMember as { business_id: string }).business_id;
-  const permissions = await getCurrentStaffPermissions(supabase, user.id, businessId)
-    ?? resolveStaffPermissions(
-        { role: 'owner', can_see_business_calendar: true, can_see_business_stats: true, can_manage_team_bookings: true, team_booking_staff_ids: [], can_manage_settings: true },
-        null
-      );
+  // Calcola permessi staff server-side (inline, senza query extra)
+  const currentStaffId = (staffResult.data as { id: string } | null)?.id ?? null;
+  const permissions = resolveStaffPermissions(
+    {
+      role: businessMember.role as 'owner' | 'admin' | 'staff',
+      can_see_business_calendar: businessMember.can_see_business_calendar,
+      can_see_business_stats: businessMember.can_see_business_stats,
+      can_manage_team_bookings: businessMember.can_manage_team_bookings,
+      team_booking_staff_ids: businessMember.team_booking_staff_ids,
+      can_manage_settings: businessMember.can_manage_settings,
+    },
+    currentStaffId
+  );
 
   return (
     <DashboardLayoutClient data={dashboardData} permissions={permissions}>

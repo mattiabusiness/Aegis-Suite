@@ -68,14 +68,14 @@ export default async function BusinessPage({
   const [servicesResult, staffResult, hoursResult, categoriesResult] = await Promise.all([
     supabase
       .from('services')
-      .select('*')
+      .select('id, category_id, name, description, short_description, duration_minutes, buffer_minutes, price, price_from, image_url, display_order, is_active, requires_deposit, deposit_amount, is_addon, parent_service_id')
       .eq('business_id', business.id)
       .eq('is_active', true)
       .order('display_order', { ascending: true }),
 
     supabase
       .from('staff')
-      .select('*')
+      .select('id, full_name, nickname, bio, avatar_url, specializations, display_order, is_active, accepts_bookings, color')
       .eq('business_id', business.id)
       .eq('is_active', true)
       .eq('accepts_bookings', true)
@@ -83,13 +83,13 @@ export default async function BusinessPage({
 
     supabase
       .from('business_hours')
-      .select('*')
+      .select('id, day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
       .eq('business_id', business.id)
       .order('day_of_week'),
 
     supabase
       .from('service_categories')
-      .select('*')
+      .select('id, name, description, display_order, icon, is_active')
       .eq('business_id', business.id)
       .eq('is_active', true)
       .order('display_order', { ascending: true }),

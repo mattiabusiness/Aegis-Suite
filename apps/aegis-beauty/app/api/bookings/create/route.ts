@@ -9,21 +9,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
 import {
   createServerSupabaseClient,
   getCurrentUser,
+  createAdminSupabaseClient,
 } from '@aegis/core';
 import { notify } from '@/lib/notify';
 import type { PushPayload } from '@aegis/core';
-
-function createAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
-}
 
 interface CreateBookingBody {
   businessId:     string;
@@ -54,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Use admin client for all DB ops — bypasses RLS for customer reads/writes
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const admin = createAdminClient() as any;
+    const admin = createAdminSupabaseClient() as any;
 
     // ========================================================================
     // STEP 1: Service details

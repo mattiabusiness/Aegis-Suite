@@ -48,7 +48,6 @@ export default async function CalendarioPage() {
     closuresResult,
     customersResult,
     servicesResult,
-    staffServicesResult,
   ] = await Promise.all([
     // Appointments for this week
     supabase
@@ -64,10 +63,10 @@ export default async function CalendarioPage() {
       .lte('start_time', endOfWeek.toISOString())
       .order('start_time', { ascending: true }),
 
-    // Staff
+    // Staff con i servizi associati (join unica, elimina query separata)
     supabase
       .from('staff')
-      .select('id, full_name, color')
+      .select('id, full_name, color, staff_services(service_id)')
       .eq('business_id', businessId)
       .eq('is_active', true)
       .order('full_name'),
@@ -101,18 +100,6 @@ export default async function CalendarioPage() {
       .eq('is_active', true)
       .order('display_order'),
 
-    // Staff-Services mapping
-    supabase
-      .from('staff_services')
-      .select('staff_id, service_id')
-      .in('staff_id',
-        (await supabase
-          .from('staff')
-          .select('id')
-          .eq('business_id', businessId)
-          .eq('is_active', true)
-        ).data?.map(s => (s as { id: string }).id) || []
-      ),
   ]);
 
   // ========================================================================
@@ -140,7 +127,13 @@ export default async function CalendarioPage() {
   });
 
   // Staff
-  const staff = (staffResult.data || []) as Array<{ id: string; full_name: string; color: string | null }>;
+  const staffWithServices = (staffResult.data || []) as Array<{
+    id: string;
+    full_name: string;
+    color: string | null;
+    staff_services: Array<{ service_id: string }> | null;
+  }>;
+  const staff = staffWithServices.map(({ staff_services: _ss, ...s }) => s);
 
   // Business hours
   const businessHours = (businessHoursResult.data || []) as BusinessHoursData[];
@@ -181,11 +174,10 @@ export default async function CalendarioPage() {
     };
   });
 
-  // Staff-Services map
+  // Staff-Services map (derivata dalla join inclusa nella query staff)
   const staffServicesMap: Record<string, string[]> = {};
-  for (const ss of (staffServicesResult.data || []) as Array<{ staff_id: string; service_id: string }>) {
-    if (!staffServicesMap[ss.staff_id]) staffServicesMap[ss.staff_id] = [];
-    staffServicesMap[ss.staff_id].push(ss.service_id);
+  for (const s of staffWithServices) {
+    staffServicesMap[s.id] = (s.staff_services || []).map(ss => ss.service_id);
   }
 
   return (

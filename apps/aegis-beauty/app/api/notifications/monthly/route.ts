@@ -5,6 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@aegis/core';
+
+export const maxDuration = 60;
 import { notify } from '@/lib/notify';
 import type { PushPayload } from '@aegis/core';
 import { cookies } from 'next/headers';

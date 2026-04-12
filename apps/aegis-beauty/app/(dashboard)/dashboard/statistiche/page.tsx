@@ -26,25 +26,16 @@ export default async function StatistichePage() {
 
   const businessId = businessMember.business_id;
 
-  // Fetch business (for roi_data and business_type)
-  const { data: business } = await supabase
-    .from('businesses')
-    .select('roi_data, business_type')
-    .eq('id', businessId)
-    .single() as { data: { roi_data: Record<string, unknown> | null; business_type: string | null } | null };
+  // Fetch business, staff e services in parallelo
+  const [businessResult, staffResult, servicesResult] = await Promise.all([
+    supabase.from('businesses').select('roi_data, business_type').eq('id', businessId).single(),
+    supabase.from('staff').select('id, full_name, color, email').eq('business_id', businessId).eq('is_active', true),
+    supabase.from('services').select('id, name, price').eq('business_id', businessId),
+  ]);
 
-  // Fetch staff — include email to detect incomplete profiles (no email = incompleto)
-  const { data: staffData } = await supabase
-    .from('staff')
-    .select('id, full_name, color, email')
-    .eq('business_id', businessId)
-    .eq('is_active', true) as { data: Array<{ id: string; full_name: string; color: string; email: string | null }> | null };
-
-  // Fetch services
-  const { data: servicesData } = await supabase
-    .from('services')
-    .select('id, name, price')
-    .eq('business_id', businessId) as { data: Array<{ id: string; name: string; price: number }> | null };
+  const business = businessResult.data as { roi_data: Record<string, unknown> | null; business_type: string | null } | null;
+  const staffData = staffResult.data as Array<{ id: string; full_name: string; color: string; email: string | null }> | null;
+  const servicesData = servicesResult.data as Array<{ id: string; name: string; price: number }> | null;
 
   return (
     <StatisticheContent

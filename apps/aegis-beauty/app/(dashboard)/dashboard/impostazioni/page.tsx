@@ -43,8 +43,6 @@ export default async function ImpostazioniPage() {
 
   if (!user) redirect('/login');
 
-  const profile = await getCurrentProfile(supabase);
-
   // Get business member
   const { data: businessMember } = await supabase
     .from('business_members')
@@ -57,33 +55,36 @@ export default async function ImpostazioniPage() {
 
   const businessId = businessMember.business_id;
 
-  // Fetch business data
-  const { data: business } = await supabase
-    .from('businesses')
-    .select('*')
-    .eq('id', businessId)
-    .single() as { data: {
-      id: string; name: string; slug: string; email: string;
-      phone: string | null; website: string | null;
-      address_street: string | null; address_city: string | null;
-      address_province: string | null; address_postal_code: string | null;
-      description: string | null; logo_url: string | null;
-      workstations: number; booking_advance_min: number;
-      booking_advance_max: number; cancellation_policy_hours: number;
-      auto_confirm_bookings: boolean; business_type: string | null;
-    } | null };
+  // Fetch profile, business e business hours in parallelo
+  const [profile, businessResult, hoursResult] = await Promise.all([
+    getCurrentProfile(supabase),
+    supabase.from('businesses')
+      .select('id, name, slug, email, phone, website, address_street, address_city, address_province, address_postal_code, description, logo_url, workstations, booking_advance_min, booking_advance_max, cancellation_policy_hours, auto_confirm_bookings, business_type')
+      .eq('id', businessId)
+      .single(),
+    supabase.from('business_hours')
+      .select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
+      .eq('business_id', businessId),
+  ]);
+
+  const business = businessResult.data as {
+    id: string; name: string; slug: string; email: string;
+    phone: string | null; website: string | null;
+    address_street: string | null; address_city: string | null;
+    address_province: string | null; address_postal_code: string | null;
+    description: string | null; logo_url: string | null;
+    workstations: number; booking_advance_min: number;
+    booking_advance_max: number; cancellation_policy_hours: number;
+    auto_confirm_bookings: boolean; business_type: string | null;
+  } | null;
 
   if (!business) redirect('/login');
 
-  // Fetch business hours
-  const { data: hoursData } = await supabase
-    .from('business_hours')
-    .select('day_of_week, is_open, open_time_1, close_time_1, open_time_2, close_time_2')
-    .eq('business_id', businessId) as { data: Array<{
-      day_of_week: string; is_open: boolean;
-      open_time_1: string | null; close_time_1: string | null;
-      open_time_2: string | null; close_time_2: string | null;
-    }> | null };
+  const hoursData = hoursResult.data as Array<{
+    day_of_week: string; is_open: boolean;
+    open_time_1: string | null; close_time_1: string | null;
+    open_time_2: string | null; close_time_2: string | null;
+  }> | null;
 
   // Map hours by day, fill defaults for missing days
   const hoursMap = new Map((hoursData || []).map(h => [h.day_of_week, h]));
