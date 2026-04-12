@@ -14,7 +14,7 @@ import type { Appointment } from '@aegis/types';
 // Window half-widths in minutes
 const WINDOW_24H_CENTER = 24 * 60;
 const WINDOW_1H_CENTER = 60;
-const HALF_WINDOW = 15; // ±15 min (cron runs every 15 min)
+const HALF_WINDOW = 1; // ±1 min (cron runs every minute)
 
 // Typed shape returned by the join query
 interface AppointmentReminder extends Appointment {
