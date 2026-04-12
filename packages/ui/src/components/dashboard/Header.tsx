@@ -276,20 +276,18 @@ function UserDropdown({
           };
           if (item.href) {
             return (
-              <a
+              <button
                 key={i}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                type="button"
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm"
-                style={{ ...sharedStyle, textDecoration: 'none', display: 'flex' }}
+                style={{ ...sharedStyle, background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
                 onMouseEnter={hoverIn}
                 onMouseLeave={hoverOut}
-                onClick={onClose}
+                onClick={() => { window.open(item.href, '_blank', 'noopener,noreferrer'); onClose(); }}
               >
                 <item.icon className="w-4 h-4" style={{ transition: 'all 0.2s ease' }} />
                 {item.label}
-              </a>
+              </button>
             );
           }
           return (

@@ -233,22 +233,20 @@ export function DashboardMobileHeader({
       </div>
       {/* Menu items */}
       {menuItems.map((item, i) => item.href ? (
-        <a
+        <button
           key={i}
-          href={item.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={closeAll}
+          type="button"
+          onClick={() => { window.open(item.href, '_blank', 'noopener,noreferrer'); closeAll(); }}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-            padding: '11px 16px', background: 'none', cursor: 'pointer',
-            color: '#4b5563', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none',
+            padding: '11px 16px', background: 'none', border: 'none', cursor: 'pointer',
+            color: '#4b5563', fontSize: '0.875rem', fontWeight: 500,
             borderBottom: '1px solid rgba(0,0,0,0.03)',
           }}
         >
           <item.icon style={{ width: 16, height: 16, flexShrink: 0 }} />
           {item.label}
-        </a>
+        </button>
       ) : (
         <button
           key={i}

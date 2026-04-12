@@ -849,8 +849,8 @@ export function AccountContent({
     ];
 
     const legalItems = [
-      { icon: Shield,   label: 'Privacy Policy',       sub: 'Come trattiamo i tuoi dati',         href: '/legal#privacy-customer' },
-      { icon: FileText, label: 'Termini e Condizioni',  sub: 'Regole di utilizzo del servizio',    href: '/legal#terms-customer' },
+      { icon: Shield,   label: 'Privacy Policy',       sub: 'Come trattiamo i tuoi dati',         href: 'https://aegisbeauty.app/legal#privacy-customer' },
+      { icon: FileText, label: 'Termini e Condizioni',  sub: 'Regole di utilizzo del servizio',    href: 'https://aegisbeauty.app/legal#terms-customer' },
     ];
 
     return (
@@ -913,7 +913,7 @@ export function AccountContent({
             return (
               <motion.button
                 key={item.label}
-                onClick={() => router.push(item.href)}
+                onClick={() => window.open(item.href, '_blank', 'noopener,noreferrer')}
                 whileHover={{ backgroundColor: 'rgba(0,0,0,0.015)', x: 2 }}
                 whileTap={{ scale: 0.99 }}
                 transition={{ duration: 0.15 }}
@@ -1124,9 +1124,9 @@ export function AccountContent({
             <span style={{ color: '#7c3aed', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/')}>Aegis Group</span>
           </span>
           <div style={{ display: 'flex', gap: 16 }}>
-            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => router.push('/legal#privacy-customer')}>Privacy Policy</span>
+            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => window.open('https://aegisbeauty.app/legal#privacy-customer', '_blank', 'noopener,noreferrer')}>Privacy Policy</span>
             <span style={{ color: '#e5e7eb' }}>·</span>
-            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => router.push('/legal#terms-customer')}>Termini e Condizioni</span>
+            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => window.open('https://aegisbeauty.app/legal#terms-customer', '_blank', 'noopener,noreferrer')}>Termini e Condizioni</span>
           </div>
         </footer>
 

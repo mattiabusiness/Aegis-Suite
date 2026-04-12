@@ -1054,9 +1054,9 @@ export function BusinessContent({ business, services, staff, hours, categories }
             <span style={{ color: '#7c3aed', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/')}>Aegis Group</span>
           </span>
           <div style={{ display: 'flex', gap: 16 }}>
-            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => router.push('/legal#privacy-customer')}>Privacy Policy</span>
+            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => window.open('https://aegisbeauty.app/legal#privacy-customer', '_blank', 'noopener,noreferrer')}>Privacy Policy</span>
             <span style={{ color: '#e5e7eb' }}>·</span>
-            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => router.push('/legal#terms-customer')}>Termini e Condizioni</span>
+            <span style={{ color: '#d1d5db', fontSize: '0.68rem', cursor: 'pointer' }} onClick={() => window.open('https://aegisbeauty.app/legal#terms-customer', '_blank', 'noopener,noreferrer')}>Termini e Condizioni</span>
           </div>
         </footer>
 
