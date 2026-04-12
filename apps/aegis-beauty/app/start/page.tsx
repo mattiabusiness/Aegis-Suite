@@ -31,7 +31,7 @@ export default async function StartPage() {
   }
 
   // Cliente: find last booked business
-  const { data: lastAppt } = await supabase
+  const { data: lastApptRaw } = await supabase
     .from('appointments')
     .select('businesses ( slug )')
     .eq('customer_id', user.id)
@@ -39,6 +39,7 @@ export default async function StartPage() {
     .limit(1)
     .maybeSingle();
 
+  const lastAppt = lastApptRaw as { businesses: { slug: string } | { slug: string }[] | null } | null;
   const business = lastAppt?.businesses;
   const slug = Array.isArray(business) ? business[0]?.slug : business?.slug;
 
