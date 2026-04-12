@@ -160,6 +160,16 @@ export function CalendarioContent({
   }));
   const staffServicesMap = initialStaffServices;
 
+  // Lock body scroll on mobile so calendar scroll doesn't bleed into page
+  useEffect(() => {
+    const isMobile = window.innerWidth < 1024;
+    if (!isMobile) return;
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = 'hidden';
+    return () => { html.style.overflow = prev; };
+  }, []);
+
   // Track last fetched range to avoid redundant fetches
   const lastFetchedRange = useRef<string>('');
   // AbortController per cancellare fetch slot in volo
