@@ -182,16 +182,16 @@ function formatHeaderTitle(date: Date, view: CalendarView): string {
 }
 
 function formatHeaderTitleMobile(date: Date, view: CalendarView): string {
-  const month = MONTHS_IT[date.getMonth()].slice(0, 3);
-  const year = `'${date.getFullYear().toString().slice(2)}`;
-  if (view === 'day') return `${date.getDate()} ${month}`;
+  const month = MONTHS_IT[date.getMonth()];
+  const year = date.getFullYear();
+  if (view === 'day') return `${date.getDate()} ${month} ${year}`;
   if (view === 'week') {
     const w = getWeekDays(date);
-    const sm = MONTHS_IT[w[0].getMonth()].slice(0, 3);
-    const em = MONTHS_IT[w[6].getMonth()].slice(0, 3);
+    const sm = MONTHS_IT[w[0].getMonth()];
+    const em = MONTHS_IT[w[6].getMonth()];
     return sm === em
-      ? `${w[0].getDate()}-${w[6].getDate()} ${sm}`
-      : `${w[0].getDate()} ${sm}-${w[6].getDate()} ${em}`;
+      ? `${w[0].getDate()} - ${w[6].getDate()} ${sm} ${year}`
+      : `${w[0].getDate()} ${sm} - ${w[6].getDate()} ${em}`;
   }
   return `${month} ${year}`;
 }
@@ -892,29 +892,29 @@ function MonthView({
 }) {
   const monthDays = getMonthDays(date);
   const currentMonth = date.getMonth();
+  const numRows = monthDays.length / 7;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Day names header */}
-      <div className="flex flex-shrink-0 pr-0 sm:pr-[17px]" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        {(isMobile ? ['L', 'M', 'M', 'G', 'V', 'S', 'D'] : ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']).map((day, idx) => (
+      <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((day, idx) => (
           <div key={idx}
             className="flex-1 h-8 sm:h-10 flex items-center justify-center"
             style={{
-              fontSize: isMobile ? 10 : 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.04em',
+              fontSize: isMobile ? 9 : 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.04em',
               background: 'rgba(0,0,0,0.015)',
               borderRight: idx < 6 ? '1px solid rgba(0,0,0,0.04)' : 'none',
             }}
           >
-            {day}
+            {isMobile ? day[0] : day}
           </div>
         ))}
       </div>
 
-      {/* Days grid */}
-      <div className="flex-1 overflow-y-scroll" style={{ scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.12) transparent' }}>
-        <div className="grid grid-cols-7">
-          {monthDays.map((day, idx) => {
+      {/* Days grid — fills remaining height exactly, rows are equal */}
+      <div className="flex-1 min-h-0 grid grid-cols-7" style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}>
+        {monthDays.map((day, idx) => {
             const dayEvents = getEventsForDate(events, day);
             const isCurrentMonth = day.getMonth() === currentMonth;
             const todayDate = isToday(day);
@@ -927,7 +927,7 @@ function MonthView({
 
             return (
               <div key={idx}
-                className="min-h-[60px] sm:min-h-[100px] p-1 sm:p-1.5 cursor-pointer transition-all duration-150 overflow-hidden"
+                className="p-1 sm:p-1.5 cursor-pointer transition-colors duration-150 overflow-hidden min-h-0"
                 style={{
                   background: !isCurrentMonth ? 'rgba(0,0,0,0.01)' : todayDate ? 'rgba(147,51,234,0.03)' : isClosed ? 'rgba(239,68,68,0.03)' : '#fff',
                   borderBottom: '1px solid rgba(0,0,0,0.04)',
@@ -976,7 +976,6 @@ function MonthView({
               </div>
             );
           })}
-        </div>
       </div>
     </div>
   );

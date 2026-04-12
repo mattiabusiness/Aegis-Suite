@@ -704,7 +704,7 @@ export function CalendarioContent({
         {/* ============================================================== */}
         {/* RIGHT - CALENDAR (full remaining space)                         */}
         {/* ============================================================== */}
-        <div className="cal-right flex-1 min-w-0 flex flex-col">
+        <div className="cal-right flex-1 min-w-0 min-h-0 flex flex-col">
           <Calendar
             view={view}
             onViewChange={setView}
