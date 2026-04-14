@@ -6,6 +6,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createServerSupabaseClient, getCurrentUser } from '@aegis/core';
+import type { BusinessType } from '@aegis/types';
 import { ProgressBar } from '@aegis/ui';
 
 // Import degli step components
@@ -81,7 +82,7 @@ export default async function OnboardingStepPage({ params }: PageProps) {
   ]);
 
   const business = businessResult.data as {
-    id: string; business_type: string; name: string;
+    id: string; business_type: BusinessType | null; name: string;
     address_street: string | null; address_city: string | null; address_postal_code: string | null;
     phone: string | null; email: string | null; logo_url: string | null; slug: string | null; workstations: number | null;
   } | null;
