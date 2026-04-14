@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: '%s | Aegis Beauty',
   },
   description:
-    '[DESCRIZIONE — DA INSERIRE] Aegis Beauty è il gestionale intelligente per centri estetici e saloni di bellezza.',
+    'Aegis Beauty è il gestionale white-label per parrucchieri e centri estetici italiani. Prenotazioni online, CRM clienti, gestione staff e agenda digitale — senza commissioni, senza marketplace. Programma Pioneers gratuito a Torino.',
   metadataBase: new URL('https://aegisbeauty.app'),
   alternates: {
     canonical: 'https://aegisbeauty.app',
@@ -32,13 +32,13 @@ export const metadata: Metadata = {
     url: 'https://aegisbeauty.app',
     siteName: 'Aegis Beauty',
     title: 'Aegis Beauty — Il software che semplifica il tuo salone',
-    description: '[OG DESCRIPTION — DA INSERIRE]',
+    description: 'Gestionale per saloni di bellezza e centri estetici italiani. Zero commissioni, zero marketplace — solo il tuo brand. Prenotazioni online, CRM, staff e statistiche in un unico sistema. Gratis per i 40 Pioneers selezionati a Torino.',
     locale: 'it_IT',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Aegis Beauty — Il software che semplifica il tuo salone',
-    description: '[TWITTER DESCRIPTION — DA INSERIRE]',
+    description: 'Il gestionale white-label per parrucchieri e centri estetici. Prenotazioni online, CRM clienti, zero commissioni. Programma Pioneers gratuito — 40 saloni selezionati a Torino.',
   },
   robots: {
     index: true,
