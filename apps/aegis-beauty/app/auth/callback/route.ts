@@ -57,8 +57,6 @@ export async function GET(request: NextRequest) {
     // ================================================================
     // STAFF INVITE — collega user_id, crea business_member e profilo
     // ================================================================
-    console.log('[Callback] user:', user?.id, '| invite_type:', metadata.invite_type, '| staff_id:', metadata.staff_id);
-
     if (metadata.invite_type === 'staff' && metadata.staff_id && user?.id) {
       try {
         const supabaseAdmin = createClient(
@@ -67,23 +65,16 @@ export async function GET(request: NextRequest) {
           { auth: { autoRefreshToken: false, persistSession: false } }
         );
 
-        // 1. Collega staff.user_id
-        const { error: linkErr } = await supabaseAdmin
+        // 1. Collega staff.user_id e leggi business_id in un'unica query
+        const { data: staffRecord } = await supabaseAdmin
           .from('staff')
           .update({ user_id: user.id })
           .eq('id', metadata.staff_id)
-          .is('user_id', null);
-        console.log('[Callback] staff link error:', linkErr);
-
-        // 2. Leggi business_id e role dallo staff record
-        const { data: staffRecord, error: staffErr } = await supabaseAdmin
-          .from('staff')
+          .is('user_id', null)
           .select('business_id')
-          .eq('id', metadata.staff_id)
           .single();
-        console.log('[Callback] staffRecord:', staffRecord, '| error:', staffErr);
 
-        // 3. Aggiungi a business_members — delete + insert per massima affidabilità
+        // 2. Inserisci business_member e upsert profilo in parallelo
         if (staffRecord?.business_id) {
           await supabaseAdmin
             .from('business_members')
@@ -91,27 +82,25 @@ export async function GET(request: NextRequest) {
             .eq('user_id', user.id)
             .eq('business_id', staffRecord.business_id);
 
-          const { error: memberErr } = await supabaseAdmin
-            .from('business_members')
-            .insert({
-              user_id: user.id,
-              business_id: staffRecord.business_id,
-              role: 'staff',
-              is_active: true,
-            });
-          console.log('[Callback] business_members insert error:', memberErr);
+          await Promise.all([
+            supabaseAdmin
+              .from('business_members')
+              .insert({
+                user_id: user.id,
+                business_id: staffRecord.business_id,
+                role: 'staff',
+                is_active: true,
+              }),
+            supabaseAdmin
+              .from('profiles')
+              .upsert({
+                id: user.id,
+                email: user.email,
+                full_name: metadata.full_name || '',
+                phone: metadata.phone || null,
+              }, { onConflict: 'id' }),
+          ]);
         }
-
-        // 4. Crea/aggiorna profilo
-        const { error: profileErr } = await supabaseAdmin
-          .from('profiles')
-          .upsert({
-            id: user.id,
-            email: user.email,
-            full_name: metadata.full_name || '',
-            phone: metadata.phone || null,
-          }, { onConflict: 'id' });
-        console.log('[Callback] profile upsert error:', profileErr);
 
       } catch (e) {
         console.error('[Callback] Errore setup staff:', e);

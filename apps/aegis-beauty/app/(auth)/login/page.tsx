@@ -127,13 +127,11 @@ function LoginContent() {
 
     const redirectParam = searchParams.get('redirect');
 
-    // Singola query per tutti i ruoli — evita due round-trip
-    const { data: { user } } = await supabase.auth.getUser();
-
     // IMPORTANT: use window.location.href (full page reload) instead of router.push
     // so the server receives the new session cookies in the next request.
     // router.push (soft nav) reuses the previous request context and the server
     // won't see the updated Supabase cookies, causing auth failures and redirect loops.
+    const user = result.user;
     if (user) {
       const { data: members } = await supabase
         .from('business_members')
