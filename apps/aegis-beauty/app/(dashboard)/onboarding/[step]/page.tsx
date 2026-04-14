@@ -62,29 +62,36 @@ export default async function OnboardingStepPage({ params }: PageProps) {
     redirect('/login');
   }
 
-  // Ottieni dati business
-  const { data: business } = await supabase
-    .from('businesses')
-    .select('*')
-    .eq('id', businessMember.business_id)
-    .single() as { data: any };
+  // Fetch business, profile and hours in parallel
+  const [businessResult, profileResult, hoursResult] = await Promise.all([
+    supabase
+      .from('businesses')
+      .select('id, business_type, name, address_street, address_city, address_postal_code, phone, email, logo_url, slug, workstations')
+      .eq('id', businessMember.business_id)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('full_name, phone')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('business_hours')
+      .select('is_open')
+      .eq('business_id', businessMember.business_id),
+  ]);
+
+  const business = businessResult.data as {
+    id: string; business_type: string; name: string;
+    address_street: string | null; address_city: string | null; address_postal_code: string | null;
+    phone: string | null; email: string | null; logo_url: string | null; slug: string | null; workstations: number | null;
+  } | null;
 
   if (!business) {
     redirect('/login');
   }
 
-  // Ottieni profilo utente per lo Step 7
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, phone')
-    .eq('id', user.id)
-    .single() as { data: { full_name: string; phone: string | null } | null };
-
-  // Conta i giorni di apertura per lo Step 8
-  const { data: businessHours } = await supabase
-    .from('business_hours')
-    .select('is_open')
-    .eq('business_id', business.id) as { data: { is_open: boolean }[] | null };
+  const profile = profileResult.data as { full_name: string; phone: string | null } | null;
+  const businessHours = hoursResult.data as { is_open: boolean }[] | null;
 
   const openDaysPerWeek = businessHours?.filter(h => h.is_open).length || 6;
 

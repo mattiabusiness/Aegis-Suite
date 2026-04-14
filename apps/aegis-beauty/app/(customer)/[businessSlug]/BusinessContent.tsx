@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useSpring, useInView, useTransform } from 'framer-motion';
@@ -246,14 +246,14 @@ export function BusinessContent({ business, services, staff, hours, categories }
     return () => mq.removeEventListener('change', h);
   }, []);
 
-  function updatePillsScroll() {
+  const updatePillsScroll = useCallback(() => {
     const el = pillsScrollRef.current;
     if (!el) return;
     setPillsCanScrollLeft(el.scrollLeft > 4);
     setPillsCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
-  }
+  }, []);
 
-  function scrollPills(direction: 'left' | 'right') {
+  const scrollPills = useCallback((direction: 'left' | 'right') => {
     const el = pillsScrollRef.current;
     if (!el) return;
     const arrowW = 40; // space occupied by arrow button overlay
@@ -274,16 +274,19 @@ export function BusinessContent({ business, services, staff, hours, categories }
         el.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
       }
     }
-  }
+  }, []);
 
   // Categories with at least one service
-  const visibleCategories = categories.filter(cat => services.some(s => s.category_id === cat.id));
-  const uncategorized     = services.filter(s => !s.category_id || !categories.some(c => c.id === s.category_id));
-  const hasCategories     = visibleCategories.length > 0;
-  const pills = [
-    ...visibleCategories.map(c => ({ id: c.id, name: c.name })),
-    ...(uncategorized.length > 0 && hasCategories ? [{ id: '__other__', name: 'Altro' }] : []),
-  ];
+  const { visibleCategories, uncategorized, hasCategories, pills } = useMemo(() => {
+    const visibleCategories = categories.filter(cat => services.some(s => s.category_id === cat.id));
+    const uncategorized     = services.filter(s => !s.category_id || !categories.some(c => c.id === s.category_id));
+    const hasCategories     = visibleCategories.length > 0;
+    const pills = [
+      ...visibleCategories.map(c => ({ id: c.id, name: c.name })),
+      ...(uncategorized.length > 0 && hasCategories ? [{ id: '__other__', name: 'Altro' }] : []),
+    ];
+    return { visibleCategories, uncategorized, hasCategories, pills };
+  }, [categories, services]);
 
   const [activeCat, setActiveCat] = useState<string | null>(pills[0]?.id ?? null);
 

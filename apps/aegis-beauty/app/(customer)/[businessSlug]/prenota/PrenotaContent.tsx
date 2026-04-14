@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Calendar, Clock, ArrowRight } from 'lucide-react';
@@ -321,15 +321,15 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     return () => { document.documentElement.style.overflow = ''; };
   }, []);
 
-  const fetchSlots: FetchSlotsFn = async ({ businessId, serviceId, staffId, date }) => {
+  const fetchSlots = useCallback<FetchSlotsFn>(async ({ businessId, serviceId, staffId, date }) => {
     const params = new URLSearchParams({ businessId, serviceId, date });
     if (staffId) params.set('staffId', staffId);
     const r = await fetch(`/api/bookings/slots?${params}`);
     const d = await r.json() as { slots?: { time: string }[] };
     return d.slots ?? [];
-  };
+  }, []);
 
-  async function handleConfirm(state: BookingState): Promise<void> {
+  const handleConfirm = useCallback(async function(state: BookingState): Promise<void> {
     if (!state.selectedService || !state.selectedDate || !state.selectedTime) {
       toast.error('Seleziona servizio, data e orario prima di confermare.');
       return;
@@ -372,7 +372,7 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     });
 
     toast.success('Prenotazione confermata!');
-  }
+  }, [business]);
 
   // Fixed height = viewport minus bottom nav on mobile.
   // overflow: auto when booked lets SuccessScreen scroll inside the dark container (no light bg strip).

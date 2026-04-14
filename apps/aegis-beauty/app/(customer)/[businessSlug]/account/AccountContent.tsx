@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useId } from 'react';
+import React, { useState, useId, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -462,7 +462,7 @@ export function AccountContent({
 
   // ── Appointment actions ──────────────────────────────────────────────────
 
-  async function handleCancel(appointmentId: string) {
+  const handleCancel = useCallback(async (appointmentId: string) => {
     const res = await fetch('/api/bookings/cancel', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -475,18 +475,18 @@ export function AccountContent({
       toast.success('Appuntamento cancellato.');
       router.refresh();
     }
-  }
+  }, [router]);
 
-  function handleReschedule(appointment: { id: string; appointment_services?: Array<{ service_id?: string | null; service_name: string }> }) {
+  const handleReschedule = useCallback((appointment: { id: string; appointment_services?: Array<{ service_id?: string | null; service_name: string }> }) => {
     const serviceId = appointment.appointment_services?.[0]?.service_id;
     const params = new URLSearchParams({ reschedule: appointment.id });
     if (serviceId) params.set('service', serviceId);
     router.push(`/${slug}/prenota?${params.toString()}`);
-  }
+  }, [router, slug]);
 
   // ── Profile save ─────────────────────────────────────────────────────────
 
-  async function handleSaveProfile() {
+  const handleSaveProfile = useCallback(async () => {
     setSaving(true);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -505,11 +505,11 @@ export function AccountContent({
       toast.success('Profilo aggiornato.');
     } catch { toast.error('Errore durante il salvataggio. Riprova.'); }
     finally { setSaving(false); }
-  }
+  }, [supabase, userId, fullName, phone, email, profile, userEmail, customer, prefs]);
 
   // ── Password update ───────────────────────────────────────────────────────
 
-  async function handleUpdatePassword() {
+  const handleUpdatePassword = useCallback(async () => {
     if (newPw !== confirmPw) { toast.error('Le password non corrispondono.'); return; }
     if (newPw.length < 8)    { toast.error('La password deve avere almeno 8 caratteri.'); return; }
     setSavingPw(true);
@@ -522,14 +522,14 @@ export function AccountContent({
         setShowPwSection(false);
       }
     } finally { setSavingPw(false); }
-  }
+  }, [supabase, newPw, confirmPw]);
 
   // ── Logout ────────────────────────────────────────────────────────────────
 
-  async function handleLogout() {
+  const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     router.push(`/${slug}`);
-  }
+  }, [supabase, router, slug]);
 
   // ── Tab renderers ─────────────────────────────────────────────────────────
 

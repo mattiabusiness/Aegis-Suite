@@ -72,20 +72,21 @@ export function Step6Services({ businessId, businessType }: Step6Props) {
       const dc = getDefaultCategories(businessType);
       const ds = getDefaultServices(businessType);
 
-      // Check if services already saved in DB
-      const { data: savedCategories } = await supabase
-        .from('service_categories')
-        .select('id, name, icon, display_order')
-        .eq('business_id', businessId)
-        .order('display_order');
-
-      if (savedCategories && savedCategories.length > 0) {
-        const { data: savedServices } = await supabase
+      // Fetch categories and services in parallel
+      const [{ data: savedCategories }, { data: savedServices }] = await Promise.all([
+        supabase
+          .from('service_categories')
+          .select('id, name, icon, display_order')
+          .eq('business_id', businessId)
+          .order('display_order'),
+        supabase
           .from('services')
           .select('id, name, duration_minutes, price, category_id, is_active, display_order')
           .eq('business_id', businessId)
-          .order('display_order');
+          .order('display_order'),
+      ]);
 
+      if (savedCategories && savedCategories.length > 0) {
         const savedSvcList = (savedServices || []) as { id: string; name: string; duration_minutes: number; price: number; category_id: string; is_active: boolean }[];
         const savedCatList = (savedCategories as { id: string; name: string; icon: string }[]);
 

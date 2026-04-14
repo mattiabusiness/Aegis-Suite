@@ -8,7 +8,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { createServerSupabaseClient, getBusinessBySlug } from '@aegis/core';
-import type { ServiceCategory } from '@aegis/types';
+import type { Service, ServiceCategory } from '@aegis/types';
 import { BusinessContent } from './BusinessContent';
 
 // ============================================================================
@@ -68,7 +68,7 @@ export default async function BusinessPage({
   const [servicesResult, staffResult, hoursResult, categoriesResult] = await Promise.all([
     supabase
       .from('services')
-      .select('id, category_id, name, description, short_description, duration_minutes, buffer_minutes, price, price_from, image_url, display_order, is_active, requires_deposit, deposit_amount, is_addon, parent_service_id')
+      .select('id, category_id, name, description, short_description, duration_minutes, price, price_from, image_url, display_order, is_active')
       .eq('business_id', business.id)
       .eq('is_active', true)
       .order('display_order', { ascending: true }),
@@ -95,7 +95,7 @@ export default async function BusinessPage({
       .order('display_order', { ascending: true }),
   ]);
 
-  const services   = servicesResult.data ?? [];
+  const services   = (servicesResult.data ?? []) as Service[];
   const staff      = staffResult.data ?? [];
   const hours      = hoursResult.data ?? [];
   const categories = (categoriesResult.data ?? []) as ServiceCategory[];
