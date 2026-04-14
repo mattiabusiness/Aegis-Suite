@@ -18,6 +18,7 @@ import { FounderSection } from './_components/sections/FounderSection';
 import { StatsSection } from './_components/sections/StatsSection';
 import { CTASection } from './_components/sections/CTASection';
 import { FAQSection } from './_components/sections/FAQSection';
+import { ROICalculatorSection } from './_components/sections/ROICalculatorSection';
 
 export const metadata: Metadata = {
   title: 'Aegis Beauty — Gestionale per Saloni e Centri Estetici Italiani',
@@ -85,6 +86,7 @@ export default function LandingPage() {
         <VideoSection />
         <ProblemSection />
         <SolutionSection />
+        <ROICalculatorSection />
         <PioneersSection />
         <WhySection />
         <FounderSection />
