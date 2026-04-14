@@ -60,7 +60,7 @@ function DarkBarChart({ timeSavings, noShowRecovery }: { timeSavings: number; no
     </div>
   );
 
-  const MAX_H = 72;
+  const MAX_H = 56;
   const bars = [
     {
       label: 'Tempo',
@@ -89,7 +89,7 @@ function DarkBarChart({ timeSavings, noShowRecovery }: { timeSavings: number; no
   ];
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 24, height: 120, paddingBottom: 4 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 24, height: 90, paddingBottom: 4 }}>
       {bars.map((bar, i) => {
         const h = Math.max(6, bar.pct * MAX_H);
         return (
@@ -177,7 +177,7 @@ export function ROICalculatorSection() {
     <section
       style={{
         backgroundColor: '#0D0D16',
-        padding: '100px 24px',
+        padding: '64px 24px',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -198,23 +198,23 @@ export function ROICalculatorSection() {
 
         {/* ── Header ── */}
         <ScrollReveal>
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <div style={{ textAlign: 'center', marginBottom: 36 }}>
             <span style={{
               display: 'inline-block', padding: '4px 14px', borderRadius: 100,
               background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)',
               color: '#a855f7', fontSize: 12, fontWeight: 600,
-              letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20,
+              letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14,
             }}>
               Calcola il tuo risparmio
             </span>
             <h2 style={{
-              fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 800,
+              fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)', fontWeight: 800,
               letterSpacing: '-0.02em', color: '#F8FAFC',
-              margin: '0 0 16px', lineHeight: 1.2,
+              margin: '0 0 10px', lineHeight: 1.2,
             }}>
               Quanto lasci sul tavolo<br />ogni mese?
             </h2>
-            <p style={{ color: '#64748B', fontSize: 16, maxWidth: 440, margin: '0 auto', lineHeight: 1.7 }}>
+            <p style={{ color: '#64748B', fontSize: 15, maxWidth: 440, margin: '0 auto', lineHeight: 1.6 }}>
               Due cursori. Il conto lo facciamo noi — in tempo reale.
             </p>
           </div>
@@ -236,10 +236,10 @@ export function ROICalculatorSection() {
           >
 
             {/* ── LEFT: Inputs ── */}
-            <div style={{ padding: '52px 44px', borderRight: '1px solid rgba(124,58,237,0.1)' }}>
+            <div style={{ padding: '36px 36px', borderRight: '1px solid rgba(124,58,237,0.1)' }}>
 
               {/* Type tabs */}
-              <div style={{ marginBottom: 44 }}>
+              <div style={{ marginBottom: 28 }}>
                 <p style={{
                   fontSize: 11, color: '#475569', fontWeight: 600,
                   letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 12px',
@@ -274,8 +274,8 @@ export function ROICalculatorSection() {
               </div>
 
               {/* Slider 1 — Phone minutes */}
-              <div style={{ marginBottom: 44 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 700, color: '#E2E8F0', margin: 0 }}>
                       Prenotazioni telefoniche
@@ -303,7 +303,7 @@ export function ROICalculatorSection() {
 
               {/* Slider 2 — No-shows */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 700, color: '#E2E8F0', margin: 0 }}>
                       No-show mensili
@@ -331,7 +331,7 @@ export function ROICalculatorSection() {
 
               {/* Disclaimer */}
               <p style={{
-                fontSize: 11, color: '#1e293b', marginTop: 48, lineHeight: 1.6,
+                fontSize: 11, color: '#1e293b', marginTop: 24, lineHeight: 1.6,
                 display: 'flex', alignItems: 'flex-start', gap: 6,
               }}>
                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -345,21 +345,21 @@ export function ROICalculatorSection() {
 
             {/* ── RIGHT: Results ── */}
             <div style={{
-              padding: '52px 44px',
+              padding: '36px 36px',
               display: 'flex', flexDirection: 'column',
               background: 'rgba(124,58,237,0.02)',
             }}>
 
               {/* Big number */}
-              <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <p style={{
                   fontSize: 11, color: '#7c3aed', fontWeight: 700,
-                  letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 12px',
+                  letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px',
                 }}>
                   Risparmio annuale stimato
                 </p>
                 <div style={{
-                  fontSize: 'clamp(3rem, 5vw, 4.2rem)', fontWeight: 900,
+                  fontSize: 'clamp(2.4rem, 4vw, 3.4rem)', fontWeight: 900,
                   letterSpacing: '-0.04em', lineHeight: 1,
                   background: 'linear-gradient(135deg, #F8FAFC 0%, #c084fc 60%, #a855f7 100%)',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -380,8 +380,8 @@ export function ROICalculatorSection() {
 
               {/* Bar chart */}
               <div style={{
-                padding: '20px 16px 16px',
-                borderRadius: 16, marginBottom: 20,
+                padding: '16px 16px 12px',
+                borderRadius: 16, marginBottom: 14,
                 background: 'rgba(124,58,237,0.04)',
                 border: '1px solid rgba(124,58,237,0.1)',
               }}>
@@ -389,27 +389,27 @@ export function ROICalculatorSection() {
               </div>
 
               {/* Stats grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
                 <div style={{
-                  padding: '16px 12px', borderRadius: 12, textAlign: 'center',
+                  padding: '12px 10px', borderRadius: 12, textAlign: 'center',
                   background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.1)',
                 }}>
                   <p style={{ fontSize: 10, color: '#475569', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Ore risparmiate
                   </p>
-                  <p style={{ fontSize: 22, fontWeight: 900, color: '#F8FAFC', margin: '0 0 2px', letterSpacing: '-0.02em' }}>
+                  <p style={{ fontSize: 20, fontWeight: 900, color: '#F8FAFC', margin: '0 0 2px', letterSpacing: '-0.02em' }}>
                     ~{Math.round(hoursSaved)}h
                   </p>
                   <p style={{ fontSize: 10, color: '#334155', margin: 0 }}>al mese</p>
                 </div>
                 <div style={{
-                  padding: '16px 12px', borderRadius: 12, textAlign: 'center',
+                  padding: '12px 10px', borderRadius: 12, textAlign: 'center',
                   background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.12)',
                 }}>
                   <p style={{ fontSize: 10, color: '#475569', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     No-show evitati
                   </p>
-                  <p style={{ fontSize: 22, fontWeight: 900, color: '#10b981', margin: '0 0 2px', letterSpacing: '-0.02em' }}>
+                  <p style={{ fontSize: 20, fontWeight: 900, color: '#10b981', margin: '0 0 2px', letterSpacing: '-0.02em' }}>
                     {noShowsAvoided}
                   </p>
                   <p style={{ fontSize: 10, color: '#334155', margin: 0 }}>al mese</p>
