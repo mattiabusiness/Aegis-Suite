@@ -169,9 +169,9 @@ function GlassInput({ label, type = 'text', placeholder, value, onChange, hint, 
   );
 }
 
-function GlassTextarea({ label, placeholder, value, onChange, rows = 4 }: {
+function GlassTextarea({ label, placeholder, value, onChange, rows = 4, maxLength }: {
   label: string; placeholder?: string; value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; rows?: number;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; rows?: number; maxLength?: number;
 }) {
   const [focused, setFocused] = useState(false);
   const id = useId();
@@ -183,6 +183,7 @@ function GlassTextarea({ label, placeholder, value, onChange, rows = 4 }: {
       }}>{label}</label>
       <textarea
         id={id} placeholder={placeholder} value={value} onChange={onChange} rows={rows}
+        maxLength={maxLength}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
         style={{
           width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: '0.88rem',
@@ -193,6 +194,11 @@ function GlassTextarea({ label, placeholder, value, onChange, rows = 4 }: {
           transition: 'border-color 0.2s, box-shadow 0.2s',
         }}
       />
+      {maxLength && (
+        <div style={{ textAlign: 'right', fontSize: '0.70rem', marginTop: 4, color: value.length >= maxLength ? '#ef4444' : '#9ca3af' }}>
+          {value.length}/{maxLength}
+        </div>
+      )}
     </div>
   );
 }
@@ -629,6 +635,7 @@ export function AccountContent({
               <GlassTextarea
                 label="Preferenze e note" value={prefs} onChange={(e) => setPrefs(e.target.value)}
                 placeholder="Es. Allergia al nichel, preferisco sempre Mario, taglio medio con frangia..." rows={4}
+                maxLength={500}
               />
             </motion.div>
             <motion.div variants={itemVariants}>
