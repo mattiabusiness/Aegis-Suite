@@ -39,6 +39,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (typeof email !== 'string' || email.length > 254) {
+      return NextResponse.json({ error: 'Email non valida' }, { status: 400 });
+    }
+    if (typeof fullName !== 'string' || fullName.length > 100) {
+      return NextResponse.json({ error: 'Nome troppo lungo (max 100 caratteri)' }, { status: 400 });
+    }
+    if (phone && (typeof phone !== 'string' || phone.length > 20)) {
+      return NextResponse.json({ error: 'Telefono non valido' }, { status: 400 });
+    }
 
     // Verify the caller is owner/admin of this specific business
     const { data: member } = await supabase

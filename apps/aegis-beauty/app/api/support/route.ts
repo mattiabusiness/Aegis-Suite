@@ -82,6 +82,9 @@ export async function POST(request: NextRequest) {
     if (userName && userName.length > 200) {
       return NextResponse.json({ error: 'Nome troppo lungo' }, { status: 400 });
     }
+    if (businessName && businessName.length > 200) {
+      return NextResponse.json({ error: 'Nome business troppo lungo' }, { status: 400 });
+    }
 
     // Get user's business_id
     const { data: businessMember } = await supabase

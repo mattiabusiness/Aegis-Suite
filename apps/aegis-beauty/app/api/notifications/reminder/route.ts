@@ -4,11 +4,10 @@
 // ============================================================================
 
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@aegis/core';
+import { createAdminSupabaseClient } from '@aegis/core';
 import { notify } from '@/lib/notify';
 import type { EmailFallbackData } from '@/lib/email';
 import type { PushPayload } from '@aegis/core';
-import { cookies } from 'next/headers';
 import type { Appointment } from '@aegis/types';
 
 // Window half-widths in minutes
@@ -36,7 +35,8 @@ export async function GET(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const supabase = createServerSupabaseClient(await cookies());
+  // Use admin client — cron calls have no user session, RLS would block anon queries
+  const supabase = createAdminSupabaseClient();
 
   const now = new Date();
 

@@ -4,12 +4,11 @@
 // ============================================================================
 
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@aegis/core';
+import { createAdminSupabaseClient } from '@aegis/core';
 
 export const maxDuration = 60;
 import { notify } from '@/lib/notify';
 import type { PushPayload } from '@aegis/core';
-import { cookies } from 'next/headers';
 import type { Business, BusinessMember } from '@aegis/types';
 
 interface AppointmentStatRow {
@@ -31,7 +30,8 @@ export async function GET(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const supabase = createServerSupabaseClient(await cookies());
+  // Use admin client — cron calls have no user session, RLS would block anon queries
+  const supabase = createAdminSupabaseClient();
 
   const now = new Date();
   const firstOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);

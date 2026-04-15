@@ -32,6 +32,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (!endpoint || !p256dh || !auth_key) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
+  if (endpoint.length > 500 || p256dh.length > 200 || auth_key.length > 100) {
+    return NextResponse.json({ error: 'Invalid subscription data' }, { status: 400 });
+  }
 
   // Get the user's business_id (optional — null for pure customers)
   const { data: member } = await supabase
