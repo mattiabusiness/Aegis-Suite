@@ -32,8 +32,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = request.nextUrl;
     const q = searchParams.get('q')?.trim() ?? '';
-    const limit = Math.min(parseInt(searchParams.get('limit') ?? '50', 10), 50);
-    const offset = Math.max(parseInt(searchParams.get('offset') ?? '0', 10), 0);
+    const rawLimit = parseInt(searchParams.get('limit') ?? '50', 10);
+    const rawOffset = parseInt(searchParams.get('offset') ?? '0', 10);
+    const limit = Math.min(isNaN(rawLimit) ? 50 : rawLimit, 50);
+    const offset = Math.max(isNaN(rawOffset) ? 0 : rawOffset, 0);
 
     let query = supabase
       .from('customers')

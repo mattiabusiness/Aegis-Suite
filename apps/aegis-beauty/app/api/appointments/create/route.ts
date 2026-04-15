@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       .from('services')
       .select('id, name, duration_minutes, price')
       .eq('id', serviceId)
+      .eq('business_id', businessId)
       .single();
     
     if (serviceError || !service) {

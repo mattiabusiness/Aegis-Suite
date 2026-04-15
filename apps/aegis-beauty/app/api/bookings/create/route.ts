@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateBookingBody = await request.json();
-    const { businessId, serviceId, staffId, date, time, customerNotes } = body;
+    const { businessId, serviceId, staffId, date, time, customerNotes: rawNotes } = body;
+    const customerNotes = rawNotes ? String(rawNotes).slice(0, 1000) : undefined;
 
     if (!businessId || !serviceId || !date || !time) {
       return NextResponse.json({ error: 'Campi obbligatori mancanti' }, { status: 400 });

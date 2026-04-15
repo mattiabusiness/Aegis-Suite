@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
     fallbackUrl.searchParams.set('staff_id', staffId);
     fallbackUrl.searchParams.set('business_slug', businessSlug || '');
     fallbackUrl.searchParams.set('business_name', businessName);
-    fallbackUrl.searchParams.set('role', role || 'employee');
+    const VALID_STAFF_ROLES = ['employee', 'admin'] as const;
+    const safeRole = VALID_STAFF_ROLES.includes(role as typeof VALID_STAFF_ROLES[number]) ? role : 'employee';
+    fallbackUrl.searchParams.set('role', safeRole);
 
     // Return QR URL — no email sent here.
     // The confirmation email is triggered automatically by Supabase when the staff
