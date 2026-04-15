@@ -92,6 +92,15 @@ export async function POST(request: NextRequest) {
       if (!customerFirstName || !customerLastName || !customerPhone || !customerEmail) {
         return NextResponse.json({ error: 'Dati cliente incompleti' }, { status: 400 });
       }
+      if (customerFirstName.length > 100 || customerLastName.length > 100) {
+        return NextResponse.json({ error: 'Nome o cognome troppo lungo (max 100 caratteri)' }, { status: 400 });
+      }
+      if (customerPhone.length > 30) {
+        return NextResponse.json({ error: 'Numero di telefono non valido' }, { status: 400 });
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+        return NextResponse.json({ error: 'Email non valida' }, { status: 400 });
+      }
       
       // Check if customer with same email already exists
       const { data: existingCustomer } = await supabase
@@ -244,7 +253,7 @@ export async function POST(request: NextRequest) {
         start_time:  startTime.toISOString(),
         end_time:    endTime.toISOString(),
         status:      'confirmed',
-        notes:       notes || null,
+        notes:       notes ? String(notes).slice(0, 1000) : null,
         source:      'dashboard',
       })
       .select('id')

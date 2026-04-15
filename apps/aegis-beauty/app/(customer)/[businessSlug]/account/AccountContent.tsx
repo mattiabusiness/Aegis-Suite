@@ -132,10 +132,10 @@ function Avatar({ name, size = 54 }: { name: string; size?: number }) {
 // GLASS INPUT — stile identico a SettingsPage dashboard
 // ============================================================================
 
-function GlassInput({ label, type = 'text', placeholder, value, onChange, hint, disabled }: {
+function GlassInput({ label, type = 'text', placeholder, value, onChange, hint, disabled, maxLength }: {
   label: string; type?: string; placeholder?: string; value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  hint?: string; disabled?: boolean;
+  hint?: string; disabled?: boolean; maxLength?: number;
 }) {
   const [focused, setFocused] = useState(false);
   const id = useId();
@@ -147,7 +147,7 @@ function GlassInput({ label, type = 'text', placeholder, value, onChange, hint, 
       }}>{label}</label>
       <input
         id={id} type={type} placeholder={placeholder} value={value} onChange={onChange}
-        disabled={disabled}
+        disabled={disabled} maxLength={maxLength}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
         style={{
           width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: '0.88rem',
@@ -505,7 +505,7 @@ export function AccountContent({
         toast.info('Controlla la tua nuova email per confermare il cambio.');
       }
       if (customer && prefs !== (customer as { preferences?: string }).preferences) {
-        updates.push(sb.from('customers').update({ preferences: prefs }).eq('id', customer.id));
+        updates.push(sb.from('customers').update({ preferences: prefs }).eq('id', customer.id).eq('user_id', userId));
       }
       await Promise.all(updates);
       toast.success('Profilo aggiornato.');
@@ -610,7 +610,7 @@ export function AccountContent({
         <SectionCard title="Dati personali">
           <motion.div variants={fieldContainerVariants} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <motion.div variants={itemVariants}>
-              <GlassInput label="Nome completo" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Mario Rossi" />
+              <GlassInput label="Nome completo" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Mario Rossi" maxLength={100} />
             </motion.div>
             <motion.div variants={itemVariants}>
               <GlassInput
@@ -620,7 +620,7 @@ export function AccountContent({
               />
             </motion.div>
             <motion.div variants={itemVariants}>
-              <GlassInput label="Telefono" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+39 333 123 4567" />
+              <GlassInput label="Telefono" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+39 333 123 4567" maxLength={20} />
             </motion.div>
             <motion.div variants={itemVariants} style={{ marginTop: 6 }}>
               <SaveButton onClick={handleSaveProfile} loading={saving} label={saving ? 'Salvataggio...' : 'Salva modifiche'} />

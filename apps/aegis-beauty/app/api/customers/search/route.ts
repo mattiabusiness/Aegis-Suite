@@ -46,9 +46,10 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1);
 
     if (q) {
-      // Search by name, phone, or email
+      // Escape ilike special chars to prevent wildcard injection
+      const safeQ = q.replace(/[%_\\]/g, c => `\\${c}`);
       query = query.or(
-        `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`
+        `full_name.ilike.%${safeQ}%,phone.ilike.%${safeQ}%,email.ilike.%${safeQ}%`
       );
     }
 

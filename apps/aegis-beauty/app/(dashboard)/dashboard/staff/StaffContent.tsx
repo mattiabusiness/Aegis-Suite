@@ -196,7 +196,8 @@ export function StaffContent({
       const { error: deleteError } = await supabase
         .from('staff')
         .delete()
-        .eq('id', deleteConfirm.id);
+        .eq('id', deleteConfirm.id)
+        .eq('business_id', businessId);
 
       if (deleteError) throw deleteError;
 

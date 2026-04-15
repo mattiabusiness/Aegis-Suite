@@ -142,7 +142,8 @@ export function ServiziContent({
       const { error: deleteError } = await supabase
         .from('services')
         .delete()
-        .eq('id', deleteConfirm.id);
+        .eq('id', deleteConfirm.id)
+        .eq('business_id', businessId);
 
       if (deleteError) throw deleteError;
 
@@ -186,7 +187,8 @@ export function ServiziContent({
       const { error: deleteError } = await supabase
         .from('service_categories')
         .delete()
-        .eq('id', deleteCategoryConfirm.id);
+        .eq('id', deleteCategoryConfirm.id)
+        .eq('business_id', businessId);
 
       if (deleteError) throw deleteError;
 

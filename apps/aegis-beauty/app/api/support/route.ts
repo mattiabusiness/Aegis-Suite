@@ -73,6 +73,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (message.length > 2000) {
+      return NextResponse.json({ error: 'Messaggio troppo lungo (max 2000 caratteri)' }, { status: 400 });
+    }
+    if (category.length > 100) {
+      return NextResponse.json({ error: 'Categoria non valida' }, { status: 400 });
+    }
+    if (userName && userName.length > 200) {
+      return NextResponse.json({ error: 'Nome troppo lungo' }, { status: 400 });
+    }
 
     // Get user's business_id
     const { data: businessMember } = await supabase

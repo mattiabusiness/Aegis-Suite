@@ -183,7 +183,7 @@ export function SettingsContent({
   };
 
   const handleDeleteClosure = async (id: string) => {
-    const { error } = await supabase.from('business_closures').delete().eq('id', id);
+    const { error } = await supabase.from('business_closures').delete().eq('id', id).eq('business_id', businessId);
     if (error) throw error;
     router.refresh();
   };

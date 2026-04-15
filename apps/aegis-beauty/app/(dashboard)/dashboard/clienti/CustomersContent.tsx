@@ -368,7 +368,8 @@ export function ClientiContent({
     const { error } = await supabase
       .from('customers')
       .update({ notes } as never)
-      .eq('id', customerId);
+      .eq('id', customerId)
+      .eq('business_id', businessId);
 
     if (error) throw error;
 
@@ -382,7 +383,8 @@ export function ClientiContent({
     const { error } = await supabase
       .from('customers')
       .update({ preferences } as never)
-      .eq('id', customerId);
+      .eq('id', customerId)
+      .eq('business_id', businessId);
 
     if (error) throw error;
 
@@ -399,7 +401,8 @@ export function ClientiContent({
     const { error } = await supabase
       .from('customers')
       .update(data as never)
-      .eq('id', customerId);
+      .eq('id', customerId)
+      .eq('business_id', businessId);
 
     if (error) throw error;
 

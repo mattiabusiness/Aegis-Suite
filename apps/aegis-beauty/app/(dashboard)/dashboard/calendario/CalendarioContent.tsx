@@ -444,7 +444,8 @@ export function CalendarioContent({
       const { error } = await supabase
         .from('appointments')
         .update(updateData as never)
-        .eq('id', eventId);
+        .eq('id', eventId)
+        .eq('business_id', businessId);
 
       if (error) throw error;
 

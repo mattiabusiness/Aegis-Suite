@@ -51,6 +51,9 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(customerIds) || customerIds.length === 0) {
       return NextResponse.json({ error: 'Nessun cliente specificato' }, { status: 400 });
     }
+    if (customerIds.length > 500) {
+      return NextResponse.json({ error: 'Massimo 500 clienti per batch' }, { status: 400 });
+    }
 
     // ── 4. Verify customers belong to this business and have email ───────────
     const { data: customers, error: fetchError } = await (supabase as any)
