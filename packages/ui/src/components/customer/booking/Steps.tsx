@@ -856,7 +856,7 @@ export function Step3Front({ business: _business, staff: _staff, bookingState, o
         onChange={e => onUpdate({ customerNotes: e.target.value })}
         onClick={e => e.stopPropagation()}
         placeholder="Note per il professionista (opzionale)"
-        maxLength={200}
+        maxLength={1000}
         rows={2}
         style={{
           width: '100%', borderRadius: 10, padding: '8px 11px', marginTop: 3,
@@ -867,6 +867,9 @@ export function Step3Front({ business: _business, staff: _staff, bookingState, o
           fontFamily: 'inherit', lineHeight: 1.5,
         } as React.CSSProperties}
       />
+      <div style={{ textAlign: 'right', fontSize: '0.68rem', marginTop: 3, color: (bookingState.customerNotes?.length ?? 0) >= 1000 ? '#ef4444' : 'rgba(255,255,255,0.35)' }}>
+        {bookingState.customerNotes?.length ?? 0}/1000
+      </div>
 
       {/* Buttons */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 7 }}>

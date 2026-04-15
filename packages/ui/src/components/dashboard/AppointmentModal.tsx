@@ -1627,11 +1627,15 @@ export function AppointmentModal({
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="Note opzionali..."
                 rows={2}
+                maxLength={1000}
                 className="resize-none outline-none"
                 style={{ ...inputBase, padding: '10px 14px' }}
                 onFocus={(e) => { e.currentTarget.style.border = '1px solid rgba(168,85,247,0.4)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.08)'; }}
                 onBlur={(e) => { e.currentTarget.style.border = '1px solid rgba(0,0,0,0.08)'; e.currentTarget.style.boxShadow = 'none'; }}
               />
+              <div className="text-right text-xs mt-0.5" style={{ color: (formData.notes?.length ?? 0) >= 1000 ? '#ef4444' : '#9ca3af' }}>
+                {formData.notes?.length ?? 0}/1000
+              </div>
             </div>
           </div>
         </form>
