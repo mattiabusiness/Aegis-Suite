@@ -435,18 +435,18 @@ export function StaffModal({
               {/* Nome */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo <span className="text-red-400">*</span></label>
-                <input ref={nameRef} type="text" value={formData.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="es. Mario Rossi" className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
+                <input ref={nameRef} type="text" value={formData.fullName} onChange={(e) => update('fullName', e.target.value)} placeholder="es. Mario Rossi" maxLength={100} className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
               </div>
 
               {/* Email + Telefono */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-400">*</span></label>
-                  <input type="email" value={formData.email} onChange={(e) => update('email', e.target.value)} placeholder="email@esempio.it" className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
+                  <input type="email" value={formData.email} onChange={(e) => update('email', e.target.value)} placeholder="email@esempio.it" maxLength={254} className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefono <span className="text-red-400">*</span></label>
-                  <input type="tel" value={formData.phone} onChange={(e) => update('phone', e.target.value)} placeholder="+39 333 1234567" className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
+                  <input type="tel" value={formData.phone} onChange={(e) => update('phone', e.target.value)} placeholder="+39 333 1234567" maxLength={20} className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
                 </div>
               </div>
 

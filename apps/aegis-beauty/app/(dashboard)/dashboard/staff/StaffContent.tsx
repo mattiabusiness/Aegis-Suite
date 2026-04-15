@@ -216,7 +216,8 @@ export function StaffContent({
       const { error: updateError } = await supabase
         .from('staff')
         .update({ is_active: active } as never)
-        .eq('id', member.id);
+        .eq('id', member.id)
+        .eq('business_id', businessId);
 
       if (updateError) throw updateError;
 
@@ -247,7 +248,8 @@ export function StaffContent({
             color: data.color,
             is_active: data.isActive,
           } as never)
-          .eq('id', editingStaff.id);
+          .eq('id', editingStaff.id)
+          .eq('business_id', businessId);
 
         if (updateError) throw updateError;
 

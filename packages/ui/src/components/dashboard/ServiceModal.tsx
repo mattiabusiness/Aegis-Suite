@@ -276,6 +276,7 @@ export function ServiceModal({
               value={formData.name}
               onChange={(e) => update('name', e.target.value)}
               placeholder="es. Taglio uomo, Piega, Manicure..."
+              maxLength={100}
               className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none"
               style={inputBaseStyle}
               {...inputFocusHandlers}
@@ -290,6 +291,7 @@ export function ServiceModal({
               onChange={(e) => update('description', e.target.value)}
               placeholder="Breve descrizione del servizio (opzionale)"
               rows={2}
+              maxLength={500}
               className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none resize-none"
               style={inputBaseStyle}
               {...inputFocusHandlers}

@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json({ error: 'Nessuna riga da importare' }, { status: 400 });
     }
+    if (rows.length > 5000) {
+      return NextResponse.json({ error: 'Massimo 5000 righe per importazione' }, { status: 400 });
+    }
 
     // ── 4. If updateDuplicates=true, fetch existing email/phone ──────────────
     let existingEmails = new Set<string>();

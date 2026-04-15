@@ -216,7 +216,8 @@ export function ServiziContent({
         const { error: updateError } = await supabase
           .from('service_categories')
           .update({ name: data.name } as never)
-          .eq('id', editingCategory.id);
+          .eq('id', editingCategory.id)
+          .eq('business_id', businessId);
 
         if (updateError) throw updateError;
 
@@ -263,7 +264,8 @@ export function ServiziContent({
       const { error: updateError } = await supabase
         .from('services')
         .update({ is_active: active } as never)
-        .eq('id', service.id);
+        .eq('id', service.id)
+        .eq('business_id', businessId);
 
       if (updateError) throw updateError;
 
@@ -292,7 +294,8 @@ export function ServiziContent({
             category_id: data.categoryId || null,
             is_active: data.isActive,
           } as never)
-          .eq('id', editingService.id);
+          .eq('id', editingService.id)
+          .eq('business_id', businessId);
 
         if (updateError) throw updateError;
 

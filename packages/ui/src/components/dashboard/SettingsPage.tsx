@@ -134,10 +134,10 @@ function GlassInput({ label, type = 'text', placeholder, value, onChange, error,
 }
 
 /** Textarea version of GlassInput */
-function GlassTextarea({ label, placeholder, value, onChange, hint, rows = 3 }: {
+function GlassTextarea({ label, placeholder, value, onChange, hint, rows = 3, maxLength }: {
   label: string; placeholder?: string; value: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  hint?: string; rows?: number;
+  hint?: string; rows?: number; maxLength?: number;
 }) {
   const [focused, setFocused] = React.useState(false);
   const id = React.useId();
@@ -145,7 +145,7 @@ function GlassTextarea({ label, placeholder, value, onChange, hint, rows = 3 }: 
     <div className="w-full">
       <label htmlFor={id} className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">{label}</label>
       <textarea
-        id={id} placeholder={placeholder} value={value} onChange={onChange} rows={rows}
+        id={id} placeholder={placeholder} value={value} onChange={onChange} rows={rows} maxLength={maxLength}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
         className="w-full rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all duration-300 resize-none"
         style={{
@@ -451,20 +451,20 @@ onClick={triggerFileInput}>
       <Section title={`Informazioni ${label}`} description={`I dati principali del tuo ${label}`} delay={160} iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 22, height: 22 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}>
         <div className="space-y-3" style={{ animation: 'stFadeUp 0.35s ease-out both' }}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <GlassInput label={`Nome ${label}`} value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
-            <GlassInput label="Telefono" type="tel" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} hint="Per i clienti — visibile solo se vuoi" />
+            <GlassInput label={`Nome ${label}`} maxLength={100} value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
+            <GlassInput label="Telefono" type="tel" maxLength={20} value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} hint="Per i clienti — visibile solo se vuoi" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <GlassInput label="Email" type="email" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} hint="Per comunicazioni e aggiornamenti" />
-            <GlassInput label="Sito web" type="url" placeholder="https://..." value={form.website} onChange={(e) => setForm(p => ({ ...p, website: e.target.value }))} />
+            <GlassInput label="Email" type="email" maxLength={254} value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} hint="Per comunicazioni e aggiornamenti" />
+            <GlassInput label="Sito web" type="url" maxLength={255} placeholder="https://..." value={form.website} onChange={(e) => setForm(p => ({ ...p, website: e.target.value }))} />
           </div>
-          <GlassInput label="Indirizzo" placeholder="Via e numero civico" value={form.addressStreet} onChange={(e) => setForm(p => ({ ...p, addressStreet: e.target.value }))} />
+          <GlassInput label="Indirizzo" maxLength={200} placeholder="Via e numero civico" value={form.addressStreet} onChange={(e) => setForm(p => ({ ...p, addressStreet: e.target.value }))} />
           <div className="grid grid-cols-3 gap-3">
-            <GlassInput label="Città" value={form.addressCity} onChange={(e) => setForm(p => ({ ...p, addressCity: e.target.value }))} />
+            <GlassInput label="Città" maxLength={100} value={form.addressCity} onChange={(e) => setForm(p => ({ ...p, addressCity: e.target.value }))} />
             <GlassInput label="Provincia" placeholder="TO" maxLength={2} value={form.addressProvince} onChange={(e) => setForm(p => ({ ...p, addressProvince: e.target.value }))} />
             <GlassInput label="CAP" placeholder="10100" maxLength={5} value={form.addressPostalCode} onChange={(e) => setForm(p => ({ ...p, addressPostalCode: e.target.value }))} />
           </div>
-          <GlassTextarea label="Descrizione" placeholder={`Descrivi brevemente il tuo ${label}...`} value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} hint="Questa descrizione sarà visibile ai tuoi clienti" />
+          <GlassTextarea label="Descrizione" placeholder={`Descrivi brevemente il tuo ${label}...`} maxLength={1000} value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} hint="Questa descrizione sarà visibile ai tuoi clienti" />
         </div>
         <div className="flex justify-end mt-5">
           <SaveBtn saving={saving} saved={saved} onClick={handleSave} disabled={!hasChanges} />

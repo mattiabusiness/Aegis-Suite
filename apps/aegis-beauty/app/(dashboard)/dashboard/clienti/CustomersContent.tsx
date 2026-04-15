@@ -595,7 +595,7 @@ export function ClientiContent({
           if (!original.phone && data.customerPhone?.trim()) contactPatch.phone = data.customerPhone.trim();
         }
         if (Object.keys(contactPatch).length > 0) {
-          await supabase.from('customers').update(contactPatch as never).eq('id', data.customerId);
+          await supabase.from('customers').update(contactPatch as never).eq('id', data.customerId).eq('business_id', businessId);
           setCustomers(prev => prev.map(c => c.id === data.customerId ? { ...c, ...contactPatch } : c));
         }
         // Send invite if requested (customer just got email added or already had one)
