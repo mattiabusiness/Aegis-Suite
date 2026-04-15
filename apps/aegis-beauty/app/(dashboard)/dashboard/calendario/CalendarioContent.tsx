@@ -48,7 +48,6 @@ interface CalendarioContentProps {
   initialStaff: StaffMember[];
   businessHours: BusinessHoursData[];
   closures: ClosureData[];
-  customers: Customer[];
   services: Service[];
   staffServices: StaffServicesMap;
 }
@@ -107,7 +106,6 @@ export function CalendarioContent({
   initialStaff,
   businessHours,
   closures,
-  customers: initialCustomers,
   services: initialServices,
   staffServices: initialStaffServices,
 }: CalendarioContentProps) {
@@ -151,7 +149,18 @@ export function CalendarioContent({
   const [liveBusinessHours, setLiveBusinessHours] = useState<BusinessHoursData[]>(businessHours);
 
   // Customers (can grow as new ones are created)
-  const [modalCustomers] = useState<Customer[]>(initialCustomers);
+  const handleCustomerSearch = useCallback(async (query: string): Promise<Customer[]> => {
+    const params = new URLSearchParams({ limit: '50' });
+    if (query) params.set('q', query);
+    try {
+      const res = await fetch(`/api/customers/search?${params}`);
+      if (!res.ok) return [];
+      const json = await res.json() as { customers: Customer[] };
+      return json.customers ?? [];
+    } catch {
+      return [];
+    }
+  }, []);
   const modalServices: Service[] = initialServices;
   const modalStaff: Staff[] = initialStaff.map(s => ({
     id: s.id,
@@ -984,7 +993,8 @@ export function CalendarioContent({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleModalSubmit}
-        customers={modalCustomers}
+        customers={[]}
+        onCustomerSearch={handleCustomerSearch}
         services={modalServices}
         staff={modalStaff}
         staffServices={staffServicesMap}

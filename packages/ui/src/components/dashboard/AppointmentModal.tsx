@@ -116,6 +116,12 @@ export interface AppointmentModalProps {
   lockedStaffId?: string;
   /** Se presente, mostra solo questi staff nella lista (per staff con permesso team parziale) */
   allowedStaffIds?: string[];
+  /**
+   * Se presente, la ricerca clienti è asincrona: viene chiamata ad ogni digitazione
+   * (debounced 300ms) invece di filtrare l'array `customers` in memoria.
+   * La prop `customers` viene usata come stato iniziale (es. array vuoto).
+   */
+  onCustomerSearch?: (query: string) => Promise<Customer[]>;
 }
 
 // ============================================================================
@@ -834,7 +840,7 @@ export function AppointmentModal({
   initialDate, initialTime, initialStaffId, initialCustomerId,
   isLoading = false, labels: customLabels,
   availableSlots, slotsLoading = false, slotsError, onSlotsNeeded,
-  lockedStaffId, allowedStaffIds,
+  lockedStaffId, allowedStaffIds, onCustomerSearch,
 }: AppointmentModalProps) {
   const labels = { ...defaultLabels, ...customLabels };
   const timeSlots = React.useMemo(() => generateTimeSlots(), []);
@@ -865,6 +871,7 @@ export function AppointmentModal({
 
   // UI state
   const [customerSearch, setCustomerSearch] = React.useState('');
+  const [asyncCustomers, setAsyncCustomers] = React.useState<Customer[]>([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = React.useState(false);
   const [serviceSearch, setServiceSearch] = React.useState('');
   const [showServiceList, setShowServiceList] = React.useState(false);
@@ -910,11 +917,22 @@ export function AppointmentModal({
     return null;
   }, [formData.staffId, formData.serviceId, staffServices, services, staff]);
 
+  // Async search: debounce 300ms, only when onCustomerSearch is provided
+  React.useEffect(() => {
+    if (!onCustomerSearch) return;
+    const timer = setTimeout(async () => {
+      const results = await onCustomerSearch(customerSearch.trim());
+      setAsyncCustomers(results);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [customerSearch, onCustomerSearch]);
+
   const filteredCustomers = React.useMemo(() => {
+    if (onCustomerSearch) return asyncCustomers;
     if (!customerSearch.trim()) return customers.slice(0, 10);
     const s = customerSearch.toLowerCase();
     return customers.filter(c => c.name.toLowerCase().includes(s) || c.phone?.includes(s) || c.email?.toLowerCase().includes(s)).slice(0, 10);
-  }, [customers, customerSearch]);
+  }, [onCustomerSearch, asyncCustomers, customers, customerSearch]);
 
   // ── Handlers ──
   const handleInputChange = (field: keyof AppointmentFormData, value: string | boolean) => {

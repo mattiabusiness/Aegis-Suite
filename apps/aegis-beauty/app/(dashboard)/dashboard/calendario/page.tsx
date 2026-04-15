@@ -46,7 +46,6 @@ export default async function CalendarioPage() {
     staffResult,
     businessHoursResult,
     closuresResult,
-    customersResult,
     servicesResult,
   ] = await Promise.all([
     // Appointments for this week
@@ -82,15 +81,6 @@ export default async function CalendarioPage() {
       .from('business_closures')
       .select('start_date, end_date, title, is_recurring_yearly')
       .eq('business_id', businessId),
-
-    // Customers (for appointment modal)
-    supabase
-      .from('customers')
-      .select('id, full_name, email, phone')
-      .eq('business_id', businessId)
-      .eq('is_active', true)
-      .order('full_name')
-      .limit(500),
 
     // Services (for appointment modal)
     supabase
@@ -153,14 +143,6 @@ export default async function CalendarioPage() {
     return dates;
   });
 
-  // Customers for modal
-  const customers = (customersResult.data || []).map((c: Record<string, unknown>) => ({
-    id: c.id as string,
-    name: c.full_name as string,
-    email: (c.email as string) || undefined,
-    phone: (c.phone as string) || undefined,
-  }));
-
   // Services for modal
   const services = (servicesResult.data || []).map((s: Record<string, unknown>) => {
     const category = s.service_categories as { name: string } | null;
@@ -187,7 +169,6 @@ export default async function CalendarioPage() {
       initialStaff={staff}
       businessHours={businessHours}
       closures={closures}
-      customers={customers}
       services={services}
       staffServices={staffServicesMap}
     />

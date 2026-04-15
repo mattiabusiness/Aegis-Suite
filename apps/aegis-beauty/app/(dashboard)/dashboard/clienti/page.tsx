@@ -41,7 +41,7 @@ export default async function ClientiPage() {
     .select('id, full_name, email, phone, total_appointments, total_spent, last_visit_at, is_active, notes, preferences, tags, birth_date, gender, source, accepts_marketing, created_at, user_id, invited_at', { count: 'exact' })
     .eq('business_id', businessId)
     .order('full_name', { ascending: true })
-    .range(0, 19) as {
+    .range(0, 49) as {
       data: Array<{
         id: string;
         full_name: string;
