@@ -825,6 +825,7 @@ export function CustomerDetailModal({
                   className="w-full px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none resize-none"
                   style={{ ...inputStyle, animation: 'cdm-draw 0.4s ease-out 0.2s both' }}
                   rows={3}
+                  maxLength={1000}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)';
                     e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.08), 0 0 20px rgba(168,85,247,0.04)';
@@ -834,6 +835,9 @@ export function CustomerDetailModal({
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
+                <div className="text-right text-xs mt-1" style={{ color: preferences.length >= 1000 ? '#ef4444' : '#9ca3af' }}>
+                  {preferences.length}/1000
+                </div>
                 {onSavePreferences && preferences !== (customer.preferences || '') && (
                   <div className="flex justify-end">
                     <button
