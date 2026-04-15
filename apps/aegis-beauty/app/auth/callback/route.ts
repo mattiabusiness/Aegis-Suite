@@ -12,7 +12,9 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const type = requestUrl.searchParams.get('type');
-  const next = requestUrl.searchParams.get('next') || '/dashboard';
+  // Sanitize next: only allow relative paths (no external redirects)
+  const rawNext = requestUrl.searchParams.get('next') ?? '';
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard';
 
   // Se non c'è code ma c'è type=invite, è implicit flow — gestito lato client
   if (!code && type === 'invite') {

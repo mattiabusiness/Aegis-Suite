@@ -118,10 +118,12 @@ export async function middleware(request: NextRequest) {
   const hasNoAccess = request.nextUrl.searchParams.get('reason') === 'no_access';
   if (isAuthenticated && isPublicRoute && !isStaffInvite && !hasNoAccess) {
     const url = request.nextUrl.clone();
-    const redirectParam = request.nextUrl.searchParams.get('redirect');
+    const rawRedirect = request.nextUrl.searchParams.get('redirect') ?? '';
+    // Only honor relative paths that start with / but not // (prevents open redirect)
+    const safeRedirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : null;
     // If redirect points to a customer route, honor it (customer already logged in)
-    if (redirectParam && isCustomerProtectedRoute(redirectParam)) {
-      url.pathname = redirectParam;
+    if (safeRedirect && isCustomerProtectedRoute(safeRedirect)) {
+      url.pathname = safeRedirect;
       url.search = '';
     } else {
       url.pathname = '/dashboard';

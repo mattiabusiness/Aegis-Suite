@@ -32,7 +32,7 @@ export async function GET(req: Request): Promise<NextResponse> {
   // Security: only allow Vercel Cron or internal calls
   const authHeader = req.headers.get('authorization') ?? '';
   const cronSecret = process.env.CRON_SECRET ?? '';
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

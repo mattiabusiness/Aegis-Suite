@@ -111,7 +111,7 @@ export function CalendarioContent({
   services: initialServices,
   staffServices: initialStaffServices,
 }: CalendarioContentProps) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const permissions = useStaffPermissions();
 
   // ========================================================================
@@ -242,6 +242,11 @@ export function CalendarioContent({
   useEffect(() => {
     fetchAppointments(selectedDate, view);
   }, [selectedDate, view, fetchAppointments]);
+
+  // Cleanup: abort any in-flight slot fetch on unmount
+  useEffect(() => {
+    return () => { slotsAbortRef.current?.abort(); };
+  }, []);
 
   // Poll for new appointments every 60s — silent (no spinner), only when tab is visible
   useEffect(() => {

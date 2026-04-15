@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
 // ============================================================================
@@ -12,12 +13,22 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
-    // Instantiate inside the handler so env vars are read at runtime, not build time
-    const supabaseAdmin = createClient(
+    // Verify caller is authenticated and is owner/admin of the target business
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return request.cookies.getAll(); },
+          setAll() {},
+        },
+      }
     );
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { staffId, email, fullName, phone, businessId, businessSlug, role } = body;
 
@@ -28,6 +39,25 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Verify the caller is owner/admin of this specific business
+    const { data: member } = await supabase
+      .from('business_members')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .single();
+    if (!member || !['owner', 'admin'].includes(member.role)) {
+      return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
+    }
+
+    // Instantiate inside the handler so env vars are read at runtime, not build time
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
 
     // Fetch business name for the invite page subtitle
     let businessName = '';

@@ -42,8 +42,6 @@ export async function POST(request: NextRequest) {
       .eq('email', user.email)
       .single();
 
-    console.log('[Setup API] email:', user.email, '| staffRecord:', staffRecord, '| err:', staffErr?.message);
-
     if (!staffRecord?.business_id) {
       return NextResponse.json({ error: 'Staff non trovato' }, { status: 404 });
     }

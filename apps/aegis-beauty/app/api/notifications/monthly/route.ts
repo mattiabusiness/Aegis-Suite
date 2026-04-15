@@ -27,7 +27,7 @@ export async function GET(req: Request): Promise<NextResponse> {
   // Security
   const authHeader = req.headers.get('authorization') ?? '';
   const cronSecret = process.env.CRON_SECRET ?? '';
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -41,35 +41,42 @@ export async function GET(req: Request): Promise<NextResponse> {
   let errors = 0;
 
   // ── 1. GESTORI REPORT ─────────────────────────────────────────────────────
-  const { data: businessRows } = await supabase
-    .from('businesses')
-    .select('id, name, slug');
+  const [{ data: businessRows }, { data: appointmentRows }, { data: ownerRows }] = await Promise.all([
+    supabase.from('businesses').select('id, name, slug'),
+    supabase
+      .from('appointments')
+      .select('business_id, total_price, status')
+      .gte('start_time', firstOfLastMonth.toISOString())
+      .lt('start_time', firstOfThisMonth.toISOString())
+      .neq('status', 'cancelled'),
+    supabase
+      .from('business_members')
+      .select('business_id, user_id')
+      .eq('role', 'owner')
+      .eq('is_active', true),
+  ]);
 
   const businesses = (businessRows ?? []) as Pick<Business, 'id' | 'name' | 'slug'>[];
 
-  for (const business of businesses) {
-    const { data: statsRows } = await supabase
-      .from('appointments')
-      .select('total_price, status')
-      .eq('business_id', business.id)
-      .gte('start_time', firstOfLastMonth.toISOString())
-      .lt('start_time', firstOfThisMonth.toISOString())
-      .neq('status', 'cancelled');
+  // Build lookup maps to avoid N+1
+  const statsByBusiness = new Map<string, AppointmentStatRow[]>();
+  for (const row of (appointmentRows ?? []) as (AppointmentStatRow & { business_id: string })[]) {
+    const list = statsByBusiness.get(row.business_id) ?? [];
+    list.push(row);
+    statsByBusiness.set(row.business_id, list);
+  }
+  const ownerByBusiness = new Map<string, string>();
+  for (const row of (ownerRows ?? []) as unknown as { business_id: string; user_id: string | null }[]) {
+    if (row.user_id) ownerByBusiness.set(row.business_id, row.user_id);
+  }
 
-    const stats = (statsRows ?? []) as AppointmentStatRow[];
+  await Promise.allSettled(businesses.map(async (business) => {
+    const ownerId = ownerByBusiness.get(business.id);
+    if (!ownerId) return;
+
+    const stats = statsByBusiness.get(business.id) ?? [];
     const totalAppointments = stats.length;
     const revenue = stats.reduce((sum, a) => sum + (a.total_price ?? 0), 0);
-
-    const { data: ownerRow } = await supabase
-      .from('business_members')
-      .select('user_id')
-      .eq('business_id', business.id)
-      .eq('role', 'owner')
-      .eq('is_active', true)
-      .single();
-
-    const owner = ownerRow as Pick<BusinessMember, 'user_id'> | null;
-    if (!owner?.user_id) continue;
 
     const payload: PushPayload = {
       title: 'Il tuo mese su Aegis Beauty',
@@ -80,13 +87,13 @@ export async function GET(req: Request): Promise<NextResponse> {
     };
 
     try {
-      await notify(owner.user_id, payload, supabase);
+      await notify(ownerId, payload, supabase);
       sent++;
     } catch (e) {
       console.error(`[monthly] gestore ${business.id} failed:`, e);
       errors++;
     }
-  }
+  }));
 
   // ── 2. CLIENTI REPORT ─────────────────────────────────────────────────────
   const { data: customerRows } = await supabase

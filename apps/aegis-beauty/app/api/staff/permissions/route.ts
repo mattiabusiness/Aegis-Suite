@@ -114,6 +114,11 @@ export async function POST(request: NextRequest) {
       team_manager_user_ids: string[];
     };
 
+    // Validate all user IDs are valid UUIDs before using them in raw string interpolation
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const validIds = (body.team_manager_user_ids ?? []).filter(id => UUID_REGEX.test(id));
+    body.team_manager_user_ids = validIds;
+
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,

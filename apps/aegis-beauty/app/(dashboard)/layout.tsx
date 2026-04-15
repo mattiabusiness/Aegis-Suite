@@ -67,7 +67,6 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 
   // Se non trovato, prova il setup automatico via API route (che ha accesso al service role)
   if (!businessMember) {
-    console.log('[Layout] nessun business_member per user:', user.id, '— chiamo setup API');
     try {
       const cookieHeader = cookieStore.getAll().map(c => `${c.name}=${c.value}`).join('; ');
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -77,7 +76,6 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       });
 
       const setupBody = await setupRes.text();
-      console.log('[Layout] setup API status:', setupRes.status, '| body:', setupBody);
 
       if (setupRes.ok) {
         const parsed = JSON.parse(setupBody) as { businessId: string; role: string };

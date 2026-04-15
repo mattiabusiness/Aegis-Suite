@@ -465,7 +465,7 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
   const [dayRevenue, setDayRevenue] = useState<DayRevenueData[]>([]);
   const [heatmapData, setHeatmapData] = useState<HeatmapCell[]>([]);
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const roi = useMemo(() => parseROI(roiData), [roiData]);
 
   // Determina se filtrare per staff_id:
@@ -487,7 +487,6 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       .gte('start_time', formatDateISO(start))
       .lt('start_time', formatDateISO(end));
     if (filterByCurrentStaff) curQuery.eq('staff_id', permissions.currentStaffId!);
-    const { data: currentAppts } = await curQuery as { data: AppointmentRow[] | null };
 
     const prevQuery = supabase
       .from('appointments')
@@ -496,7 +495,11 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       .gte('start_time', formatDateISO(prevStart))
       .lt('start_time', formatDateISO(prevEnd));
     if (filterByCurrentStaff) prevQuery.eq('staff_id', permissions.currentStaffId!);
-    const { data: prevAppts } = await prevQuery as { data: AppointmentRow[] | null };
+
+    const [{ data: currentAppts }, { data: prevAppts }] = await Promise.all([curQuery, prevQuery]) as [
+      { data: AppointmentRow[] | null },
+      { data: AppointmentRow[] | null },
+    ];
 
     const current = currentAppts || [];
     const prev = prevAppts || [];

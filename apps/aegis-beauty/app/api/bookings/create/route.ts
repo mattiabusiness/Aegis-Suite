@@ -49,6 +49,21 @@ export async function POST(request: NextRequest) {
     const admin = createAdminSupabaseClient() as any;
 
     // ========================================================================
+    // STEP 0: Verify business exists and is active (prevents booking on inactive tenants)
+    // ========================================================================
+
+    const { data: businessCheck } = await admin
+      .from('businesses')
+      .select('id')
+      .eq('id', businessId)
+      .eq('is_active', true)
+      .single();
+
+    if (!businessCheck) {
+      return NextResponse.json({ error: 'Attività non disponibile' }, { status: 404 });
+    }
+
+    // ========================================================================
     // STEP 1: Service details
     // ========================================================================
 
@@ -60,7 +75,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (serviceError || !service) {
-      console.error('[bookings/create] service lookup failed:', serviceError);
       return NextResponse.json({ error: 'Servizio non trovato' }, { status: 404 });
     }
 
