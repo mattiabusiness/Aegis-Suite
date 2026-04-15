@@ -144,8 +144,16 @@ function LoginContent() {
 
       if (redirectParam) { window.location.href = redirectParam; return; }
 
-      const customerMember = members?.find((m) => m.role === 'customer');
-      const slug = (customerMember?.businesses as { slug: string } | null)?.slug;
+      // Customers are in the `customers` table (not business_members) — look up their business slug
+      const { data: customerRecord } = await supabase
+        .from('customers')
+        .select('businesses(slug)')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle() as { data: { businesses: { slug: string } | null } | null };
+
+      const slug = (customerRecord?.businesses as { slug: string } | null)?.slug;
       window.location.href = slug ? `/${slug}` : '/';
       return;
     }
