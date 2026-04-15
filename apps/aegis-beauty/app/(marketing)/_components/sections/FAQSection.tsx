@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     q: 'Ho già un gestionale. È complicato passare ad Aegis?',
-    a: 'No. L\'onboarding lo facciamo insieme in una videocall di 30 minuti — io e te. Importiamo i tuoi dati, configuriamo il salone, testiamo tutto. Se hai un gestionale vecchio, ti aiutiamo a migrare. Se usi ancora carta e WhatsApp, partiamo da zero in meno di un\'ora.',
+    a: 'No. L\'onboarding lo facciamo insieme in una videocall di 30 minuti — io e te. Importiamo i tuoi dati, configuriamo il salone, testiamo tutto. Se hai un gestionale vecchio, ti aiuto a migrare. Se usi ancora carta e WhatsApp, partiamo da zero in meno di un\'ora.',
   },
   {
     q: 'I dati dei miei clienti sono al sicuro?',

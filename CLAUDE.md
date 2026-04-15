@@ -28,11 +28,12 @@ Senior Full-Stack Developer e UI/UX Architect di Aegis Suite.
 - Responsive fatto 
 
 ### IN CORSO:
-    PWA, notifiche push e email
-    
+Security Audit    
    
 ### DA FARE (in ordine): 
-1. Launch prep (Inserire Toggle ON/OFF nelle impostazioni gestore (default: ON),Inserire altre due piccole features, performance, sicurezza)
+Inserire Toggle ON/OFF per visibilità pagina pubblica business, nelle impostazioni gestore (default: ON)
+Inserire altre due piccole features
+Finire PWA e sistema di notifiche
 
 ---
 

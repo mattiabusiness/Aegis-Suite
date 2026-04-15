@@ -62,18 +62,12 @@ L'area dedicata all'utente finale del salone. **Mobile-First strict.**
 
 ---
 
-## 6. ACTIVE BACKLOG (Prioritized)
-
-### P0 — CLIENT INTERFACE NOW (Sessione corrente)
-- PWA: manifest, service worker, installabile, notifiche push e email transazionali (ZeptoMail) + notifiche: conferma, reminder 24h, notifica gestore
-  
-
+### P0 — Security NOW (Sessione corrente)
+- [ ] Security audit finale (RLS, API routes, input sanitization)
 
 ### P1 — LAUNCH PREP
 - Inserire Toggle ON/OFF nelle impostazioni gestore (default: ON),Inserire altre due piccole features
-- [ ] Lighthouse > 90 su tutte le pagine
-- [ ] Security audit finale (RLS, API routes, input sanitization)
-- [ ] Performance: bundle analysis, lazy loading, image optimization
+- PWA: manifest, service worker, installabile, notifiche push e email transazionali (ZeptoMail) + notifiche: conferma, reminder 24h, notifica gestore
 
 ## 7. REGOLE D'ORO PER LO SVILUPPO
 - **Nessuna Duplicazione**: Se una logica serve a due pagine, va in un Hook in `packages/core`.
