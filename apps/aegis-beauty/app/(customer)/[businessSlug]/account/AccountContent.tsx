@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useId, useCallback } from 'react';
+import React, { useState, useId, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -441,7 +441,7 @@ export function AccountContent({
   business, customer, profile, upcoming, past, userId, userEmail,
 }: AccountContentProps) {
   const router   = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const slug     = business.slug;
 
   const [activeTab, setActiveTab] = useState<Tab>('appointments');

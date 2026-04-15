@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import ExcelJS from 'exceljs';
 import { useRouter } from 'next/navigation';
@@ -130,7 +130,7 @@ export function ClientiContent({
   businessId,
 }: ClientiContentProps) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const permissions = useStaffPermissions();
 
   // State
