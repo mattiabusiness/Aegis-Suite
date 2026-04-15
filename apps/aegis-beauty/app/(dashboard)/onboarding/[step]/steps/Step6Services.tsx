@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStepTransition, AnimatedSelect } from '@aegis/ui';
 import { createClient } from '@aegis/core';
@@ -46,7 +46,7 @@ const DURATION_OPTIONS = [15, 20, 30, 45, 60, 75, 90, 120].map(d => ({
 
 export function Step6Services({ businessId, businessType }: Step6Props) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const { showTransition } = useStepTransition();
 
   const [categories, setCategories] = useState<CategoryWithServices[]>([]);
