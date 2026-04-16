@@ -34,42 +34,41 @@ const HAIR_CATEGORIES: DefaultCategory[] = [
 
 const HAIR_SERVICES: DefaultService[] = [
   // 1. TAGLIO & STYLING
-  { id: 'taglio-uomo', name: 'Taglio Uomo', duration: 30, price: 20, categoryId: 'taglio-styling' },
-  { id: 'taglio-donna', name: 'Taglio Donna', duration: 45, price: 35, categoryId: 'taglio-styling' },
-  { id: 'taglio-bambino', name: 'Taglio Bambino', duration: 25, price: 15, categoryId: 'taglio-styling' },
-  { id: 'taglio-uomo-shampoo', name: 'Taglio Uomo + Shampoo + Asciugatura', duration: 40, price: 30, categoryId: 'taglio-styling' },
-  { id: 'taglio-donna-shampoo', name: 'Taglio Donna + Shampoo + Asciugatura', duration: 60, price: 45, categoryId: 'taglio-styling' },
-  { id: 'taglio-piega', name: 'Taglio + Piega', duration: 75, price: 50, categoryId: 'taglio-styling' },
-  
+  { id: 'taglio-uomo', name: 'Taglio Uomo', duration: 30, price: 22, categoryId: 'taglio-styling' },
+  { id: 'taglio-donna', name: 'Taglio Donna', duration: 45, price: 30, categoryId: 'taglio-styling' },
+  { id: 'taglio-bimbo', name: 'Taglio Bimbo Under 10', duration: 30, price: 15, categoryId: 'taglio-styling' },
+  { id: 'piega-corti-medi', name: 'Piega Capelli Corti/Medi', duration: 30, price: 20, categoryId: 'taglio-styling' },
+  { id: 'piega-lunghi', name: 'Piega Capelli Lunghi', duration: 45, price: 25, categoryId: 'taglio-styling' },
+  { id: 'taglio-piega-donna', name: 'Taglio + Piega Donna', duration: 75, price: 55, categoryId: 'taglio-styling' },
+
   // 2. COLORAZIONE
-  { id: 'colore-completo', name: 'Colore Completo', duration: 90, price: 50, categoryId: 'colorazione' },
-  { id: 'ritocco-radici', name: 'Ritocco Radici', duration: 60, price: 35, categoryId: 'colorazione' },
-  { id: 'meches', name: 'Meches / Colpi di Sole', duration: 120, price: 70, categoryId: 'colorazione' },
-  { id: 'balayage', name: 'Balayage / Ombré', duration: 150, price: 90, categoryId: 'colorazione' },
-  { id: 'tonalizzante', name: 'Tonalizzante / Shampoo Color', duration: 45, price: 25, categoryId: 'colorazione' },
-  { id: 'decolorazione', name: 'Decolorazione', duration: 120, price: 60, categoryId: 'colorazione' },
-  
+  { id: 'colore-radici', name: 'Colore Solo Radici', duration: 60, price: 38, categoryId: 'colorazione' },
+  { id: 'colore-completo', name: 'Colore Completo', duration: 90, price: 55, categoryId: 'colorazione' },
+  { id: 'meches', name: 'Meches / Colpi di Sole', duration: 120, price: 75, categoryId: 'colorazione' },
+  { id: 'balayage', name: 'Balayage / Schiariture', duration: 150, price: 95, categoryId: 'colorazione' },
+  { id: 'tonalizzante', name: 'Tonalizzante / Gloss', duration: 30, price: 25, categoryId: 'colorazione' },
+  { id: 'decolorazione', name: 'Decolorazione Totale', duration: 120, price: 70, categoryId: 'colorazione' },
+
   // 3. TRATTAMENTI
-  { id: 'trattamento-cheratina', name: 'Trattamento Cheratina', duration: 120, price: 100, categoryId: 'trattamenti' },
-  { id: 'trattamento-botox', name: 'Trattamento Botox Capelli', duration: 90, price: 80, categoryId: 'trattamenti' },
-  { id: 'maschera-ricostruttiva', name: 'Maschera Ricostruttiva', duration: 30, price: 20, categoryId: 'trattamenti' },
-  { id: 'trattamento-anticaduta', name: 'Trattamento Anticaduta', duration: 45, price: 35, categoryId: 'trattamenti' },
-  
+  { id: 'trattamento-cheratina', name: 'Trattamento Lisciante Cheratina', duration: 150, price: 150, categoryId: 'trattamenti' },
+  { id: 'trattamento-botox', name: 'Trattamento Rimpolpante Botox Capelli', duration: 60, price: 60, categoryId: 'trattamenti' },
+  { id: 'maschera-idratante', name: 'Maschera / Trattamento Idratante', duration: 20, price: 18, categoryId: 'trattamenti' },
+  { id: 'peeling-cute', name: 'Peeling / Purificazione Cute', duration: 30, price: 25, categoryId: 'trattamenti' },
+
   // 4. PIEGA & ACCONCIATURE
-  { id: 'piega-completa', name: 'Piega Completa', duration: 45, price: 30, categoryId: 'piega-acconciature' },
-  { id: 'piega-sposa', name: 'Piega Sposa / Cerimonia', duration: 90, price: 80, categoryId: 'piega-acconciature' },
-  { id: 'acconciatura-elegante', name: 'Acconciatura Elegante', duration: 60, price: 45, categoryId: 'piega-acconciature' },
-  { id: 'ondulazione', name: 'Ondulazione / Bigodini', duration: 60, price: 40, categoryId: 'piega-acconciature' },
-  
+  { id: 'piega-onde', name: 'Piega Onde / Beach Waves', duration: 45, price: 30, categoryId: 'piega-acconciature' },
+  { id: 'acconciatura-evento', name: 'Acconciatura Evento', duration: 60, price: 50, categoryId: 'piega-acconciature' },
+  { id: 'prova-sposa', name: 'Prova Acconciatura Sposa', duration: 90, price: 80, categoryId: 'piega-acconciature' },
+
   // 5. SERVIZI UOMO
-  { id: 'taglio-barba', name: 'Taglio Barba', duration: 20, price: 15, categoryId: 'servizi-uomo' },
-  { id: 'rasatura-rasoio', name: 'Rasatura con Rasoio', duration: 30, price: 20, categoryId: 'servizi-uomo' },
-  { id: 'rifiniture-barba', name: 'Rifiniture Barba', duration: 15, price: 10, categoryId: 'servizi-uomo' },
-  
+  { id: 'barba-base', name: 'Regolazione Barba Base', duration: 20, price: 15, categoryId: 'servizi-uomo' },
+  { id: 'rasatura-tradizionale', name: 'Rasatura Tradizionale Panno Caldo', duration: 30, price: 25, categoryId: 'servizi-uomo' },
+  { id: 'taglio-barba', name: 'Taglio Capelli + Barba', duration: 45, price: 35, categoryId: 'servizi-uomo' },
+
   // 6. EXTENSION & PROTEZIONE
-  { id: 'extension-capelli', name: 'Extension Capelli', duration: 180, price: 150, categoryId: 'extension-protezione' },
-  { id: 'trecce-intrecci', name: 'Trecce / Intrecci', duration: 60, price: 40, categoryId: 'extension-protezione' },
-  { id: 'protezione-colore', name: 'Protezione Colore', duration: 15, price: 10, categoryId: 'extension-protezione' },
+  { id: 'extension-montaggio', name: 'Montaggio Extension a ciocca', duration: 180, price: 180, categoryId: 'extension-protezione' },
+  { id: 'extension-rimozione', name: 'Rimozione Extension', duration: 60, price: 40, categoryId: 'extension-protezione' },
+  { id: 'protettore-olaplex', name: 'Aggiunta Protettore es. Olaplex', duration: 15, price: 25, categoryId: 'extension-protezione' },
 ];
 
 // ============================================================================
@@ -81,59 +80,58 @@ const BEAUTY_CATEGORIES: DefaultCategory[] = [
   { id: 'depilazione', name: 'Depilazione', icon: 'leaf' },
   { id: 'massaggi', name: 'Massaggi', icon: 'heart' },
   { id: 'trattamenti-corporei', name: 'Trattamenti Corporei', icon: 'body' },
-  { id: 'unghie-spa', name: 'Unghie & Spa Mani/Piedi', icon: 'hand' },
+  { id: 'unghie-spa', name: 'Unghie & Spa', icon: 'hand' },
   { id: 'trattamenti-speciali', name: 'Trattamenti Speciali', icon: 'star' },
 ];
 
 const BEAUTY_SERVICES: DefaultService[] = [
   // 1. TRATTAMENTI VISO
-  { id: 'pulizia-viso-base', name: 'Pulizia Viso Base', duration: 60, price: 50, categoryId: 'trattamenti-viso' },
-  { id: 'pulizia-viso-profonda', name: 'Pulizia Viso Profonda', duration: 75, price: 70, categoryId: 'trattamenti-viso' },
-  { id: 'peeling-chimico', name: 'Peeling Chimico', duration: 45, price: 60, categoryId: 'trattamenti-viso' },
-  { id: 'botox-dermopigmentazione', name: 'Botox/Dermopigmentazione', duration: 60, price: 120, categoryId: 'trattamenti-viso' },
-  { id: 'luce-pulsata', name: 'Luce Pulsata', duration: 45, price: 90, categoryId: 'trattamenti-viso' },
-  { id: 'filler-labbra', name: 'Filler Labbra', duration: 45, price: 150, categoryId: 'trattamenti-viso' },
-  
+  { id: 'pulizia-viso-base', name: 'Pulizia Viso Tradizionale', duration: 60, price: 50, categoryId: 'trattamenti-viso' },
+  { id: 'pulizia-viso-profonda', name: 'Pulizia Viso Profonda + Acidi', duration: 75, price: 70, categoryId: 'trattamenti-viso' },
+  { id: 'radiofrequenza-viso', name: 'Radiofrequenza Viso Anti-Age', duration: 45, price: 65, categoryId: 'trattamenti-viso' },
+  { id: 'microneedling-viso', name: 'Microneedling Viso', duration: 60, price: 90, categoryId: 'trattamenti-viso' },
+  { id: 'massaggio-viso-decollete', name: 'Massaggio Viso e Décolleté', duration: 30, price: 35, categoryId: 'trattamenti-viso' },
+
   // 2. DEPILAZIONE
-  { id: 'depilazione-sopracciglia', name: 'Depilazione Sopracciglia', duration: 15, price: 12, categoryId: 'depilazione' },
-  { id: 'depilazione-labbra-mento', name: 'Depilazione Labbra/Mento', duration: 15, price: 15, categoryId: 'depilazione' },
-  { id: 'depilazione-ascelle', name: 'Depilazione Ascelle', duration: 20, price: 18, categoryId: 'depilazione' },
-  { id: 'depilazione-gambe-complete', name: 'Depilazione Gambe Complete', duration: 60, price: 45, categoryId: 'depilazione' },
-  { id: 'depilazione-bikini-base', name: 'Depilazione Bikini Base', duration: 30, price: 25, categoryId: 'depilazione' },
-  { id: 'depilazione-bikini-integrale', name: 'Depilazione Bikini Integrale', duration: 45, price: 35, categoryId: 'depilazione' },
-  { id: 'depilazione-uomo', name: 'Depilazione Uomo (petto/schiena)', duration: 45, price: 40, categoryId: 'depilazione' },
-  
+  { id: 'sopracciglia-baffetto', name: 'Sopracciglia e Baffetto', duration: 15, price: 12, categoryId: 'depilazione' },
+  { id: 'ceretta-mezza-gamba', name: 'Ceretta Mezza Gamba', duration: 30, price: 20, categoryId: 'depilazione' },
+  { id: 'ceretta-gamba-intera', name: 'Ceretta Gamba Intera', duration: 45, price: 30, categoryId: 'depilazione' },
+  { id: 'ceretta-inguine-base', name: 'Ceretta Inguine Base', duration: 15, price: 15, categoryId: 'depilazione' },
+  { id: 'ceretta-brasiliana', name: 'Ceretta Inguine Totale Brasiliana', duration: 30, price: 25, categoryId: 'depilazione' },
+  { id: 'ceretta-ascelle-braccia', name: 'Ceretta Ascelle / Braccia', duration: 20, price: 15, categoryId: 'depilazione' },
+  { id: 'pacchetto-gamba-inguine', name: 'Pacchetto: Gamba Intera + Inguine', duration: 60, price: 45, categoryId: 'depilazione' },
+  { id: 'ceretta-uomo', name: 'Ceretta Uomo Schiena/Petto', duration: 45, price: 35, categoryId: 'depilazione' },
+
   // 3. MASSAGGI
-  { id: 'massaggio-rilassante', name: 'Massaggio Rilassante', duration: 60, price: 55, categoryId: 'massaggi' },
-  { id: 'massaggio-decontratturante', name: 'Massaggio Decontratturante', duration: 60, price: 60, categoryId: 'massaggi' },
-  { id: 'massaggio-svedese', name: 'Massaggio Svedese', duration: 90, price: 80, categoryId: 'massaggi' },
-  { id: 'massaggio-linfodrenante', name: 'Massaggio Linfodrenante', duration: 60, price: 65, categoryId: 'massaggi' },
-  { id: 'massaggio-riflessologico', name: 'Massaggio Riflessologico Plantare', duration: 45, price: 40, categoryId: 'massaggi' },
-  { id: 'massaggio-coppettazione', name: 'Massaggio Coppettazione', duration: 60, price: 70, categoryId: 'massaggi' },
-  
+  { id: 'massaggio-rilassante', name: 'Massaggio Rilassante Total Body', duration: 60, price: 60, categoryId: 'massaggi' },
+  { id: 'massaggio-decontratturante', name: 'Massaggio Decontratturante Schiena', duration: 45, price: 50, categoryId: 'massaggi' },
+  { id: 'linfodrenaggio', name: 'Linfodrenaggio Corpo Metodo Vodder', duration: 60, price: 65, categoryId: 'massaggi' },
+  { id: 'massaggio-parziale', name: 'Massaggio Parziale Gambe o Schiena', duration: 30, price: 35, categoryId: 'massaggi' },
+
   // 4. TRATTAMENTI CORPOREI
-  { id: 'body-scrub', name: 'Body Scrub', duration: 45, price: 50, categoryId: 'trattamenti-corporei' },
-  { id: 'trattamento-anticellulite', name: 'Trattamento Anticellulite', duration: 60, price: 65, categoryId: 'trattamenti-corporei' },
-  { id: 'trattamento-rassodante', name: 'Trattamento Rassodante', duration: 60, price: 60, categoryId: 'trattamenti-corporei' },
-  { id: 'impacco-alghe', name: 'Impacco Alghe', duration: 45, price: 55, categoryId: 'trattamenti-corporei' },
-  { id: 'crioterapia', name: 'Crioterapia', duration: 30, price: 45, categoryId: 'trattamenti-corporei' },
-  
-  // 5. UNGHIE & SPA MANI/PIEDI
-  { id: 'manicure-base', name: 'Manicure Base', duration: 45, price: 25, categoryId: 'unghie-spa' },
-  { id: 'manicure-semipermanente', name: 'Manicure con Smalto Semiperm.', duration: 60, price: 35, categoryId: 'unghie-spa' },
-  { id: 'manicure-ricostruzione', name: 'Manicure Ricostruzione', duration: 90, price: 45, categoryId: 'unghie-spa' },
-  { id: 'pedicure-base', name: 'Pedicure Base', duration: 45, price: 30, categoryId: 'unghie-spa' },
-  { id: 'pedicure-ristrutturante', name: 'Pedicure Ristrutturante', duration: 60, price: 40, categoryId: 'unghie-spa' },
-  { id: 'spa-mani', name: 'Spa Mani', duration: 60, price: 40, categoryId: 'unghie-spa' },
-  { id: 'spa-piedi', name: 'Spa Piedi', duration: 60, price: 45, categoryId: 'unghie-spa' },
-  
+  { id: 'scrub-esfoliante', name: 'Scrub Corpo Esfoliante', duration: 45, price: 45, categoryId: 'trattamenti-corporei' },
+  { id: 'pressoterapia', name: 'Pressoterapia Gambe/Addome', duration: 45, price: 40, categoryId: 'trattamenti-corporei' },
+  { id: 'bendaggi-drenanti', name: 'Bendaggi Drenanti / Freddi', duration: 60, price: 55, categoryId: 'trattamenti-corporei' },
+  { id: 'fangoterapia', name: 'Fangoterapia Anticellulite', duration: 60, price: 60, categoryId: 'trattamenti-corporei' },
+  { id: 'radiofrequenza-corpo', name: 'Radiofrequenza Corpo Tonificante', duration: 45, price: 70, categoryId: 'trattamenti-corporei' },
+
+  // 5. UNGHIE & SPA
+  { id: 'manicure-estetica', name: 'Manicure Estetica', duration: 30, price: 20, categoryId: 'unghie-spa' },
+  { id: 'manicure-semipermanente', name: 'Manicure con Semipermanente', duration: 60, price: 35, categoryId: 'unghie-spa' },
+  { id: 'ricostruzione-gel', name: 'Ricostruzione Unghie Gel / Acrilico', duration: 120, price: 65, categoryId: 'unghie-spa' },
+  { id: 'refill-gel', name: 'Refill / Ritocco Gel', duration: 90, price: 45, categoryId: 'unghie-spa' },
+  { id: 'pedicure-estetico', name: 'Pedicure Estetico', duration: 45, price: 30, categoryId: 'unghie-spa' },
+  { id: 'pedicure-curativo', name: 'Pedicure Curativo Specifico', duration: 60, price: 45, categoryId: 'unghie-spa' },
+  { id: 'smalto-semipermanente-piedi', name: 'Smalto Semipermanente Piedi', duration: 30, price: 25, categoryId: 'unghie-spa' },
+  { id: 'smontaggio-gel', name: 'Smontaggio Gel / Semipermanente', duration: 30, price: 15, categoryId: 'unghie-spa' },
+
   // 6. TRATTAMENTI SPECIALI
-  { id: 'epilazione-laser', name: 'Epilazione Laser (1 zona)', duration: 30, price: 70, categoryId: 'trattamenti-speciali' },
-  { id: 'pressoterapia', name: 'Pressoterapia', duration: 45, price: 50, categoryId: 'trattamenti-speciali' },
-  { id: 'carbossiterapia', name: 'Carbossiterapia', duration: 45, price: 85, categoryId: 'trattamenti-speciali' },
-  { id: 'microblading', name: 'Trattamento Microblading', duration: 120, price: 250, categoryId: 'trattamenti-speciali' },
-  { id: 'laminazione-ciglia', name: 'Laminazione Ciglia', duration: 60, price: 55, categoryId: 'trattamenti-speciali' },
-  { id: 'extension-ciglia', name: 'Extension Ciglia', duration: 90, price: 65, categoryId: 'trattamenti-speciali' },
+  { id: 'laser-zona-piccola', name: 'Epilazione Laser Zona Piccola es. Ascelle', duration: 20, price: 40, categoryId: 'trattamenti-speciali' },
+  { id: 'laser-zona-media', name: 'Epilazione Laser Zona Media es. Inguine', duration: 30, price: 60, categoryId: 'trattamenti-speciali' },
+  { id: 'laser-gambe-complete', name: 'Epilazione Laser Gambe Complete', duration: 60, price: 100, categoryId: 'trattamenti-speciali' },
+  { id: 'laminazione-ciglia', name: 'Laminazione Ciglia + Tinta', duration: 60, price: 60, categoryId: 'trattamenti-speciali' },
+  { id: 'extension-ciglia', name: 'Extension Ciglia One to One', duration: 120, price: 80, categoryId: 'trattamenti-speciali' },
+  { id: 'dermopigmentazione', name: 'Trucco Permanente Dermopigmentazione', duration: 150, price: 250, categoryId: 'trattamenti-speciali' },
 ];
 
 // ============================================================================
