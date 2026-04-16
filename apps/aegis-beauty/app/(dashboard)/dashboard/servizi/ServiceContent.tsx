@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Droplets } from 'lucide-react';
 import {
   ServiceList,
   ServiceModal,
@@ -449,10 +450,10 @@ export function ServiziContent({
             <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}
                 >
-                  🚿
+                  <Droplets className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">

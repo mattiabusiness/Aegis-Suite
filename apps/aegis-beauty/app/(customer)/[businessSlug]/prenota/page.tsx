@@ -32,7 +32,7 @@ export default async function PrenotaPage({
   if (!business) notFound();
 
   // Fetch all data needed for the booking flow in parallel
-  const [servicesResult, staffResult, hoursResult, customerResult, categoriesResult] = await Promise.all([
+  const [servicesResult, staffResult, hoursResult, customerResult, categoriesResult, shampooPriceResult] = await Promise.all([
     supabase
       .from('services')
       .select('id, name, duration_minutes, price, price_from, category_id, display_order')
@@ -60,6 +60,12 @@ export default async function PrenotaPage({
       .select('id, name, display_order')
       .eq('business_id', business.id)
       .order('display_order', { ascending: true }),
+
+    supabase
+      .from('businesses')
+      .select('shampoo_price')
+      .eq('id', business.id)
+      .single(),
   ]);
 
   const services   = servicesResult.data   ?? [];
@@ -67,10 +73,13 @@ export default async function PrenotaPage({
   const hours      = hoursResult.data      ?? [];
   const customer   = customerResult;
   const categories = categoriesResult.data ?? [];
+  const shampooPrice = (shampooPriceResult.data as { shampoo_price: number } | null)?.shampoo_price ?? 2;
+
+  const businessWithShampoo = { ...business, shampoo_price: shampooPrice };
 
   return (
     <PrenotaContent
-      business={business}
+      business={businessWithShampoo}
       services={services}
       staff={staff}
       hours={hours}

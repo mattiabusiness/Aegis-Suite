@@ -213,7 +213,7 @@ export function CalendarEvent({
                   color: '#7c3aed', flexShrink: 0, whiteSpace: 'nowrap',
                 }}
               >
-                🚿
+                <Droplets className="w-2.5 h-2.5" />
               </span>
             )}
           </div>

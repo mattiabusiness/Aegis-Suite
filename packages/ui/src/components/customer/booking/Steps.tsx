@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import {
   Scissors, Calendar, CheckCircle, MapPin, Phone, Clock,
   ChevronLeft, ChevronRight, ChevronDown, ArrowLeft, HelpCircle,
-  Loader2, Bell, User,
+  Loader2, Bell, User, Droplets,
 } from 'lucide-react';
 import type {
   BookingBusiness, BookingCategory, BookingService, BookingStaff, BookingHours,
@@ -878,7 +878,7 @@ export function Step3Front({ business, staff: _staff, bookingState, onUpdate, on
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span>🚿</span>
+            <Droplets style={{ width: 13, height: 13, color: bookingState.includeShampoo ? '#a855f7' : 'rgba(255,255,255,0.5)', flexShrink: 0 }} />
             <span>Aggiungi shampoo</span>
             {(business.shampoo_price ?? 2) > 0 && (
               <span style={{
