@@ -450,7 +450,7 @@ export function BookingCarousel({ business, services, staff, hours, categories, 
                   frontContent={
                     cardIdx === 0 ? (
                       <Step1Front
-                        services={services} staff={staff} categories={categories}
+                        business={business} services={services} staff={staff} categories={categories}
                         bookingState={state} onUpdate={updateState}
                         onNext={nextStep} onFlip={() => toggleFlip(0)}
                       />

@@ -107,6 +107,7 @@ function PrimaryButton({ onClick, disabled, children }: { onClick: () => void; d
 // ============================================================================
 
 interface Step1FrontProps {
+  business:     BookingBusiness;
   services:     BookingService[];
   staff:        BookingStaff[];
   categories:   BookingCategory[];
@@ -154,7 +155,7 @@ function ServiceRow({ s, isSelected, onSelect }: { s: BookingService; isSelected
   );
 }
 
-export function Step1Front({ services, staff, categories, bookingState, onUpdate, onNext, onFlip }: Step1FrontProps) {
+export function Step1Front({ business, services, staff, categories, bookingState, onUpdate, onNext, onFlip }: Step1FrontProps) {
   const canNext = !!bookingState.selectedService;
 
   // Group services by category
@@ -361,6 +362,47 @@ export function Step1Front({ services, staff, categories, bookingState, onUpdate
               </motion.button>
             );
           })}
+        </div>
+      </div>
+
+      {/* Shampoo toggle */}
+      <div
+        onClick={e => { e.stopPropagation(); onUpdate({ includeShampoo: !bookingState.includeShampoo }); }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '8px 10px', borderRadius: 11, cursor: 'pointer', marginTop: 6,
+          background: bookingState.includeShampoo ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.04)',
+          border: bookingState.includeShampoo ? '1px solid rgba(168,85,247,0.35)' : '1px solid rgba(255,255,255,0.08)',
+          transition: 'all 0.25s ease',
+        }}
+      >
+        <div style={{
+          width: 32, height: 18, borderRadius: 999, flexShrink: 0, position: 'relative',
+          background: bookingState.includeShampoo ? '#a855f7' : 'rgba(255,255,255,0.15)',
+          boxShadow: bookingState.includeShampoo ? '0 0 8px rgba(168,85,247,0.4)' : 'none',
+          transition: 'background 0.25s ease, box-shadow 0.25s ease',
+        }}>
+          <span style={{
+            position: 'absolute', width: 14, height: 14, borderRadius: '50%',
+            top: 2, left: 2, background: '#fff',
+            transform: bookingState.includeShampoo ? 'translateX(14px)' : 'translateX(0)',
+            transition: 'transform 0.28s cubic-bezier(0.34,1.56,0.64,1)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+          }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Droplets style={{ width: 12, height: 12, color: bookingState.includeShampoo ? '#a855f7' : 'rgba(255,255,255,0.45)', flexShrink: 0 }} />
+            <span>Aggiungi shampoo</span>
+            {(business.shampoo_price ?? 2) > 0 && (
+              <span style={{
+                fontSize: '0.62rem', fontWeight: 600,
+                color: bookingState.includeShampoo ? '#d8b4fe' : 'rgba(255,255,255,0.3)',
+              }}>
+                +€{(business.shampoo_price ?? 2).toFixed(2).replace('.00', '')}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -846,54 +888,6 @@ export function Step3Front({ business, staff: _staff, bookingState, onUpdate, on
             <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)', fontWeight: 500, lineHeight: 1.3 }}>{row.value}</span>
           </div>
         ))}
-      </div>
-
-      <div style={{ ...dividerStyle, margin: '7px 0' }} />
-
-      {/* Shampoo toggle */}
-      <div
-        onClick={e => { e.stopPropagation(); onUpdate({ includeShampoo: !bookingState.includeShampoo }); }}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '9px 12px', borderRadius: 12, cursor: 'pointer',
-          background: bookingState.includeShampoo ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.04)',
-          border: bookingState.includeShampoo ? '1px solid rgba(168,85,247,0.35)' : '1px solid rgba(255,255,255,0.08)',
-          transition: 'all 0.25s ease',
-        }}
-      >
-        {/* Mini toggle pill */}
-        <div style={{
-          width: 34, height: 19, borderRadius: 999, flexShrink: 0, position: 'relative',
-          background: bookingState.includeShampoo ? '#a855f7' : 'rgba(255,255,255,0.15)',
-          boxShadow: bookingState.includeShampoo ? '0 0 10px rgba(168,85,247,0.45)' : 'none',
-          transition: 'background 0.25s ease, box-shadow 0.25s ease',
-        }}>
-          <span style={{
-            position: 'absolute', width: 15, height: 15, borderRadius: '50%',
-            top: 2, left: 2, background: '#fff',
-            transform: bookingState.includeShampoo ? 'translateX(15px)' : 'translateX(0)',
-            transition: 'transform 0.28s cubic-bezier(0.34,1.56,0.64,1)',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
-          }} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <Droplets style={{ width: 13, height: 13, color: bookingState.includeShampoo ? '#a855f7' : 'rgba(255,255,255,0.5)', flexShrink: 0 }} />
-            <span>Aggiungi shampoo</span>
-            {(business.shampoo_price ?? 2) > 0 && (
-              <span style={{
-                fontSize: '0.65rem', fontWeight: 600,
-                color: bookingState.includeShampoo ? '#d8b4fe' : 'rgba(255,255,255,0.35)',
-                marginLeft: 2,
-              }}>
-                +€{(business.shampoo_price ?? 2).toFixed(2).replace('.00', '')}
-              </span>
-            )}
-          </div>
-          <div style={{ fontSize: '0.67rem', color: 'rgba(255,255,255,0.38)', marginTop: 1 }}>
-            Includi lavaggio prima del servizio
-          </div>
-        </div>
       </div>
 
       <div style={{ ...dividerStyle, margin: '7px 0' }} />
