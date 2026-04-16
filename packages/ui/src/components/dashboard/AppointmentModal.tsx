@@ -1643,42 +1643,49 @@ export function AppointmentModal({
           </div>
         </form>
 
-        {/* ═══ SHAMPOO TOGGLE — fixed, outside scroll area ═══ */}
-        <div
-          className="flex items-center gap-3 mx-6 mb-2 px-3 py-2.5 rounded-xl flex-shrink-0 transition-all duration-200"
-          style={{
-            background: formData.includeShampoo ? 'rgba(168,85,247,0.06)' : 'rgba(0,0,0,0.02)',
-            border: formData.includeShampoo ? '1px solid rgba(168,85,247,0.2)' : '1px solid rgba(0,0,0,0.06)',
-          }}
-        >
-          <button
-            type="button"
-            className="relative flex-shrink-0 outline-none cursor-pointer"
+        {/* ═══ SHAMPOO TOGGLE — fixed strip outside scrollable form ═══ */}
+        <div className="px-6 pb-3 flex-shrink-0 space-y-1.5">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <Droplets className="w-4 h-4" style={{ color: '#9333ea' }} />Shampoo
+          </label>
+          <div
+            className="flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-150"
             style={{
-              width: 36, height: 20, borderRadius: 999,
-              background: formData.includeShampoo ? '#a855f7' : '#d1d5db',
-              boxShadow: formData.includeShampoo ? '0 2px 8px rgba(168,85,247,0.3)' : 'none',
-              transition: 'background 0.3s ease, box-shadow 0.3s ease',
+              background: formData.includeShampoo ? 'rgba(168,85,247,0.04)' : 'rgba(0,0,0,0.02)',
+              border: formData.includeShampoo ? '1px solid rgba(168,85,247,0.2)' : '1px solid rgba(0,0,0,0.07)',
             }}
             onClick={() => handleInputChange('includeShampoo', !formData.includeShampoo)}
           >
-            <span
-              className="absolute bg-white rounded-full shadow-sm"
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                Lavaggio shampoo
+                {((shampooPrice ?? 2) > 0) && (
+                  <span className="ml-1.5 text-xs font-medium" style={{ color: '#9333ea' }}>
+                    +€{(shampooPrice ?? 2) % 1 === 0 ? (shampooPrice ?? 2).toFixed(0) : (shampooPrice ?? 2).toFixed(2)}
+                  </span>
+                )}
+              </p>
+            </div>
+            {/* Toggle pill */}
+            <div
+              className="relative flex-shrink-0"
               style={{
-                width: 16, height: 16, top: 2, left: 2,
-                transform: formData.includeShampoo ? 'translateX(16px)' : 'translateX(0)',
-                transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                width: 38, height: 21, borderRadius: 999,
+                background: formData.includeShampoo ? '#a855f7' : '#d1d5db',
+                boxShadow: formData.includeShampoo ? '0 2px 8px rgba(168,85,247,0.3)' : 'none',
+                transition: 'background 0.3s ease, box-shadow 0.3s ease',
               }}
-            />
-          </button>
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Droplets className="w-3.5 h-3.5 flex-shrink-0" style={{ color: formData.includeShampoo ? '#a855f7' : '#9ca3af' }} />
-            <span className="text-sm font-semibold text-gray-800">Shampoo</span>
-            {((shampooPrice ?? 2) > 0) && (
-              <span className="text-xs font-medium" style={{ color: '#9333ea' }}>
-                +€{(shampooPrice ?? 2) % 1 === 0 ? (shampooPrice ?? 2).toFixed(0) : (shampooPrice ?? 2).toFixed(2)}
-              </span>
-            )}
+            >
+              <span
+                className="absolute bg-white rounded-full"
+                style={{
+                  width: 17, height: 17, top: 2, left: 2,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                  transform: formData.includeShampoo ? 'translateX(17px)' : 'translateX(0)',
+                  transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                }}
+              />
+            </div>
           </div>
         </div>
 

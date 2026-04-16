@@ -436,102 +436,105 @@ export function ServiziContent({
           <style>{`@keyframes sl-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
         </div>
 
-        {/* Shampoo service — sempre visibile, prezzo modificabile dal titolare */}
-        {!isStaff && (
-          <div
-            className="mb-6 rounded-2xl border overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, rgba(168,85,247,0.06) 0%, rgba(124,58,237,0.04) 100%)',
-              border: '1px solid rgba(168,85,247,0.18)',
-              boxShadow: '0 4px 16px rgba(168,85,247,0.08)',
-              animation: 'sl-fade-in 0.45s ease-out 80ms both',
-            }}
-          >
-            <div className="flex items-center justify-between px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}
-                >
-                  <Droplets className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">Shampoo</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5">Lavaggio shampoo opzionale — il cliente sceglie in fase di prenotazione</p>
-                </div>
+        {/* Shampoo service — sempre visibile; titolare può modificare prezzo, staff solo lettura */}
+        <div
+          className="mb-6 rounded-2xl border overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.06) 0%, rgba(124,58,237,0.04) 100%)',
+            border: '1px solid rgba(168,85,247,0.18)',
+            boxShadow: '0 4px 16px rgba(168,85,247,0.08)',
+            animation: 'sl-fade-in 0.45s ease-out 80ms both',
+          }}
+        >
+          <div className="flex items-center justify-between px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}
+              >
+                <Droplets className="w-5 h-5 text-white" />
               </div>
-
-              <div className="flex items-center gap-2 ml-4">
-                {shampooEditing ? (
-                  <>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-gray-500">€</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.50"
-                        value={shampooInput}
-                        onChange={e => setShampooInput(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleSaveShampooPrice(); if (e.key === 'Escape') { setShampooEditing(false); setShampooInput(String(shampooPrice)); } }}
-                        autoFocus
-                        className="outline-none text-sm font-bold text-gray-900 text-right"
-                        style={{
-                          width: 60, borderRadius: 8, padding: '4px 8px',
-                          border: '1px solid rgba(168,85,247,0.35)',
-                          boxShadow: '0 0 0 3px rgba(168,85,247,0.08)',
-                          background: '#fff',
-                        }}
-                      />
-                    </div>
-                    <button
-                      onClick={handleSaveShampooPrice}
-                      disabled={shampooSaving}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                      style={{
-                        background: shampooSaving ? '#e9d5ff' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
-                        boxShadow: shampooSaving ? 'none' : '0 2px 8px rgba(124,58,237,0.3)',
-                        color: '#fff',
-                        opacity: shampooSaving ? 0.7 : 1,
-                      }}
-                    >
-                      Conferma
-                    </button>
-                    <button
-                      onClick={() => { setShampooEditing(false); setShampooInput(String(shampooPrice)); }}
-                      className="px-2 py-1.5 rounded-lg text-xs font-medium text-gray-500"
-                      style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.06)' }}
-                    >
-                      Annulla
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-base font-bold" style={{
-                      background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
-                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                    }}>
-                      €{shampooPrice % 1 === 0 ? shampooPrice.toFixed(0) : shampooPrice.toFixed(2)}
-                    </span>
-                    <button
-                      onClick={() => { setShampooEditing(true); setShampooInput(String(shampooPrice)); }}
-                      className="p-2 rounded-lg text-gray-400 transition-all"
-                      style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }}
-                      onMouseEnter={e => { e.currentTarget.style.color = '#9333ea'; e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; }}
-                      title="Modifica prezzo"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                  </>
-                )}
+              <div>
+                <span className="text-sm font-bold text-gray-900">Shampoo</span>
+                <p className="text-xs text-gray-500 mt-0.5">Lavaggio opzionale — il cliente sceglie in fase di prenotazione</p>
               </div>
             </div>
+
+            <div className="flex items-center gap-2 ml-4">
+              {isStaff ? (
+                <span className="text-base font-bold" style={{
+                  background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>
+                  €{shampooPrice % 1 === 0 ? shampooPrice.toFixed(0) : shampooPrice.toFixed(2)}
+                </span>
+              ) : shampooEditing ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-bold text-gray-500">€</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.50"
+                      value={shampooInput}
+                      onChange={e => setShampooInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSaveShampooPrice(); if (e.key === 'Escape') { setShampooEditing(false); setShampooInput(String(shampooPrice)); } }}
+                      autoFocus
+                      className="outline-none text-sm font-bold text-gray-900 text-right"
+                      style={{
+                        width: 60, borderRadius: 8, padding: '4px 8px',
+                        border: '1px solid rgba(168,85,247,0.35)',
+                        boxShadow: '0 0 0 3px rgba(168,85,247,0.08)',
+                        background: '#fff',
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveShampooPrice}
+                    disabled={shampooSaving}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: shampooSaving ? '#e9d5ff' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
+                      boxShadow: shampooSaving ? 'none' : '0 2px 8px rgba(124,58,237,0.3)',
+                      color: '#fff',
+                      opacity: shampooSaving ? 0.7 : 1,
+                    }}
+                  >
+                    Conferma
+                  </button>
+                  <button
+                    onClick={() => { setShampooEditing(false); setShampooInput(String(shampooPrice)); }}
+                    className="px-2 py-1.5 rounded-lg text-xs font-medium text-gray-500"
+                    style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.06)' }}
+                  >
+                    Annulla
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-base font-bold" style={{
+                    background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                  }}>
+                    €{shampooPrice % 1 === 0 ? shampooPrice.toFixed(0) : shampooPrice.toFixed(2)}
+                  </span>
+                  <button
+                    onClick={() => { setShampooEditing(true); setShampooInput(String(shampooPrice)); }}
+                    className="p-2 rounded-lg text-gray-400 transition-all"
+                    style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = '#9333ea'; e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; }}
+                    title="Modifica prezzo"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        )}
+        </div>
 
         {/* Content */}
         <div className="mt-6 pb-8">
