@@ -47,12 +47,13 @@ export default async function CalendarioPage() {
     businessHoursResult,
     closuresResult,
     servicesResult,
+    businessResult,
   ] = await Promise.all([
     // Appointments for this week
     supabase
       .from('appointments')
       .select(`
-        id, start_time, end_time, status, staff_notes, staff_id,
+        id, start_time, end_time, status, staff_notes, staff_id, include_shampoo,
         customer:customers(full_name),
         staff:staff(full_name, color),
         appointment_services(service_name)
@@ -90,6 +91,13 @@ export default async function CalendarioPage() {
       .eq('is_active', true)
       .order('display_order'),
 
+    // Business shampoo price
+    supabase
+      .from('businesses')
+      .select('shampoo_price')
+      .eq('id', businessId)
+      .single(),
+
   ]);
 
   // ========================================================================
@@ -113,6 +121,7 @@ export default async function CalendarioPage() {
       staffId: a.staff_id as string,
       status: (a.status as CalendarEventData['status']) || 'confirmed',
       notes: a.staff_notes as string | undefined,
+      includeShampoo: (a.include_shampoo as boolean) || false,
     };
   });
 
@@ -162,6 +171,8 @@ export default async function CalendarioPage() {
     staffServicesMap[s.id] = (s.staff_services || []).map(ss => ss.service_id);
   }
 
+  const shampooPrice = (businessResult.data as { shampoo_price: number } | null)?.shampoo_price ?? 2;
+
   return (
     <CalendarioContent
       businessId={businessId}
@@ -171,6 +182,7 @@ export default async function CalendarioPage() {
       closures={closures}
       services={services}
       staffServices={staffServicesMap}
+      shampooPrice={shampooPrice}
     />
   );
 }

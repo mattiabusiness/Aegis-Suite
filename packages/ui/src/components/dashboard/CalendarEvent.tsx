@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { Clock, User, Scissors, MapPin, MoreVertical, X, CheckCircle, UserX, XCircle, FileText, AlertTriangle } from 'lucide-react';
+import { Clock, User, Scissors, MapPin, MoreVertical, X, CheckCircle, UserX, XCircle, FileText, AlertTriangle, Droplets } from 'lucide-react';
 
 // ============================================================================
 // TYPES
@@ -29,6 +29,8 @@ export interface CalendarEventData {
   staffColor?: string;
   /** Staff member ID (for filtering) */
   staffId?: string;
+  /** Whether shampoo was requested for this appointment */
+  includeShampoo?: boolean;
 }
 
 export interface CalendarEventProps {
@@ -195,9 +197,26 @@ export function CalendarEvent({
     >
       <div className={eventStyles.header}>
         <div className="min-w-0 flex-1">
-          <p className={`${eventStyles.title} ${titleClass} ${status.text}`}>
-            {event.title}
-          </p>
+          <div className="flex items-center gap-1 flex-wrap">
+            <p className={`${eventStyles.title} ${titleClass} ${status.text}`}>
+              {event.title}
+            </p>
+            {event.includeShampoo && (
+              <span
+                title="Shampoo incluso"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 2,
+                  fontSize: '0.6rem', fontWeight: 700, lineHeight: 1,
+                  padding: '1px 5px', borderRadius: 999,
+                  background: 'rgba(168,85,247,0.12)',
+                  border: '1px solid rgba(168,85,247,0.25)',
+                  color: '#7c3aed', flexShrink: 0, whiteSpace: 'nowrap',
+                }}
+              >
+                🚿
+              </span>
+            )}
+          </div>
           
           {showTime && (
             <p className={`${eventStyles.time} ${timeClass}`}>
@@ -468,6 +487,7 @@ export function EventDetailModal({
             { icon: Clock, label: 'Orario', value: `${formatTime(new Date(event.startTime))} – ${formatTime(new Date(event.endTime))}` },
             { icon: User, label: 'Cliente', value: event.customerName || 'N/A' },
             { icon: Scissors, label: 'Operatore', value: event.staffName || 'N/A' },
+            ...(event.includeShampoo ? [{ icon: Droplets, label: 'Shampoo', value: '✓ Incluso' }] : []),
           ].map((row, i) => (
             <div key={i} className="flex items-center justify-between p-3.5 rounded-xl"
               style={{ background: 'rgba(0,0,0,0.025)', border: '1px solid rgba(0,0,0,0.06)', transition: 'all 0.15s ease' }}

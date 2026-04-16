@@ -25,6 +25,7 @@ interface CreateAppointmentRequest {
   time: string;
   notes: string;
   businessId: string;
+  includeShampoo?: boolean;
 }
 
 // ============================================================================
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     const body: CreateAppointmentRequest = await request.json();
     const {
       customerId, customerFirstName, customerLastName, customerPhone, customerEmail,
-      isNewCustomer, sendInvite, serviceId, staffId, date, time, notes, businessId,
+      isNewCustomer, sendInvite, serviceId, staffId, date, time, notes, businessId, includeShampoo,
     } = body;
     
     // Validate required fields (staffId is optional — null means "first available")
@@ -247,14 +248,15 @@ export async function POST(request: NextRequest) {
     const { data: newAppt, error: insertError } = await supabase
       .from('appointments')
       .insert({
-        business_id: businessId,
-        staff_id:    finalStaffId,
-        customer_id: finalCustomerId,
-        start_time:  startTime.toISOString(),
-        end_time:    endTime.toISOString(),
-        status:      'confirmed',
-        notes:       notes ? String(notes).slice(0, 1000) : null,
-        source:      'dashboard',
+        business_id:     businessId,
+        staff_id:        finalStaffId,
+        customer_id:     finalCustomerId,
+        start_time:      startTime.toISOString(),
+        end_time:        endTime.toISOString(),
+        status:          'confirmed',
+        notes:           notes ? String(notes).slice(0, 1000) : null,
+        source:          'dashboard',
+        include_shampoo: includeShampoo === true,
       })
       .select('id')
       .single();

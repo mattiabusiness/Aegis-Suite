@@ -50,6 +50,7 @@ interface CalendarioContentProps {
   closures: ClosureData[];
   services: Service[];
   staffServices: StaffServicesMap;
+  shampooPrice: number;
 }
 
 // ============================================================================
@@ -108,6 +109,7 @@ export function CalendarioContent({
   closures,
   services: initialServices,
   staffServices: initialStaffServices,
+  shampooPrice,
 }: CalendarioContentProps) {
   const supabase = useMemo(() => createClient(), []);
   const permissions = useStaffPermissions();
@@ -503,6 +505,7 @@ export function CalendarioContent({
         staffColor: selectedStaffMember?.color || undefined,
         status: result.appointment.status || 'confirmed',
         notes: result.appointment.notes || undefined,
+        includeShampoo: data.includeShampoo === true,
       };
 
       setEvents(prev => [...prev, newEvent]);
@@ -1019,6 +1022,7 @@ export function CalendarioContent({
           searchCustomer: 'Cerca cliente per nome o telefono...',
           submit: 'Crea appuntamento',
         }}
+        shampooPrice={shampooPrice}
       />
 
       <style>{`

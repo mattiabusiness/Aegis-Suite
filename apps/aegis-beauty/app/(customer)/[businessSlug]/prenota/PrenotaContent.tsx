@@ -346,12 +346,13 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        businessId:    business.id,
-        serviceId:     state.selectedService.id,
-        staffId:       resolvedStaffId,
-        date:          dateStr,
-        time:          state.selectedTime,
-        customerNotes: state.customerNotes || undefined,
+        businessId:     business.id,
+        serviceId:      state.selectedService.id,
+        staffId:        resolvedStaffId,
+        date:           dateStr,
+        time:           state.selectedTime,
+        customerNotes:  state.customerNotes || undefined,
+        includeShampoo: state.includeShampoo,
       }),
     });
 

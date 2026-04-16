@@ -64,6 +64,7 @@ export interface AppointmentFormData {
   notes: string;
   isNewCustomer: boolean;
   sendInvite: boolean;
+  includeShampoo: boolean;
 }
 
 export interface BusinessHoursData {
@@ -122,6 +123,8 @@ export interface AppointmentModalProps {
    * La prop `customers` viene usata come stato iniziale (es. array vuoto).
    */
   onCustomerSearch?: (query: string) => Promise<Customer[]>;
+  /** Prezzo shampoo del business (default 2) */
+  shampooPrice?: number;
 }
 
 // ============================================================================
@@ -840,7 +843,7 @@ export function AppointmentModal({
   initialDate, initialTime, initialStaffId, initialCustomerId,
   isLoading = false, labels: customLabels,
   availableSlots, slotsLoading = false, slotsError, onSlotsNeeded,
-  lockedStaffId, allowedStaffIds, onCustomerSearch,
+  lockedStaffId, allowedStaffIds, onCustomerSearch, shampooPrice,
 }: AppointmentModalProps) {
   const labels = { ...defaultLabels, ...customLabels };
   const timeSlots = React.useMemo(() => generateTimeSlots(), []);
@@ -866,7 +869,7 @@ export function AppointmentModal({
     customerPhone: '', customerEmail: '', serviceId: '',
     staffId: effectiveInitialStaffId,
     date: initialDate ? fmtDate(initialDate) : fmtDate(new Date()),
-    time: initialTime || '', notes: '', isNewCustomer: false, sendInvite: true,
+    time: initialTime || '', notes: '', isNewCustomer: false, sendInvite: true, includeShampoo: false,
   });
 
   // UI state
@@ -969,7 +972,7 @@ export function AppointmentModal({
         customerPhone: prefill?.phone || '', customerEmail: prefill?.email || '',
         serviceId: '', staffId: lockedStaffId || initialStaffId || '',
         date: initialDate ? fmtDate(initialDate) : fmtDate(new Date()),
-        time: initialTime || '', notes: '', isNewCustomer: false, sendInvite: true,
+        time: initialTime || '', notes: '', isNewCustomer: false, sendInvite: true, includeShampoo: false,
       });
       setCustomerSearch(prefill?.name || '');
       setServiceSearch(''); setShowServiceList(false);
@@ -1616,6 +1619,50 @@ export function AppointmentModal({
                 </select>
               )}
               {errors.time && <p className="text-xs" style={{ color: '#dc2626' }}>* {errors.time}</p>}
+            </div>
+
+            {/* ── SHAMPOO TOGGLE ── */}
+            <div
+              className="flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all duration-200"
+              style={{
+                background: formData.includeShampoo ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.015)',
+                borderLeft: formData.includeShampoo ? '3px solid #a855f7' : '3px solid #e5e7eb',
+                backdropFilter: 'blur(4px)',
+              }}
+              onClick={() => handleInputChange('includeShampoo', !formData.includeShampoo)}
+            >
+              {/* Animated toggle pill */}
+              <button
+                type="button"
+                className="relative flex-shrink-0 outline-none"
+                style={{
+                  width: 38, height: 21, borderRadius: 999,
+                  background: formData.includeShampoo ? '#a855f7' : '#d1d5db',
+                  boxShadow: formData.includeShampoo ? '0 2px 8px rgba(168,85,247,0.3)' : 'none',
+                  transition: 'background 0.3s ease, box-shadow 0.3s ease',
+                }}
+              >
+                <span
+                  className="absolute bg-white rounded-full shadow-sm"
+                  style={{
+                    width: 17, height: 17, top: 2, left: 2,
+                    transform: formData.includeShampoo ? 'translateX(17px)' : 'translateX(0)',
+                    transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                  }}
+                />
+              </button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-base leading-none">🚿</span>
+                  <span className="text-sm font-semibold text-gray-900">Shampoo incluso</span>
+                  {((shampooPrice ?? 2) > 0) && (
+                    <span className="text-xs font-medium" style={{ color: '#9333ea' }}>
+                      +€{(shampooPrice ?? 2).toFixed(2).replace('.00', '')}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5 ml-6">Aggiungi lavaggio shampoo al servizio</p>
+              </div>
             </div>
 
             {/* ── NOTES ── */}

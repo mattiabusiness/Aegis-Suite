@@ -287,6 +287,7 @@ export function BookingCarousel({ business, services, staff, hours, categories, 
     selectedTime:      null,
     customerNotes:     '',
     autoAssignedStaff: null,
+    includeShampoo:    false,
   });
 
   const updateState = useCallback((patch: Partial<BookingState>) => {

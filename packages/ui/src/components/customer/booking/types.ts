@@ -18,6 +18,7 @@ export interface BookingBusiness {
   address_province:          string | null;
   cancellation_policy_hours: number;
   description:               string | null;
+  shampoo_price?:            number;
 }
 
 export interface BookingService {
@@ -54,6 +55,7 @@ export interface BookingState {
   selectedTime:      string | null;
   customerNotes:     string;
   autoAssignedStaff: BookingStaff | null;
+  includeShampoo:    boolean;
 }
 
 export type FetchSlotsFn = (params: {

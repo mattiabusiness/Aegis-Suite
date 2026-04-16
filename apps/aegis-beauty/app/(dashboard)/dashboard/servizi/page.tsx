@@ -90,12 +90,22 @@ export default async function ServiziPage() {
     ? (allCategories || []).filter(c => usedCategoryIds.has(c.id))
     : (allCategories || []);
 
+  // Fetch shampoo price
+  const { data: businessData } = await supabase
+    .from('businesses')
+    .select('shampoo_price')
+    .eq('id', businessId)
+    .single() as { data: { shampoo_price: number } | null };
+
+  const shampooPrice = businessData?.shampoo_price ?? 2;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (
     <ServiziContent
       initialServices={services as unknown as any[]}
       initialCategories={categories as unknown as any[]}
       businessId={businessId}
+      shampooPrice={shampooPrice}
     />
   );
 }

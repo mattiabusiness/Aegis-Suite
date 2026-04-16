@@ -18,12 +18,13 @@ import { notify } from '@/lib/notify';
 import type { PushPayload } from '@aegis/core';
 
 interface CreateBookingBody {
-  businessId:     string;
-  serviceId:      string;
-  staffId:        string | null;
-  date:           string;
-  time:           string;
-  customerNotes?: string;
+  businessId:      string;
+  serviceId:       string;
+  staffId:         string | null;
+  date:            string;
+  time:            string;
+  customerNotes?:  string;
+  includeShampoo?: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateBookingBody = await request.json();
-    const { businessId, serviceId, staffId, date, time, customerNotes: rawNotes } = body;
+    const { businessId, serviceId, staffId, date, time, customerNotes: rawNotes, includeShampoo } = body;
     const customerNotes = rawNotes ? String(rawNotes).slice(0, 1000) : undefined;
 
     if (!businessId || !serviceId || !date || !time) {
@@ -203,15 +204,16 @@ export async function POST(request: NextRequest) {
     const { data: newAppt, error: insertError } = await admin
       .from('appointments')
       .insert({
-        business_id:    businessId,
-        staff_id:       finalStaffId,
-        customer_id:    customerId,
-        start_time:     startTime.toISOString(),
-        end_time:       endTime.toISOString(),
-        status:         'confirmed',
-        notes:          customerNotes || null,
-        source:         'online',
-        booked_online:  true,
+        business_id:     businessId,
+        staff_id:        finalStaffId,
+        customer_id:     customerId,
+        start_time:      startTime.toISOString(),
+        end_time:        endTime.toISOString(),
+        status:          'confirmed',
+        notes:           customerNotes || null,
+        source:          'online',
+        booked_online:   true,
+        include_shampoo: includeShampoo === true,
       })
       .select('id')
       .single();

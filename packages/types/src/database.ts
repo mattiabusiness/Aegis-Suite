@@ -90,6 +90,8 @@ export interface Business {
   articles_1341_accepted_at: string | null;
   // Visibility
   is_public: boolean;
+  // Shampoo service
+  shampoo_price: number;
 }
 
 export interface Subscription {
@@ -301,6 +303,7 @@ export interface Appointment {
   parent_appointment_id: string | null;
   booked_online: boolean;
   source: string;
+  include_shampoo: boolean;
   created_at: string;
   updated_at: string;
 }
