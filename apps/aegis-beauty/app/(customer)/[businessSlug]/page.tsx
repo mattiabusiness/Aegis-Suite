@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { createServerSupabaseClient, getBusinessBySlug } from '@aegis/core';
 import type { Service, ServiceCategory } from '@aegis/types';
@@ -63,6 +63,12 @@ export default async function BusinessPage({
 
   const business = await getBusinessBySlug(supabase, businessSlug);
   if (!business) notFound();
+
+  // Se la pagina non è pubblica, richiede login
+  if (business.is_public === false) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect(`/login?redirect=/${businessSlug}`);
+  }
 
   // Fetch services + staff + business hours + categories in parallel
   const [servicesResult, staffResult, hoursResult, categoriesResult] = await Promise.all([

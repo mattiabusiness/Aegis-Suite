@@ -9,7 +9,7 @@ import * as React from 'react';
 import {
   Store, Clock, CalendarCheck, UserCog,
   Save, X, Copy, Check, Plus, Trash2,
-  Eye, EyeOff, RefreshCw, Users, Layers, Info,
+  Eye, EyeOff, RefreshCw, Users, Layers, Info, Globe,
   ChevronLeft, ChevronRight, Calendar,
   type LucideIcon,
 } from 'lucide-react';
@@ -39,7 +39,7 @@ export interface ClosureItem {
 export interface BookingSettings {
   bookingAdvanceMin: number; bookingAdvanceMax: number;
   cancellationPolicyHours: number; bufferMinutes: number;
-  allowNoStaffPreference: boolean; allowMultipleServices: boolean;
+  isPublic: boolean; allowNoStaffPreference: boolean; allowMultipleServices: boolean;
 }
 
 export interface AccountData { fullName: string; email: string; phone: string; }
@@ -838,13 +838,14 @@ function BookingsTab({ form, setForm, baseSettings, onSave }: {
     try { await onSave(form); setSaved(true); setTimeout(() => setSaved(false), 2000); }
     finally { setSaving(false); }
   };
-  const handleToggle = async (key: 'allowNoStaffPreference' | 'allowMultipleServices') => {
+  const handleToggle = async (key: 'isPublic' | 'allowNoStaffPreference' | 'allowMultipleServices') => {
     const nv = !form[key]; setForm(p => ({ ...p, [key]: nv })); setSavingToggle(key);
     try { await onSave({ ...form, [key]: nv }); }
     catch { setForm(p => ({ ...p, [key]: !nv })); }
     finally { setSavingToggle(null); }
   };
   const opts = [
+    { key: 'isPublic' as const, icon: Globe, label: 'Pagina pubblica', desc: 'La pagina del tuo business è visibile a tutti. Se disattivato, i clienti devono effettuare il login per vederla.' },
     { key: 'allowNoStaffPreference' as const, icon: Users, label: 'Nessuna preferenza staff', desc: 'I clienti possono prenotare senza scegliere un operatore specifico' },
     { key: 'allowMultipleServices' as const, icon: Layers, label: 'Più servizi insieme', desc: 'I clienti possono combinare più servizi in un\'unica prenotazione' },
   ];

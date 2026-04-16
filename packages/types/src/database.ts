@@ -88,6 +88,8 @@ export interface Business {
   // Legal consent (gestore)
   terms_accepted_at: string | null;
   articles_1341_accepted_at: string | null;
+  // Visibility
+  is_public: boolean;
 }
 
 export interface Subscription {

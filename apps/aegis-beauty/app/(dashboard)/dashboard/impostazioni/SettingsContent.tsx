@@ -193,6 +193,7 @@ export function SettingsContent({
       booking_advance_min: settings.bookingAdvanceMin,
       booking_advance_max: settings.bookingAdvanceMax,
       cancellation_policy_hours: settings.cancellationPolicyHours,
+      is_public: settings.isPublic,
     } as never).eq('id', businessId);
     if (error) throw error;
     router.refresh();
