@@ -458,12 +458,6 @@ export function ServiziContent({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-gray-900">Shampoo</span>
-                    <span
-                      className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: 'rgba(168,85,247,0.1)', color: '#7c3aed', border: '1px solid rgba(168,85,247,0.2)' }}
-                    >
-                      Sempre incluso
-                    </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5">Lavaggio shampoo opzionale — il cliente sceglie in fase di prenotazione</p>
                 </div>
@@ -494,13 +488,15 @@ export function ServiziContent({
                     <button
                       onClick={handleSaveShampooPrice}
                       disabled={shampooSaving}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                       style={{
-                        background: shampooSaving ? '#c4b5fd' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
+                        background: shampooSaving ? '#e9d5ff' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
                         boxShadow: shampooSaving ? 'none' : '0 2px 8px rgba(124,58,237,0.3)',
+                        color: '#fff',
+                        opacity: shampooSaving ? 0.7 : 1,
                       }}
                     >
-                      {shampooSaving ? '...' : 'Salva'}
+                      Conferma
                     </button>
                     <button
                       onClick={() => { setShampooEditing(false); setShampooInput(String(shampooPrice)); }}
@@ -512,8 +508,11 @@ export function ServiziContent({
                   </>
                 ) : (
                   <>
-                    <span className="text-base font-bold text-gray-900">
-                      €{shampooPrice.toFixed(2).replace('.00', '')}
+                    <span className="text-base font-bold" style={{
+                      background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                    }}>
+                      €{shampooPrice % 1 === 0 ? shampooPrice.toFixed(0) : shampooPrice.toFixed(2)}
                     </span>
                     <button
                       onClick={() => { setShampooEditing(true); setShampooInput(String(shampooPrice)); }}

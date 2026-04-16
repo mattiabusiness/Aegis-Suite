@@ -1621,50 +1621,6 @@ export function AppointmentModal({
               {errors.time && <p className="text-xs" style={{ color: '#dc2626' }}>* {errors.time}</p>}
             </div>
 
-            {/* ── SHAMPOO TOGGLE ── */}
-            <div
-              className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200"
-              style={{
-                background: formData.includeShampoo ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.015)',
-                borderLeft: formData.includeShampoo ? '3px solid #a855f7' : '3px solid #e5e7eb',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              {/* Animated toggle pill — only this is clickable */}
-              <button
-                type="button"
-                className="relative flex-shrink-0 outline-none cursor-pointer"
-                style={{
-                  width: 38, height: 21, borderRadius: 999,
-                  background: formData.includeShampoo ? '#a855f7' : '#d1d5db',
-                  boxShadow: formData.includeShampoo ? '0 2px 8px rgba(168,85,247,0.3)' : 'none',
-                  transition: 'background 0.3s ease, box-shadow 0.3s ease',
-                }}
-                onClick={() => handleInputChange('includeShampoo', !formData.includeShampoo)}
-              >
-                <span
-                  className="absolute bg-white rounded-full shadow-sm"
-                  style={{
-                    width: 17, height: 17, top: 2, left: 2,
-                    transform: formData.includeShampoo ? 'translateX(17px)' : 'translateX(0)',
-                    transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-                  }}
-                />
-              </button>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Droplets className="w-4 h-4 flex-shrink-0" style={{ color: formData.includeShampoo ? '#a855f7' : '#9ca3af' }} />
-                  <span className="text-sm font-semibold text-gray-900">Shampoo incluso</span>
-                  {((shampooPrice ?? 2) > 0) && (
-                    <span className="text-xs font-medium" style={{ color: '#9333ea' }}>
-                      +€{(shampooPrice ?? 2).toFixed(2).replace('.00', '')}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mt-0.5 ml-6">Aggiungi lavaggio shampoo al servizio</p>
-              </div>
-            </div>
-
             {/* ── NOTES ── */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
@@ -1686,6 +1642,45 @@ export function AppointmentModal({
             </div>
           </div>
         </form>
+
+        {/* ═══ SHAMPOO TOGGLE — fixed, outside scroll area ═══ */}
+        <div
+          className="flex items-center gap-3 mx-6 mb-2 px-3 py-2.5 rounded-xl flex-shrink-0 transition-all duration-200"
+          style={{
+            background: formData.includeShampoo ? 'rgba(168,85,247,0.06)' : 'rgba(0,0,0,0.02)',
+            border: formData.includeShampoo ? '1px solid rgba(168,85,247,0.2)' : '1px solid rgba(0,0,0,0.06)',
+          }}
+        >
+          <button
+            type="button"
+            className="relative flex-shrink-0 outline-none cursor-pointer"
+            style={{
+              width: 36, height: 20, borderRadius: 999,
+              background: formData.includeShampoo ? '#a855f7' : '#d1d5db',
+              boxShadow: formData.includeShampoo ? '0 2px 8px rgba(168,85,247,0.3)' : 'none',
+              transition: 'background 0.3s ease, box-shadow 0.3s ease',
+            }}
+            onClick={() => handleInputChange('includeShampoo', !formData.includeShampoo)}
+          >
+            <span
+              className="absolute bg-white rounded-full shadow-sm"
+              style={{
+                width: 16, height: 16, top: 2, left: 2,
+                transform: formData.includeShampoo ? 'translateX(16px)' : 'translateX(0)',
+                transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+              }}
+            />
+          </button>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Droplets className="w-3.5 h-3.5 flex-shrink-0" style={{ color: formData.includeShampoo ? '#a855f7' : '#9ca3af' }} />
+            <span className="text-sm font-semibold text-gray-800">Shampoo</span>
+            {((shampooPrice ?? 2) > 0) && (
+              <span className="text-xs font-medium" style={{ color: '#9333ea' }}>
+                +€{(shampooPrice ?? 2) % 1 === 0 ? (shampooPrice ?? 2).toFixed(0) : (shampooPrice ?? 2).toFixed(2)}
+              </span>
+            )}
+          </div>
+        </div>
 
         <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.15), transparent)' }} />
 
