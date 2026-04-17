@@ -5,8 +5,6 @@
 // Merged by @ducanh2912/next-pwa into the generated Workbox service worker.
 // ============================================================================
 
-declare const self: ServiceWorkerGlobalScope;
-
 // ============================================================================
 // PUSH EVENT — shows the notification on the device
 // ============================================================================
