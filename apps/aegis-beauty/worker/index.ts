@@ -33,7 +33,7 @@ sw.addEventListener('push', (event: PushEvent) => {
       data: { url: data.url ?? '/' },
       actions: data.actions,
       tag: data.tag,
-    })
+    } as unknown as NotificationOptions)
   );
 });
 
