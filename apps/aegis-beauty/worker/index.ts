@@ -5,11 +5,14 @@
 // Merged by @ducanh2912/next-pwa into the generated Workbox service worker.
 // ============================================================================
 
+// Cast self to ServiceWorkerGlobalScope so TypeScript resolves the correct types.
+const sw = self as unknown as ServiceWorkerGlobalScope;
+
 // ============================================================================
 // PUSH EVENT — shows the notification on the device
 // ============================================================================
 
-self.addEventListener('push', (event: PushEvent) => {
+sw.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
 
   const data = event.data.json() as {
@@ -23,7 +26,7 @@ self.addEventListener('push', (event: PushEvent) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, {
+    sw.registration.showNotification(data.title, {
       body: data.body,
       icon: data.icon ?? '/icons/icon-192x192.png',
       badge: data.badge ?? '/icons/icon-96x96.png',
@@ -38,31 +41,29 @@ self.addEventListener('push', (event: PushEvent) => {
 // NOTIFICATION CLICK — opens/focuses the app on the correct URL
 // ============================================================================
 
-self.addEventListener('notificationclick', (event: NotificationEvent) => {
+sw.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
   const url = (event.notification.data as { url?: string })?.url ?? '/';
 
   event.waitUntil(
-    self.clients
+    sw.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((clients) => {
-        // Focus existing window if already open
         for (const client of clients) {
           if ('focus' in client) {
             return (client as WindowClient).focus().then((c) => c.navigate(url));
           }
         }
-        // Otherwise open a new window
-        return self.clients.openWindow(url);
+        return sw.clients.openWindow(url);
       })
   );
 });
 
 // ============================================================================
-// NOTIFICATION CLOSE — optional, for analytics/cleanup
+// NOTIFICATION CLOSE — no-op, available for future analytics
 // ============================================================================
 
-self.addEventListener('notificationclose', (_event: NotificationEvent) => {
-  // No-op for now — can be used for analytics
+sw.addEventListener('notificationclose', (_event: NotificationEvent) => {
+  // no-op
 });
