@@ -9,7 +9,7 @@
 // PUSH EVENT — shows the notification on the device
 // ============================================================================
 
-self.addEventListener('push', (event) => {
+self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
 
   const data = event.data.json() as {
@@ -38,7 +38,7 @@ self.addEventListener('push', (event) => {
 // NOTIFICATION CLICK — opens/focuses the app on the correct URL
 // ============================================================================
 
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
   const url = (event.notification.data as { url?: string })?.url ?? '/';
@@ -63,6 +63,6 @@ self.addEventListener('notificationclick', (event) => {
 // NOTIFICATION CLOSE — optional, for analytics/cleanup
 // ============================================================================
 
-self.addEventListener('notificationclose', () => {
+self.addEventListener('notificationclose', (_event: NotificationEvent) => {
   // No-op for now — can be used for analytics
 });
