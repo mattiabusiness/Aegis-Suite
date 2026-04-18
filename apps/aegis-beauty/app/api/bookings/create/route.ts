@@ -278,6 +278,16 @@ export async function POST(request: NextRequest) {
         };
 
         await notify(ownerRow.user_id, payload, admin);
+
+        // Save in-app notification for the dashboard bell
+        await admin.from('notifications').insert({
+          business_id: businessId,
+          user_id: ownerRow.user_id,
+          type: 'info',
+          title: payload.title,
+          message: payload.body,
+          data: { url: '/dashboard/calendario' },
+        });
       }
     } catch (notifyErr) {
       // Non-critical — booking is confirmed regardless

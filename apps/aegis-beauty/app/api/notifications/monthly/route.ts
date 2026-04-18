@@ -88,6 +88,17 @@ export async function GET(req: Request): Promise<NextResponse> {
 
     try {
       await notify(ownerId, payload, supabase);
+
+      // Save in-app notification for the dashboard bell
+      await supabase.from('notifications').insert({
+        business_id: business.id,
+        user_id: ownerId,
+        type: 'success',
+        title: payload.title,
+        message: payload.body,
+        data: { url: '/dashboard/statistiche' },
+      });
+
       sent++;
     } catch (e) {
       console.error(`[monthly] gestore ${business.id} failed:`, e);

@@ -21,6 +21,8 @@ import type { StaffPermissions } from '@aegis/core';
 import { getMenuForRole, getActiveMenuId } from '@/config/menu';
 import { StaffPermissionsProvider } from '@/lib/staff-permissions-context';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
+import { useNotifications } from '@/hooks/useNotifications';
+import type { HeaderNotification } from '@aegis/ui';
 
 // ============================================================================
 // TYPES
@@ -71,6 +73,7 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
   const router = useRouter();
 
   usePushSubscription();
+  const { notifications, unreadCount, markRead } = useNotifications();
 
   // Se siamo in onboarding, non mostrare il layout dashboard
   if (pathname.startsWith('/onboarding')) {
@@ -88,7 +91,14 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
     router.push(item.href);
   };
 
-  // Handler per logout
+  // Handler click su notifica: mark read + naviga all'URL se presente
+  const handleNotificationClick = (notification: HeaderNotification) => {
+    markRead([notification.id]);
+    const full = notifications.find(n => n.id === notification.id);
+    if (full?.url) router.push(full.url);
+  };
+
+  // Handler logout
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -110,6 +120,9 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
           businessLogo={data.business.logoUrl || undefined}
           userName={data.user.name}
           userEmail={data.user.email}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onNotificationClick={handleNotificationClick}
           onMenuItemClick={handleMenuItemClick}
           onLogout={handleLogout}
           onProfileClick={() => router.push('/dashboard/impostazioni?tab=account')}
