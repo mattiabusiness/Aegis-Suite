@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
                   business_slug: business?.slug || '',
                   customer_id: finalCustomerId,
                 },
-                redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?type=invite`,
+                redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://aegisbeauty.app'}/auth/callback?type=invite`,
               }
             );
 
