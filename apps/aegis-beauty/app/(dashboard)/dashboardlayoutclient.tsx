@@ -6,7 +6,8 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Toaster } from 'sonner';
+import { useEffect } from 'react';
+import { Toaster, toast } from 'sonner';
 import {
   DashboardLayout,
   beautyTheme,
@@ -16,7 +17,7 @@ import {
   NotificationPrompt,
 } from '@aegis/ui';
 import type { SidebarMenuItem } from '@aegis/ui';
-import { createClient } from '@aegis/core';
+import { createClient, subscribeToPush, isPushSupported } from '@aegis/core';
 import type { StaffPermissions } from '@aegis/core';
 import { getMenuForRole, getActiveMenuId } from '@/config/menu';
 import { StaffPermissionsProvider } from '@/lib/staff-permissions-context';
@@ -74,6 +75,48 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
 
   usePushSubscription();
   const { notifications, unreadCount, markRead } = useNotifications();
+
+  // Desktop browser (non-standalone): mostra toast per abilitare notifiche push
+  useEffect(() => {
+    if (!isPushSupported()) return;
+    if (Notification.permission !== 'default') return;
+
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    if (isStandalone) return; // gestito da usePushSubscription
+
+    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidKey) return;
+
+    const t = setTimeout(() => {
+      toast.info('Ricevi notifiche per le nuove prenotazioni', {
+        duration: Infinity,
+        action: {
+          label: 'Abilita',
+          onClick: async () => {
+            const subscription = await subscribeToPush(vapidKey);
+            if (!subscription) return;
+            const key = subscription.getKey('p256dh');
+            const auth = subscription.getKey('auth');
+            if (!key || !auth) return;
+            const p256dh = btoa(String.fromCharCode(...new Uint8Array(key)));
+            const authKey = btoa(String.fromCharCode(...new Uint8Array(auth)));
+            try {
+              await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint: subscription.endpoint, p256dh, auth_key: authKey }),
+              });
+            } catch { /* silent fail */ }
+          },
+        },
+        cancel: { label: 'Non ora', onClick: () => {} },
+      });
+    }, 3000);
+
+    return () => clearTimeout(t);
+  }, []);
 
   // Se siamo in onboarding, non mostrare il layout dashboard
   if (pathname.startsWith('/onboarding')) {
