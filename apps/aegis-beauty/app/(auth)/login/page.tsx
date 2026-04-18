@@ -27,13 +27,8 @@ function AegisLogo() {
       justifyContent: 'center',
       boxShadow: '0 0 30px rgba(168,85,247,0.35)',
     }}>
-      <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-        {/* Bottom layer */}
-        <polygon points="17,22 28,17 17,12 6,17" fill="white" opacity="0.4" />
-        {/* Middle layer */}
-        <polygon points="17,27 28,22 17,17 6,22" fill="white" opacity="0.7" />
-        {/* Top layer */}
-        <polygon points="17,17 28,12 17,7  6,12" fill="white" opacity="1" />
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
       </svg>
     </div>
   );
