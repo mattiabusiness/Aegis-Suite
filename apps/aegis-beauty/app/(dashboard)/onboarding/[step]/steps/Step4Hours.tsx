@@ -320,20 +320,24 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
       if (ie) throw ie;
 
       const yr = new Date().getFullYear();
-      const dates: string[] = [];
+      const closureRows: { business_id: string; title: string; start_date: string; end_date: string; is_full_day: boolean; is_recurring_yearly: boolean }[] = [];
       for (const h of holidays) {
         if (!h.enabled) continue;
         if (h.date === 'easter') {
           const e = getEasterDate(yr);
-          dates.push(e.toISOString().split('T')[0]);
+          const d1 = e.toISOString().split('T')[0];
+          closureRows.push({ business_id: businessId, title: 'Pasqua', start_date: d1, end_date: d1, is_full_day: true, is_recurring_yearly: false });
           const em = new Date(e); em.setDate(e.getDate() + 1);
-          dates.push(em.toISOString().split('T')[0]);
-        } else dates.push(`${yr}-${h.date}`);
+          const d2 = em.toISOString().split('T')[0];
+          closureRows.push({ business_id: businessId, title: 'Pasquetta', start_date: d2, end_date: d2, is_full_day: true, is_recurring_yearly: false });
+        } else {
+          const d = `${yr}-${h.date}`;
+          closureRows.push({ business_id: businessId, title: h.name, start_date: d, end_date: d, is_full_day: true, is_recurring_yearly: true });
+        }
       }
-      if (dates.length > 0) {
+      if (closureRows.length > 0) {
         await supabase.from('business_closures').delete().eq('business_id', businessId);
-        const cd = dates.map(d => ({ business_id: businessId, date: d, reason: 'Festività' }));
-        await supabase.from('business_closures').insert(cd as never);
+        await supabase.from('business_closures').insert(closureRows as never);
       }
 
       await supabase.from('businesses').update({ onboarding_step: 5 } as never).eq('id', businessId);

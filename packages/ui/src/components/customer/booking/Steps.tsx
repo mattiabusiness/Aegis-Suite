@@ -394,12 +394,12 @@ export function Step1Front({ business, services, staff, categories, bookingState
           <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 5 }}>
             <Droplets style={{ width: 12, height: 12, color: bookingState.includeShampoo ? '#a855f7' : 'rgba(255,255,255,0.45)', flexShrink: 0 }} />
             <span>Aggiungi shampoo</span>
-            {(business.shampoo_price ?? 5) > 0 && (
+            {(business.shampoo_price ?? 3) > 0 && (
               <span style={{
                 fontSize: '0.62rem', fontWeight: 600,
                 color: bookingState.includeShampoo ? '#d8b4fe' : 'rgba(255,255,255,0.3)',
               }}>
-                +€{(business.shampoo_price ?? 5).toFixed(2).replace('.00', '')}
+                +€{(business.shampoo_price ?? 3).toFixed(2).replace('.00', '')}
               </span>
             )}
           </div>

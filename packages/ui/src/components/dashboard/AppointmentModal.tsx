@@ -1636,9 +1636,9 @@ export function AppointmentModal({
               >
                 <p className="text-sm font-semibold text-gray-900 select-none">
                   Lavaggio shampoo
-                  {((shampooPrice ?? 5) > 0) && (
+                  {((shampooPrice ?? 3) > 0) && (
                     <span className="ml-1.5 text-xs font-medium" style={{ color: '#9333ea' }}>
-                      +€{(shampooPrice ?? 5) % 1 === 0 ? (shampooPrice ?? 5).toFixed(0) : (shampooPrice ?? 5).toFixed(2)}
+                      +€{(shampooPrice ?? 3) % 1 === 0 ? (shampooPrice ?? 3).toFixed(0) : (shampooPrice ?? 3).toFixed(2)}
                     </span>
                   )}
                 </p>

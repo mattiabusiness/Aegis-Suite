@@ -73,7 +73,7 @@ export default async function PrenotaPage({
   const hours      = hoursResult.data      ?? [];
   const customer   = customerResult;
   const categories = categoriesResult.data ?? [];
-  const shampooPrice = (shampooPriceResult.data as { shampoo_price: number } | null)?.shampoo_price ?? 5;
+  const shampooPrice = (shampooPriceResult.data as { shampoo_price: number } | null)?.shampoo_price ?? 3;
 
   const businessWithShampoo = { ...business, shampoo_price: shampooPrice };
 
