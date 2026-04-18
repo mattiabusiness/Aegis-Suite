@@ -29,6 +29,16 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json([], { status: 200 });
   }
 
+  // Cleanup: delete read notifications older than 30 days (fire-and-forget)
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  supabase
+    .from('notifications')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('read', true)
+    .lt('created_at', cutoff)
+    .then(() => {/* silent */});
+
   return NextResponse.json(data ?? []);
 }
 
