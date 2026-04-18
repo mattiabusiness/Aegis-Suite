@@ -112,7 +112,7 @@ function NotificationDropdown({
       </div>
 
       {/* List */}
-      <div className="max-h-80 overflow-y-auto">
+      <div className="max-h-80 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(168,85,247,0.15) transparent' }}>
         {notifications.length === 0 ? (
           <div className="px-5 py-12 text-center">
             <div
