@@ -150,41 +150,45 @@ function CustomerRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-gray-900 truncate">{customer.fullName}</p>
-          {/* Import status badge */}
-          {customer.source === 'import' && !customer.userId && (
+          {/* Invite / registration status badge */}
+          {!customer.userId && (
             customer.invitedAt ? (
+              // Invitato via email (qualunque source: import, manual, ecc.)
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
                 style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.2)' }}>
                 <Mail className="w-2.5 h-2.5" />Invitato
               </span>
-            ) : inviteError ? (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
-                style={{ background: 'rgba(239,68,68,0.08)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)', animation: 'cl-card-in 0.15s ease-out both' }}>
-                Email mancante
-              </span>
-            ) : (
-              <button
-                onClick={handleInvite}
-                disabled={inviting}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
-                style={{
-                  background: 'rgba(100,116,139,0.1)',
-                  color: '#64748b',
-                  border: '1px solid rgba(100,116,139,0.15)',
-                  cursor: inviting ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-                onMouseEnter={e => { if (!inviting) { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.color = '#7c3aed'; e.currentTarget.style.border = '1px solid rgba(168,85,247,0.2)'; } }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(100,116,139,0.1)'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.border = '1px solid rgba(100,116,139,0.15)'; }}
-                title={customer.email ? 'Clicca per inviare invito email' : 'Aggiungi un\'email al cliente prima di inviare l\'invito'}
-              >
-                {inviting
-                  ? <span className="w-2.5 h-2.5 rounded-full border border-current border-t-transparent animate-spin" />
-                  : <Upload className="w-2.5 h-2.5" />
-                }
-                Non registrato
-              </button>
-            )
+            ) : customer.source === 'import' ? (
+              // Importato ma non ancora invitato → bottone per invitare
+              inviteError ? (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
+                  style={{ background: 'rgba(239,68,68,0.08)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)', animation: 'cl-card-in 0.15s ease-out both' }}>
+                  Email mancante
+                </span>
+              ) : (
+                <button
+                  onClick={handleInvite}
+                  disabled={inviting}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
+                  style={{
+                    background: 'rgba(100,116,139,0.1)',
+                    color: '#64748b',
+                    border: '1px solid rgba(100,116,139,0.15)',
+                    cursor: inviting ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={e => { if (!inviting) { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.color = '#7c3aed'; e.currentTarget.style.border = '1px solid rgba(168,85,247,0.2)'; } }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(100,116,139,0.1)'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.border = '1px solid rgba(100,116,139,0.15)'; }}
+                  title={customer.email ? 'Clicca per inviare invito email' : 'Aggiungi un\'email al cliente prima di inviare l\'invito'}
+                >
+                  {inviting
+                    ? <span className="w-2.5 h-2.5 rounded-full border border-current border-t-transparent animate-spin" />
+                    : <Upload className="w-2.5 h-2.5" />
+                  }
+                  Non registrato
+                </button>
+              )
+            ) : null
           )}
         </div>
         <div className="flex items-center gap-3 mt-0.5 text-sm text-gray-500">

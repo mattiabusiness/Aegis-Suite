@@ -140,16 +140,13 @@ export async function POST(request: NextRequest) {
         if (sendInvite) {
           try {
             const adminClient = createAdminSupabaseClient();
-            
+
             const { data: business } = await supabase
               .from('businesses')
               .select('name, slug')
               .eq('id', businessId)
               .single();
-            
-            // ================================================================
-            // MODIFICATO: Aggiunto customer_id e business_slug ai metadata
-            // ================================================================
+
             const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
               customerEmail.toLowerCase(),
               {
@@ -158,15 +155,23 @@ export async function POST(request: NextRequest) {
                   phone: customerPhone,
                   invited_by_business: businessId,
                   business_name: business?.name || 'Salone',
-                  business_slug: business?.slug || '',      // AGGIUNTO
-                  customer_id: finalCustomerId,              // AGGIUNTO
+                  business_slug: business?.slug || '',
+                  customer_id: finalCustomerId,
                 },
                 redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?type=invite`,
               }
             );
-            
+
             if (inviteError) {
               console.error('Error sending invite:', inviteError);
+              // Riporta l'errore al chiamante senza bloccare la creazione dell'appuntamento
+              // L'appuntamento è già stato creato a questo punto (viene dopo)
+            } else {
+              // Invite inviato con successo → aggiorna invited_at sul record cliente
+              await supabase
+                .from('customers')
+                .update({ invited_at: new Date().toISOString() })
+                .eq('id', finalCustomerId);
             }
           } catch (inviteErr) {
             console.error('Invite error:', inviteErr);
