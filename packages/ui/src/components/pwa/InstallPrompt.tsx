@@ -108,11 +108,22 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [ios, setIos] = useState(false);
 
+  // Effect 1: count this visit + platform detection (runs once on mount)
   useEffect(() => {
     setIos(isIOS());
-
-    // Use global deferred prompt (captured at module load) + keep listening for future events
     if (_globalDeferredPrompt) setDeferredPrompt(_globalDeferredPrompt);
+
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem(KEYS.isInstalled) === 'true') return;
+    if (isInStandaloneMode()) {
+      localStorage.setItem(KEYS.isInstalled, 'true');
+      return;
+    }
+    if (!localStorage.getItem(KEYS.firstVisitAt)) {
+      localStorage.setItem(KEYS.firstVisitAt, String(Date.now()));
+    }
+    const visits = parseInt(localStorage.getItem(KEYS.visitCount) ?? '0', 10) + 1;
+    localStorage.setItem(KEYS.visitCount, String(visits));
 
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
@@ -120,7 +131,6 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-
     window.addEventListener('appinstalled', () => {
       localStorage.setItem(KEYS.isInstalled, 'true');
       _globalDeferredPrompt = null;
@@ -128,21 +138,31 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
       onInstalled?.();
     });
 
-    // After booking: bypass all localStorage checks — just show it
-    const shouldDisplay = showAfterBooking
-      ? !isInStandaloneMode() && localStorage.getItem(KEYS.isInstalled) !== 'true'
-      : shouldShow(false);
-
-    if (shouldDisplay) {
-      const t = setTimeout(() => setVisible(true), showAfterBooking ? 1500 : 800);
-      return () => {
-        clearTimeout(t);
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      };
-    }
-
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-  }, [showAfterBooking, onInstalled]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Effect 2: decide whether to show banner (reads visitCount after Effect 1 has updated it)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem(KEYS.isInstalled) === 'true') return;
+    if (isInStandaloneMode()) return;
+
+    const now = Date.now();
+    const dismissedAt = parseInt(localStorage.getItem(KEYS.installDismissedAt) ?? '0', 10);
+    if (dismissedAt && now - dismissedAt < DISMISS_COOLDOWN_MS) return;
+
+    const visits = parseInt(localStorage.getItem(KEYS.visitCount) ?? '0', 10);
+
+    const shouldDisplay = showAfterBooking
+      ? true
+      : visits >= 2;
+
+    if (!shouldDisplay) return;
+
+    const t = setTimeout(() => setVisible(true), showAfterBooking ? 1500 : 800);
+    return () => clearTimeout(t);
+  }, [showAfterBooking]);
 
   const dismiss = useCallback(() => {
     const count = parseInt(localStorage.getItem(KEYS.dismissCount) ?? '0', 10) + 1;
