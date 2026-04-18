@@ -285,35 +285,55 @@ export function AuthFlipCard({
           {/* REGISTER FORM — right half */}
           <div className={`afc-form-area afc-form-right ${regShake ? 'afc-shake' : ''}`}>
             <div className="afc-form-inner afc-form-reg">
-              <h3 className="afc-title">Registrati</h3>
-              <p className="afc-desc">Crea il tuo account</p>
+              <h3 className="afc-title">{inviteMode ? 'Scegli la password' : 'Registrati'}</h3>
+              <p className="afc-desc">{inviteMode ? 'Il tuo profilo è già pronto' : 'Crea il tuo account'}</p>
               {errR && <div className="afc-alert afc-err">{errR}</div>}
               {registerSuccess && <div className="afc-alert afc-ok">{registerSuccess}</div>}
               <form onSubmit={handleRegister} className="afc-form">
-                <div className="afc-field">
-                  <label className="afc-label">Nome completo</label>
-                  <div className="afc-input-wrap">
-                    <input type="text" value={regName} onChange={e => !isNameRO && setRegName(e.target.value)} placeholder="Mario Rossi" className={`afc-input ${isNameRO ? 'afc-ro' : ''}`} disabled={isNameRO} autoComplete="name" />
-                    <span className="afc-icon"><IcoUser /></span>
-                  </div>
-                </div>
-                <div className="afc-field">
-                  <label className="afc-label">Email</label>
-                  <div className="afc-input-wrap">
-                    <input type="email" value={regEmail} onChange={e => !isEmailRO && setRegEmail(e.target.value)} placeholder="nome@esempio.it" className={`afc-input ${isEmailRO ? 'afc-ro' : ''}`} disabled={isEmailRO} autoComplete="email" />
-                    <span className="afc-icon"><IcoMail /></span>
-                  </div>
-                </div>
-                {showPhone && (
-                  <div className="afc-field">
-                    <label className="afc-label">Telefono</label>
-                    <div className="afc-input-wrap">
-                      <input type="tel" value={regPhone} onChange={e => !isPhoneRO && setRegPhone(e.target.value)} placeholder="+39 333 1234567" className={`afc-input ${isPhoneRO ? 'afc-ro' : ''}`} disabled={isPhoneRO} autoComplete="tel" />
-                      <span className="afc-icon"><IcoPhone /></span>
+                {inviteMode ? (
+                  /* ── Invite mode: show profile summary, only ask for password ── */
+                  <>
+                    <div className="afc-invite-summary">
+                      <div className="afc-invite-avatar">
+                        {regName ? regName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?'}
+                      </div>
+                      <div className="afc-invite-info">
+                        {regName && <p className="afc-invite-name">{regName}</p>}
+                        {regEmail && <p className="afc-invite-email">{regEmail}</p>}
+                        {regPhone && <p className="afc-invite-phone">{regPhone}</p>}
+                      </div>
                     </div>
-                  </div>
+                    <PasswordField label="Scegli una password" value={regPassword} onChange={setRegPassword} placeholder="Minimo 8 caratteri" autoComplete="new-password" />
+                  </>
+                ) : (
+                  /* ── Normal mode: all fields ── */
+                  <>
+                    <div className="afc-field">
+                      <label className="afc-label">Nome completo</label>
+                      <div className="afc-input-wrap">
+                        <input type="text" value={regName} onChange={e => setRegName(e.target.value)} placeholder="Mario Rossi" className="afc-input" autoComplete="name" />
+                        <span className="afc-icon"><IcoUser /></span>
+                      </div>
+                    </div>
+                    <div className="afc-field">
+                      <label className="afc-label">Email</label>
+                      <div className="afc-input-wrap">
+                        <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} placeholder="nome@esempio.it" className="afc-input" autoComplete="email" />
+                        <span className="afc-icon"><IcoMail /></span>
+                      </div>
+                    </div>
+                    {showPhone && (
+                      <div className="afc-field">
+                        <label className="afc-label">Telefono</label>
+                        <div className="afc-input-wrap">
+                          <input type="tel" value={regPhone} onChange={e => setRegPhone(e.target.value)} placeholder="+39 333 1234567" className="afc-input" autoComplete="tel" />
+                          <span className="afc-icon"><IcoPhone /></span>
+                        </div>
+                      </div>
+                    )}
+                    <PasswordField label="Password" value={regPassword} onChange={setRegPassword} placeholder="Minimo 8 caratteri" autoComplete="new-password" />
+                  </>
                 )}
-                <PasswordField label="Password" value={regPassword} onChange={setRegPassword} placeholder="Minimo 8 caratteri" autoComplete="new-password" />
                 <label className="afc-check">
                   <input type="checkbox" checked={regTerms} onChange={e => setRegTerms(e.target.checked)} className="afc-checkbox" />
                   <span className="afc-check-text">
@@ -673,6 +693,24 @@ export function AuthFlipCard({
 
         .afc-powered { color: #c4c0d4; font-size: 0.85rem; letter-spacing: 0.03em; }
         .afc-pow-brand { color: var(--afc-a); font-weight: 600; opacity: 0.75; }
+
+        /* ===== INVITE MODE — profile summary ===== */
+        .afc-invite-summary {
+          display: flex; align-items: center; gap: 12px;
+          padding: 12px 14px; border-radius: 12px; margin-bottom: 4px;
+          background: rgba(168,85,247,0.05); border: 1px solid rgba(168,85,247,0.15);
+        }
+        .afc-invite-avatar {
+          width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+          background: linear-gradient(135deg, rgba(147,51,234,0.25), rgba(126,34,206,0.15));
+          border: 1px solid rgba(147,51,234,0.3);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 15px; font-weight: 700; color: #7c3aed; letter-spacing: -0.5px;
+        }
+        .afc-invite-info { flex: 1; min-width: 0; }
+        .afc-invite-name { margin: 0; font-size: 14px; font-weight: 600; color: #1e1b2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .afc-invite-email { margin: 2px 0 0; font-size: 12px; color: #7c3aed; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .afc-invite-phone { margin: 1px 0 0; font-size: 12px; color: #9ca3af; }
 
         /* ===== RESPONSIVE — mobile/tablet-portrait < 1024px ===== */
         @media (max-width: 1023px) {
