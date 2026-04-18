@@ -142,7 +142,7 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Effect 2: decide whether to show banner (reads visitCount after Effect 1 has updated it)
+  // Effect 2: decide whether to show banner
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (localStorage.getItem(KEYS.isInstalled) === 'true') return;
@@ -151,14 +151,6 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
     const now = Date.now();
     const dismissedAt = parseInt(localStorage.getItem(KEYS.installDismissedAt) ?? '0', 10);
     if (dismissedAt && now - dismissedAt < DISMISS_COOLDOWN_MS) return;
-
-    const visits = parseInt(localStorage.getItem(KEYS.visitCount) ?? '0', 10);
-
-    const shouldDisplay = showAfterBooking
-      ? true
-      : visits >= 2;
-
-    if (!shouldDisplay) return;
 
     const t = setTimeout(() => setVisible(true), showAfterBooking ? 1500 : 800);
     return () => clearTimeout(t);
