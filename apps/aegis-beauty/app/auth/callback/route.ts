@@ -125,7 +125,9 @@ export async function GET(request: NextRequest) {
       if (metadata.business_slug) params.set('business_slug', metadata.business_slug);
       if (metadata.customer_id) params.set('customer_id', metadata.customer_id);
       if (user?.id) params.set('user_id', user.id);
-      return NextResponse.redirect(new URL(`/register?${params.toString()}`, request.url));
+      // Riusa `response` (che ha già i cookie di sessione scritti) cambiando solo la destinazione
+      response.headers.set('Location', new URL(`/register?${params.toString()}`, request.url).toString());
+      return response;
     }
 
     // ================================================================
