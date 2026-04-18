@@ -63,13 +63,13 @@ function getDefaultHours(type: BusinessType | null): DayHours[] {
   // Hair Salon: 9:00-13:00 | 14:30-19:00
   // Beauty Center: 9:00-13:00 | 15:00-19:30
   // Mixed: 9:00-19:00 continuato (no pausa)
-  const breakStart = '13:00';
-  const breakEnd = isBC ? '15:00' : '14:30';
+  const breakStart = '12:30';
+  const breakEnd = '14:30';
   const closeTime = isBC ? '19:30' : '19:00';
   const satClose = isBC ? '19:00' : '18:00';
 
   const daysConfig: { day: DayOfWeek; label: string; isOpen: boolean }[] = [
-    { day: 'monday', label: 'Lun', isOpen: true },
+    { day: 'monday', label: 'Lun', isOpen: false },
     { day: 'tuesday', label: 'Mar', isOpen: true },
     { day: 'wednesday', label: 'Mer', isOpen: true },
     { day: 'thursday', label: 'Gio', isOpen: true },
@@ -85,7 +85,7 @@ function getDefaultHours(type: BusinessType | null): DayHours[] {
       // Continuato: no break, closeTime2 = orario chiusura
       return { ...d, openTime1: '09:00', closeTime1: breakStart, openTime2: breakEnd, closeTime2: isSat ? '18:00' : '19:00', hasBreak: false };
     }
-    return { ...d, openTime1: '09:00', closeTime1: breakStart, openTime2: breakEnd, closeTime2: endTime, hasBreak: d.isOpen };
+    return { ...d, openTime1: '09:00', closeTime1: breakStart, openTime2: breakEnd, closeTime2: endTime, hasBreak: false };
   });
 }
 
@@ -184,7 +184,7 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
   const [holidays, setHolidays] = useState<Holiday[]>(DEFAULT_HOLIDAYS);
   const [globalBreak, setGlobalBreak] = useState(() => {
     const isBC = businessType === 'beauty_center';
-    return { enabled: true, start: '13:00', end: isBC ? '15:00' : '14:30' };
+    return { enabled: false, start: '12:30', end: '14:30' };
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -207,9 +207,9 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
     let cancelled = false;
     const defaults = getDefaultHours(businessType);
     const isBC = businessType === 'beauty_center';
-    const breakEnabled = true;
-    const breakStart = '13:00';
-    const breakEnd = isBC ? '15:00' : '14:30';
+    const breakEnabled = false;
+    const breakStart = '12:30';
+    const breakEnd = '14:30';
 
     async function loadAndApply() {
       const { data: savedHours } = await supabase
