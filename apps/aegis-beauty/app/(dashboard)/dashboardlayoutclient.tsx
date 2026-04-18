@@ -113,12 +113,20 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
 
     // Permesso non ancora chiesto: mostra toast dopo 3s
     if (Notification.permission === 'default') {
+      const TOAST_ID = 'push-permission';
       const t = setTimeout(() => {
         toast.info('Ricevi notifiche per le nuove prenotazioni', {
+          id: TOAST_ID,
           duration: Infinity,
           action: {
             label: 'Abilita',
-            onClick: registerSubscription,
+            onClick: async () => {
+              // Dismiss toast first — Android blocks Notification.requestPermission()
+              // if any overlay/toast is still visible on screen
+              toast.dismiss(TOAST_ID);
+              await new Promise(resolve => setTimeout(resolve, 400));
+              await registerSubscription();
+            },
           },
           cancel: { label: 'Non ora', onClick: () => {} },
         });
