@@ -90,7 +90,8 @@ export async function GET(req: Request): Promise<NextResponse> {
       await notify(ownerId, payload, supabase);
 
       // Save in-app notification for the dashboard bell
-      await supabase.from('notifications').insert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('notifications').insert({
         business_id: business.id,
         user_id: ownerId,
         type: 'success',
