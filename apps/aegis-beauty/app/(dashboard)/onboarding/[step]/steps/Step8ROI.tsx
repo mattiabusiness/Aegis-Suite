@@ -189,7 +189,7 @@ export function Step8ROI({ businessId, businessType, businessSlug, businessName,
         .eq('id', businessId);
       if (error) throw error;
 
-      showTransition('Dati salvati ✓', () => setPhase('summary'));
+      showTransition('Dati salvati ✓', () => setPhase('summary'), true);
     } catch (err) {
       console.error('Error completing onboarding:', err);
       setShaking(true); setTimeout(() => setShaking(false), 500);
