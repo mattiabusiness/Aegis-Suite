@@ -136,8 +136,38 @@ interface ActionButtonProps {
 
 function ActionButton({ action, sizeClass }: ActionButtonProps) {
   const Icon = action.icon;
-  const variantClass = buttonVariants[action.variant || 'primary'];
-  
+  const variant = action.variant || 'primary';
+
+  if (variant === 'primary') {
+    return (
+      <button
+        onClick={action.onClick}
+        className={`${emptyStateStyles.button} ${sizeClass} text-white relative overflow-hidden`}
+        style={{
+          background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+          boxShadow: '0 2px 8px rgba(147,51,234,0.25)',
+          transition: 'all 0.2s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(147,51,234,0.35)';
+          e.currentTarget.style.transform = 'translateY(-1px)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(147,51,234,0.25)';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+      >
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+          animation: 'es-shimmer 2.5s ease-in-out infinite',
+        }} />
+        {Icon && <Icon className={`${emptyStateStyles.buttonIcon} relative z-10`} />}
+        <span className="relative z-10">{action.label}</span>
+      </button>
+    );
+  }
+
+  const variantClass = buttonVariants[variant];
   return (
     <button
       onClick={action.onClick}
@@ -206,6 +236,13 @@ export function EmptyState({
           )}
         </div>
       )}
+
+      <style>{`
+        @keyframes es-shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 }
