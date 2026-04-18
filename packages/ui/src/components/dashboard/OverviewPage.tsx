@@ -217,7 +217,7 @@ function SectionCard({ section, delay, grow }: { section: OverviewSection; delay
 
 function QuickLinkCard({ slug, onQrClick }: { slug: string; onQrClick: () => void }) {
   const [copied, setCopied] = React.useState(false);
-  const url = `aegisbeauty.aegis.app/${slug}`;
+  const url = `aegisbeauty.app/${slug}`;
 
   const handleCopy = async () => {
     try {
@@ -276,10 +276,10 @@ function QuickLinkCard({ slug, onQrClick }: { slug: string; onQrClick: () => voi
             onClick={handleCopy}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium"
             style={{
-              background: copied ? 'rgba(16,185,129,0.08)' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
-              color: copied ? '#059669' : '#fff',
-              border: copied ? '1px solid rgba(16,185,129,0.2)' : '1px solid transparent',
-              boxShadow: copied ? 'none' : '0 2px 8px rgba(147,51,234,0.25)',
+              background: 'linear-gradient(135deg, #059669, #10b981)',
+              color: '#fff',
+              border: '1px solid transparent',
+              boxShadow: '0 2px 8px rgba(5,150,105,0.25)',
               transition: 'all 0.2s ease',
             }}
           >
@@ -323,7 +323,7 @@ export function OverviewPage({
   className = '',
 }: OverviewPageProps) {
   const [qrOpen, setQrOpen] = React.useState(false);
-  const fullUrl = businessUrl || (businessSlug ? `https://aegisbeauty.aegis.app/${businessSlug}` : '');
+  const fullUrl = businessUrl || (businessSlug ? `https://aegisbeauty.app/${businessSlug}` : '');
 
   return (
     <div className={`w-full ${className}`}>

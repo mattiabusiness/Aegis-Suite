@@ -314,7 +314,7 @@ export function SettingsContent({
       closures={initialClosures}
       bookingSettings={bookingSettings}
       accountData={accountData}
-      publicUrlBase="aegisbeauty.aegis.app"
+      publicUrlBase="aegisbeauty.app"
       businessType={businessType}
       onSaveGeneral={handleSaveGeneral}
       onUploadLogo={handleUploadLogo}
