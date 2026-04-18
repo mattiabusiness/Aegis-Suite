@@ -21,18 +21,19 @@ function AegisLogo() {
       width: 60,
       height: 60,
       borderRadius: '1rem',
-      background: 'rgba(255,255,255,0.12)',
-      border: '1px solid rgba(255,255,255,0.2)',
+      background: 'linear-gradient(135deg, #3b0764, #6d28d9)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backdropFilter: 'blur(8px)',
-      boxShadow: '0 0 30px rgba(168,85,247,0.25)',
+      boxShadow: '0 0 30px rgba(168,85,247,0.35)',
     }}>
-      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-        <path d="M2 17l10 5 10-5" />
-        <path d="M2 12l10 5 10-5" />
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+        {/* Bottom layer */}
+        <polygon points="17,22 28,17 17,12 6,17" fill="white" opacity="0.4" />
+        {/* Middle layer */}
+        <polygon points="17,27 28,22 17,17 6,22" fill="white" opacity="0.7" />
+        {/* Top layer */}
+        <polygon points="17,17 28,12 17,7  6,12" fill="white" opacity="1" />
       </svg>
     </div>
   );
