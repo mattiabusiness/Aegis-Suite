@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
         const payload: PushPayload = {
           title: 'Nuova prenotazione',
           body: `${(service as { name: string }).name} — ${dateLabel} alle ${startLabel}`,
-          url: `/${(businessRow as { slug: string }).slug}/dashboard/calendario`,
+          url: '/dashboard/calendario',
           actions: [{ action: 'view', title: 'Vedi calendario' }],
           tag: `new-booking-${appointmentId}`,
         };
