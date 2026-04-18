@@ -87,34 +87,61 @@ function LoginContent() {
     return 'login';
   });
 
-  // Process invite token from URL hash (Supabase implicit flow for email invites)
+  // Process invite — handles both PKCE (URL params) and implicit (URL hash) flows,
+  // plus session-already-set fallback when redirect params are missing.
   useEffect(() => {
     const process = async () => {
-      if (typeof window === 'undefined' || !window.location.hash) return;
-      const hash = window.location.hash.substring(1);
-      const p = new URLSearchParams(hash);
-      if (p.get('type') !== 'invite' || !p.get('access_token')) return;
+      if (typeof window === 'undefined') return;
 
-      setProcessingInvite(true);
-      try {
-        const { data: sd, error: se } = await supabase.auth.setSession({
-          access_token: p.get('access_token')!,
-          refresh_token: p.get('refresh_token') || '',
-        });
-        if (se || !sd.user) { setLoginError('Link invito non valido o scaduto'); setProcessingInvite(false); return; }
-        const m = sd.user.user_metadata || {};
-        setInviteData({
-          isInvite: true, isStaffInvite: false, staffId: '',
-          name: m.full_name || '', email: sd.user.email || '',
-          phone: m.phone || '', businessName: m.business_name || '', businessSlug: m.business_slug || '',
-        });
-        setInitialMode('register');
-        window.history.replaceState(null, '', window.location.pathname);
-      } catch { setLoginError("Errore durante l'elaborazione dell'invito"); }
-      finally { setProcessingInvite(false); }
+      // ── 1. Implicit flow: access_token in hash ──
+      if (window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        const p = new URLSearchParams(hash);
+        if (p.get('type') === 'invite' && p.get('access_token')) {
+          setProcessingInvite(true);
+          try {
+            const { data: sd, error: se } = await supabase.auth.setSession({
+              access_token: p.get('access_token')!,
+              refresh_token: p.get('refresh_token') || '',
+            });
+            if (se || !sd.user) { setLoginError('Link invito non valido o scaduto'); return; }
+            const m = sd.user.user_metadata || {};
+            setInviteData({
+              isInvite: true, isStaffInvite: false, staffId: '',
+              name: m.full_name || '', email: sd.user.email || '',
+              phone: m.phone || '', businessName: m.business_name || '', businessSlug: m.business_slug || '',
+            });
+            setInitialMode('register');
+            window.history.replaceState(null, '', window.location.pathname);
+          } catch { setLoginError("Errore durante l'elaborazione dell'invito"); }
+          finally { setProcessingInvite(false); }
+          return;
+        }
+      }
+
+      // ── 2. PKCE flow: URL params already set (inviteData initialized from searchParams).
+      //    If invite=true is in URL and name/email are already populated, nothing to do.
+      if (searchParams.get('invite') === 'true' && searchParams.get('email')) return;
+
+      // ── 3. Fallback: session already active (PKCE redirect happened but params got lost).
+      //    Read metadata directly from the authenticated session.
+      if (searchParams.get('invite') === 'true' || searchParams.get('mode') === 'register') {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.user_metadata?.invited_by_business) {
+            const m = user.user_metadata;
+            setInviteData({
+              isInvite: true, isStaffInvite: false, staffId: '',
+              name: m.full_name || '', email: user.email || '',
+              phone: m.phone || '', businessName: m.business_name || '', businessSlug: m.business_slug || '',
+            });
+            setInitialMode('register');
+          }
+        } catch { /* silently ignore */ }
+      }
     };
     process();
-  }, [supabase.auth]);
+  }, [supabase, searchParams]);
 
   const handleLogin = async (data: { email: string; password: string }) => {
     setLoginError(''); setLoginSuccess('');
