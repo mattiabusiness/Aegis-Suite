@@ -363,8 +363,8 @@ function GeneralTab({
 
       {/* Logo — compact + info cards */}
       <Section title={`Logo del ${label}`} description="Personalizza la tua app" delay={80} compact iconSvg={<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: 18, height: 18 }} className="text-white"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}>
-        <div className="flex flex-col gap-4" style={{ animation: 'stFadeUp 0.4s ease-out both' }}>
-          {/* Top: preview + upload */}
+        <div className="flex items-start gap-4" style={{ animation: 'stFadeUp 0.4s ease-out both' }}>
+          {/* Left: preview + upload */}
           <div className="flex flex-col items-center flex-shrink-0">
             {form.logoUrl && (
               <div className="relative group mb-2">
@@ -421,8 +421,8 @@ onClick={triggerFileInput}>
               </p>
             )}
           </div>
-          {/* Bottom: info cards in row */}
-          <div className="flex gap-2" style={{ animation: 'stFadeUp 0.35s ease-out 0.1s both' }}>
+          {/* Right: info cards stacked */}
+          <div className="flex flex-col gap-2 flex-1" style={{ animation: 'stFadeUp 0.35s ease-out 0.1s both' }}>
             <div className="p-3 rounded-xl transition-all duration-200 cursor-default" style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.08)' }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(124,58,237,0.06)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.04)'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}

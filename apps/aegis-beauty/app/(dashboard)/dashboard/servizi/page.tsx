@@ -97,7 +97,7 @@ export default async function ServiziPage() {
     .eq('id', businessId)
     .single() as { data: { shampoo_price: number } | null };
 
-  const shampooPrice = businessData?.shampoo_price ?? 3;
+  const shampooPrice = businessData?.shampoo_price ?? 5;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (

@@ -171,7 +171,7 @@ export default async function CalendarioPage() {
     staffServicesMap[s.id] = (s.staff_services || []).map(ss => ss.service_id);
   }
 
-  const shampooPrice = (businessResult.data as { shampoo_price: number } | null)?.shampoo_price ?? 3;
+  const shampooPrice = (businessResult.data as { shampoo_price: number } | null)?.shampoo_price ?? 5;
 
   return (
     <CalendarioContent
