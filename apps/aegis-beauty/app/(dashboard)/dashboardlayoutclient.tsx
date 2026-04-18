@@ -76,10 +76,9 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
   usePushSubscription();
   const { notifications, unreadCount, markRead } = useNotifications();
 
-  // Desktop browser (non-standalone): mostra toast per abilitare notifiche push
+  // Desktop browser (non-standalone): gestisce permesso notifiche push
   useEffect(() => {
     if (!isPushSupported()) return;
-    if (Notification.permission !== 'default') return;
 
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -89,33 +88,45 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!vapidKey) return;
 
-    const t = setTimeout(() => {
-      toast.info('Ricevi notifiche per le nuove prenotazioni', {
-        duration: Infinity,
-        action: {
-          label: 'Abilita',
-          onClick: async () => {
-            const subscription = await subscribeToPush(vapidKey);
-            if (!subscription) return;
-            const key = subscription.getKey('p256dh');
-            const auth = subscription.getKey('auth');
-            if (!key || !auth) return;
-            const p256dh = btoa(String.fromCharCode(...new Uint8Array(key)));
-            const authKey = btoa(String.fromCharCode(...new Uint8Array(auth)));
-            try {
-              await fetch('/api/push/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint: subscription.endpoint, p256dh, auth_key: authKey }),
-              });
-            } catch { /* silent fail */ }
-          },
-        },
-        cancel: { label: 'Non ora', onClick: () => {} },
-      });
-    }, 3000);
+    const registerSubscription = async () => {
+      const subscription = await subscribeToPush(vapidKey);
+      if (!subscription) return;
+      const key = subscription.getKey('p256dh');
+      const auth = subscription.getKey('auth');
+      if (!key || !auth) return;
+      const p256dh = btoa(String.fromCharCode(...new Uint8Array(key)));
+      const authKey = btoa(String.fromCharCode(...new Uint8Array(auth)));
+      try {
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: subscription.endpoint, p256dh, auth_key: authKey }),
+        });
+      } catch { /* silent fail */ }
+    };
 
-    return () => clearTimeout(t);
+    // Permesso già concesso: registra silenziosamente senza mostrare nulla
+    if (Notification.permission === 'granted') {
+      registerSubscription();
+      return;
+    }
+
+    // Permesso non ancora chiesto: mostra toast dopo 3s
+    if (Notification.permission === 'default') {
+      const t = setTimeout(() => {
+        toast.info('Ricevi notifiche per le nuove prenotazioni', {
+          duration: Infinity,
+          action: {
+            label: 'Abilita',
+            onClick: registerSubscription,
+          },
+          cancel: { label: 'Non ora', onClick: () => {} },
+        });
+      }, 3000);
+      return () => clearTimeout(t);
+    }
+
+    // 'denied': non fare nulla
   }, []);
 
   // Se siamo in onboarding, non mostrare il layout dashboard
