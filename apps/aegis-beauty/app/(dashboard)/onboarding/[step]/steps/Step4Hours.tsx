@@ -230,14 +230,16 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
         resolvedHours = defaults.map(d => {
           const saved = dayMap.get(d.day) as { is_open: boolean; open_time_1: string | null; close_time_1: string | null; open_time_2: string | null; close_time_2: string | null } | undefined;
           if (!saved) return d;
+          // Supabase TIME columns return 'HH:MM:SS' — truncate to 'HH:MM'
+          const t = (v: string | null) => v ? v.substring(0, 5) : null;
           const hasBreak = !!(saved.open_time_2 && saved.close_time_1);
           return {
             ...d,
             isOpen: saved.is_open,
-            openTime1: saved.open_time_1 || d.openTime1,
-            closeTime1: hasBreak ? (saved.close_time_1 || d.closeTime1) : d.closeTime1,
-            openTime2: saved.open_time_2 || d.openTime2,
-            closeTime2: hasBreak ? (saved.close_time_2 || d.closeTime2) : (saved.close_time_1 || d.closeTime2),
+            openTime1: t(saved.open_time_1) || d.openTime1,
+            closeTime1: hasBreak ? (t(saved.close_time_1) || d.closeTime1) : d.closeTime1,
+            openTime2: t(saved.open_time_2) || d.openTime2,
+            closeTime2: hasBreak ? (t(saved.close_time_2) || d.closeTime2) : (t(saved.close_time_1) || d.closeTime2),
             hasBreak,
           };
         });
