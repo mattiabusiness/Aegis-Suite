@@ -151,8 +151,11 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
                 </button>
                 <motion.button
                   onClick={async () => {
+                    // Call requestPermission immediately within user gesture —
+                    // setTimeout would break the activation context on Android Chrome
+                    const permission = await Notification.requestPermission();
                     toast.dismiss(TOAST_ID);
-                    await new Promise(resolve => setTimeout(resolve, 400));
+                    if (permission !== 'granted') return;
                     await registerSubscription();
                   }}
                   style={{
