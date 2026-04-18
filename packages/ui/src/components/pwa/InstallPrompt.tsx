@@ -178,9 +178,8 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-          style={{ zIndex: 9999 }}
-          className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:max-w-sm md:rounded-3xl rounded-t-3xl backdrop-blur-3xl bg-white/10 border border-white/20 shadow-2xl shadow-purple-900/40"
           style={{ zIndex: 10000 }}
+          className="fixed bottom-0 left-0 right-0 md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:max-w-sm md:rounded-3xl rounded-t-3xl backdrop-blur-3xl bg-white/10 border border-white/20 shadow-2xl shadow-purple-900/40"
         >
           <div className="p-5">
             {/* Header */}
