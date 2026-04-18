@@ -67,7 +67,7 @@ export default async function OnboardingStepPage({ params }: PageProps) {
   const [businessResult, profileResult, hoursResult] = await Promise.all([
     supabase
       .from('businesses')
-      .select('id, business_type, name, address_street, address_city, address_postal_code, phone, email, logo_url, slug, workstations')
+      .select('id, business_type, name, address_street, address_city, address_postal_code, phone, email, logo_url, slug, workstations, onboarding_step')
       .eq('id', businessMember.business_id)
       .single(),
     supabase
@@ -84,7 +84,7 @@ export default async function OnboardingStepPage({ params }: PageProps) {
   const business = businessResult.data as {
     id: string; business_type: BusinessType | null; name: string;
     address_street: string | null; address_city: string | null; address_postal_code: string | null;
-    phone: string | null; email: string | null; logo_url: string | null; slug: string | null; workstations: number | null;
+    phone: string | null; email: string | null; logo_url: string | null; slug: string | null; workstations: number | null; onboarding_step: number | null;
   } | null;
 
   if (!business) {
@@ -153,7 +153,7 @@ export default async function OnboardingStepPage({ params }: PageProps) {
           <Step5Workstations 
             businessId={business.id}
             businessType={business.business_type}
-            initialValue={business.workstations || 3}
+            initialValue={(business.onboarding_step ?? 0) >= 6 ? (business.workstations ?? 3) : 3}
           />
         )}
 
