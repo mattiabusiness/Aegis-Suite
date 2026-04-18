@@ -364,7 +364,7 @@ export function Step8ROI({ businessId, businessType, businessSlug, businessName,
           <div className="space-y-6">
             {/* Phone time */}
             <div style={{ animation: 's8FadeUp 0.3s ease-out both' }}>
-              <label className="block text-sm font-semibold text-gray-900 mb-1">Tempo per prenotazioni telefoniche</label>
+              <label className="block text-sm font-semibold text-gray-900 mb-1">Tempo per prenotazioni telefoniche al giorno</label>
               <p className="text-xs text-gray-500 mb-3">Tra chiamate in entrata e richiesta di informazioni...</p>
               <div className="flex items-center gap-4">
                 <AnimatedSlider value={phoneMinutesPerDay} onChange={setPhoneMinutesPerDay} min={5} max={120} step={5} label="min" />
