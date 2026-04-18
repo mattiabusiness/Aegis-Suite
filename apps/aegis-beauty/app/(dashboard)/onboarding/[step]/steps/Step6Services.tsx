@@ -39,7 +39,7 @@ function CategoryIcon({ iconName, className }: { iconName: string; className?: s
   return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" dangerouslySetInnerHTML={{ __html: svgPath }} />;
 }
 
-const DURATION_OPTIONS = [15, 20, 30, 45, 60, 75, 90, 120].map(d => ({
+const DURATION_OPTIONS = [15, 20, 30, 45, 60, 75, 90, 120, 150, 180, 240].map(d => ({
   value: String(d),
   label: d >= 60 ? `${Math.floor(d / 60)}h${d % 60 ? ` ${d % 60}m` : ''}` : `${d} min`,
 }));
