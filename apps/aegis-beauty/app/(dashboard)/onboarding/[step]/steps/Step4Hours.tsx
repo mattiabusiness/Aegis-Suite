@@ -310,9 +310,9 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
       const hoursData = hours.map(day => ({
         business_id: businessId, day_of_week: day.day, is_open: day.isOpen,
         open_time_1: day.isOpen ? day.openTime1 : null,
-        close_time_1: day.isOpen ? (day.hasBreak ? day.closeTime1 : day.closeTime2) : null,
-        open_time_2: day.isOpen && day.hasBreak ? day.openTime2 : null,
-        close_time_2: day.isOpen && day.hasBreak ? day.closeTime2 : null,
+        close_time_1: day.isOpen ? (globalBreak.enabled ? day.closeTime1 : day.closeTime2) : null,
+        open_time_2: day.isOpen && globalBreak.enabled ? day.openTime2 : null,
+        close_time_2: day.isOpen && globalBreak.enabled ? day.closeTime2 : null,
       }));
       const { error: ie } = await supabase.from('business_hours').insert(hoursData as never);
       if (ie) throw ie;
@@ -432,11 +432,11 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
                       <AnimatedSelect value={day.openTime1} onChange={(v) => updateDay(index, { openTime1: v })} options={TIME_OPTIONS} compact />
                       <span className="text-purple-300 text-xs">→</span>
                       <AnimatedSelect
-                        value={day.hasBreak ? day.closeTime1 : day.closeTime2}
-                        onChange={(v) => updateDay(index, day.hasBreak ? { closeTime1: v } : { closeTime2: v })}
+                        value={globalBreak.enabled ? day.closeTime1 : day.closeTime2}
+                        onChange={(v) => updateDay(index, globalBreak.enabled ? { closeTime1: v } : { closeTime2: v })}
                         options={TIME_OPTIONS} compact
                       />
-                      {day.hasBreak && (
+                      {globalBreak.enabled && (
                         <>
                           <span className="text-purple-200 mx-0.5 text-xs">|</span>
                           <AnimatedSelect value={day.openTime2} onChange={(v) => updateDay(index, { openTime2: v })} options={TIME_OPTIONS} compact />
@@ -444,15 +444,6 @@ export function Step4Hours({ businessId, businessType }: Step4Props) {
                           <AnimatedSelect value={day.closeTime2} onChange={(v) => updateDay(index, { closeTime2: v })} options={TIME_OPTIONS} compact />
                         </>
                       )}
-                      <button type="button" onClick={() => updateDay(index, { hasBreak: !day.hasBreak })}
-                        className="ml-auto text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200"
-                        style={{
-                          background: day.hasBreak ? 'rgba(168,85,247,0.1)' : 'rgba(0,0,0,0.04)',
-                          color: day.hasBreak ? '#7c3aed' : '#9ca3af',
-                          border: day.hasBreak ? '1px solid rgba(168,85,247,0.2)' : '1px solid transparent',
-                        }}>
-                        {day.hasBreak ? 'Con pausa' : 'No pausa'}
-                      </button>
                     </div>
                   ) : (
                     <span className="text-gray-400 text-sm italic">Chiuso</span>
