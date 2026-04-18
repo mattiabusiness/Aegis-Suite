@@ -22,7 +22,7 @@ interface Step8Props {
 const HOURLY_RATE = { hair_salon: 25, beauty_center: 35, mixed: 30 };
 const NOSHOW_VALUE = { hair_salon: 30, beauty_center: 50, mixed: 40 };
 
-function calcDashHours(m: number): number { return Math.min(25, 5 + (m * 0.15)); }
+function calcDashHours(m: number): number { return m * 0.10; }
 
 type Phase = 'calculator' | 'summary';
 

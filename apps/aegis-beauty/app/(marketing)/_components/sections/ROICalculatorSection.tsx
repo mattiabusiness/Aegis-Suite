@@ -15,7 +15,7 @@ const HOURLY_RATE = { hair: 25, beauty: 35, mixed: 30 } as const;
 const NOSHOW_VALUE = { hair: 30, beauty: 50, mixed: 40 } as const;
 
 function calcDashHours(manualH: number): number {
-  return Math.min(25, 5 + manualH * 0.15);
+  return manualH * 0.10;
 }
 
 type BizType = 'hair' | 'beauty' | 'mixed';
@@ -157,7 +157,7 @@ export function ROICalculatorSection() {
   // ── Calculations (identical logic to Step8ROI) ──────────────────────────
   const hourlyRate       = HOURLY_RATE[type];
   const noShowValue      = NOSHOW_VALUE[type];
-  const openDaysPerMonth = 6 * 4.33;
+  const openDaysPerMonth = 5 * 4.33;
   const manualHoursPerMonth = (phoneMin * openDaysPerMonth) / 60;
   const dashHours        = calcDashHours(manualHoursPerMonth);
   const hoursSaved       = Math.max(0, manualHoursPerMonth - dashHours);
