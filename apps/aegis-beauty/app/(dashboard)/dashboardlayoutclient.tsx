@@ -151,14 +151,9 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
                 </button>
                 <motion.button
                   onClick={async () => {
-                    // 1. Dismiss toast + hide Sonner container from DOM before dialog appears
-                    // Android Chrome blocks requestPermission if any overlay is visible
-                    toast.dismiss(TOAST_ID);
-                    const sonner = document.querySelector('[data-sonner-toaster]') as HTMLElement | null;
-                    if (sonner) sonner.style.visibility = 'hidden';
-                    // 2. Request permission immediately — still within user gesture (no setTimeout)
+                    // Request permission immediately within user gesture (no ops before this)
                     const permission = await Notification.requestPermission();
-                    if (sonner) sonner.style.visibility = '';
+                    toast.dismiss(TOAST_ID);
                     if (permission !== 'granted') return;
                     await registerSubscription();
                   }}
