@@ -9,7 +9,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { Download, Link2, Check, X } from 'lucide-react';
+import { Download, Link2, X } from 'lucide-react';
 
 // ============================================================================
 // TYPES
@@ -165,8 +165,8 @@ export function QRCodeDisplay({
                 transition: 'all 0.2s ease',
               }}
             >
-              {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
-              {copied ? 'Copiato!' : 'Copia link'}
+              {!copied && <Link2 className="w-4 h-4" />}
+              {copied ? '✓ Copiato' : 'Copia link'}
             </button>
           )}
           {showDownloadButton && (
