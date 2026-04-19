@@ -65,16 +65,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Inline setup — admin client bypasses RLS, no session cookie needed.
-    // Link staff.user_id first (sequential, then parallel for the rest).
-    await admin.from('staff').update({ user_id: created.user.id }).eq('id', staffId);
+    // Update staff row: set user_id AND email (email may be null if manager
+    // created the staff record without filling it in — isIncomplete checks both).
+    const { error: staffUpdateErr } = await admin
+      .from('staff')
+      .update({ user_id: created.user.id, email: email.toLowerCase() })
+      .eq('id', staffId);
+    if (staffUpdateErr) console.error('[staff/register] staff update error:', staffUpdateErr);
 
     await Promise.all([
-      admin.from('business_members').insert({
+      // upsert instead of insert — idempotent, won't throw on duplicate key
+      admin.from('business_members').upsert({
         user_id: created.user.id,
         business_id: staffCheck.business_id,
         role: 'staff',
         is_active: true,
-      }),
+      }, { onConflict: 'user_id,business_id', ignoreDuplicates: false }),
       admin.from('profiles').upsert({
         id: created.user.id,
         email: created.user.email,
