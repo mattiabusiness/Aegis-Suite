@@ -248,18 +248,19 @@ function LoginContent() {
         if (ue) { setRegisterError(ue.message); throw new Error(ue.message); }
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const profilePromise = supabase.from('profiles').upsert({
+          // Profile must be upserted BEFORE customer link — customers.user_id has
+          // a FK to profiles(id), running them in parallel risks a FK violation.
+          await supabase.from('profiles').upsert({
             id: user.id, email: data.email, full_name: data.fullName, phone: data.phone,
           } as never);
           // Link customer record → clears the "Invitato" badge in the business CRM
-          const linkPromise = inviteData.customerId
-            ? fetch('/api/customer/link', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ customerId: inviteData.customerId }),
-              })
-            : Promise.resolve();
-          await Promise.all([profilePromise, linkPromise]);
+          if (inviteData.customerId) {
+            await fetch('/api/customer/link', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ customerId: inviteData.customerId }),
+            });
+          }
         }
         setRegisterSuccess('Registrazione completata! Reindirizzamento...');
         setTimeout(() => { window.location.href = inviteData.businessSlug ? `/${inviteData.businessSlug}` : '/'; }, 1500);
