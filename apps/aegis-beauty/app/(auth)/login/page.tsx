@@ -75,9 +75,10 @@ function LoginContent() {
         businessName: searchParams.get('business') || '',
         businessSlug: searchParams.get('business_slug') || '',
         staffId: '',
+        customerId: searchParams.get('customer_id') || '',
       };
     }
-    return { isInvite: false, isStaffInvite: false, name: '', email: '', phone: '', businessName: '', businessSlug: '', staffId: '' };
+    return { isInvite: false, isStaffInvite: false, name: '', email: '', phone: '', businessName: '', businessSlug: '', staffId: '', customerId: '' };
   });
 
   const [initialMode, setInitialMode] = useState<'login' | 'register'>(() => {
@@ -110,6 +111,7 @@ function LoginContent() {
               isInvite: true, isStaffInvite: false, staffId: '',
               name: m.full_name || '', email: sd.user.email || '',
               phone: m.phone || '', businessName: m.business_name || '', businessSlug: m.business_slug || '',
+              customerId: m.customer_id || '',
             });
             setInitialMode('register');
             window.history.replaceState(null, '', window.location.pathname);
@@ -132,6 +134,7 @@ function LoginContent() {
             isInvite: true, isStaffInvite: false, staffId: '',
             name: m.full_name || '', email: user.email || '',
             phone: m.phone || '', businessName: m.business_name || '', businessSlug: m.business_slug || '',
+            customerId: m.customer_id || '',
           });
           setInitialMode('register');
         }
@@ -230,9 +233,18 @@ function LoginContent() {
         if (ue) { setRegisterError(ue.message); throw new Error(ue.message); }
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          await supabase.from('profiles').upsert({
+          const profilePromise = supabase.from('profiles').upsert({
             id: user.id, email: data.email, full_name: data.fullName, phone: data.phone,
           } as never);
+          // Link customer record → clears the "Invitato" badge in the business CRM
+          const linkPromise = inviteData.customerId
+            ? fetch('/api/customer/link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId: inviteData.customerId }),
+              })
+            : Promise.resolve();
+          await Promise.all([profilePromise, linkPromise]);
         }
         setRegisterSuccess('Registrazione completata! Reindirizzamento...');
         setTimeout(() => { window.location.href = inviteData.businessSlug ? `/${inviteData.businessSlug}` : '/'; }, 1500);
