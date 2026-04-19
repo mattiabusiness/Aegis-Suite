@@ -40,7 +40,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invito non valido o già utilizzato' }, { status: 400 });
     }
 
-    // Create user with email already confirmed — no confirmation email sent
+    // Create user with email already confirmed — no confirmation email sent.
+    // Staff linking (user_id, business_member, profile) is handled by
+    // /api/staff/setup called client-side after signInWithPassword.
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email: email.toLowerCase(),
       password,
@@ -60,41 +62,6 @@ export async function POST(request: NextRequest) {
         { error: createError?.message || 'Errore creazione account' },
         { status: 400 }
       );
-    }
-
-    const userId = created.user.id;
-
-    // Link staff.user_id + create business_member + upsert profile (same as auth callback)
-    const { data: staffRecord } = await admin
-      .from('staff')
-      .update({ user_id: userId })
-      .eq('id', staffId)
-      .is('user_id', null)
-      .select('business_id')
-      .single();
-
-    if (staffRecord?.business_id) {
-      // Remove any stale member row before inserting
-      await admin
-        .from('business_members')
-        .delete()
-        .eq('user_id', userId)
-        .eq('business_id', staffRecord.business_id);
-
-      await Promise.all([
-        admin.from('business_members').insert({
-          user_id: userId,
-          business_id: staffRecord.business_id,
-          role: 'staff',
-          is_active: true,
-        }),
-        admin.from('profiles').upsert({
-          id: userId,
-          email: email.toLowerCase(),
-          full_name: fullName || '',
-          phone: phone || null,
-        }, { onConflict: 'id' }),
-      ]);
     }
 
     return NextResponse.json({ success: true });

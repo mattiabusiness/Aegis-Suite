@@ -222,6 +222,9 @@ function LoginContent() {
             throw signInError;
           }
 
+          // Link staff.user_id + business_member + profile (browser sends session cookies automatically)
+          await fetch('/api/staff/setup', { method: 'POST' });
+
           setRegisterSuccess('Registrazione completata! Reindirizzamento...');
           setTimeout(() => { window.location.href = '/dashboard'; }, 800);
           return;
