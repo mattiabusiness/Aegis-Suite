@@ -81,41 +81,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ sent: 0, failed: 0 });
     }
 
-    // ── 6. Send invites via Supabase inviteUserByEmail ───────────────────────
+    // ── 6. Send invites via Supabase inviteUserByEmail (10 concurrent) ───────
     const appUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://aegisbeauty.app';
     const redirectTo = `${appUrl}/auth/callback?type=invite`;
+    const CONCURRENCY = 10;
 
     let sent = 0;
     let failed = 0;
     const invitedIds: string[] = [];
 
-    for (const customer of validCustomers) {
-      try {
-        const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
-          customer.email.toLowerCase(),
-          {
-            data: {
-              full_name: customer.full_name,
-              phone: customer.phone || '',
-              invited_by_business: businessId,
-              business_name: business?.name || '',
-              business_slug: business?.slug || '',
-              customer_id: customer.id,
-            },
-            redirectTo,
+    for (let i = 0; i < validCustomers.length; i += CONCURRENCY) {
+      const batch = validCustomers.slice(i, i + CONCURRENCY);
+      await Promise.all(batch.map(async (customer) => {
+        try {
+          const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+            customer.email.toLowerCase(),
+            {
+              data: {
+                full_name: customer.full_name,
+                phone: customer.phone || '',
+                invited_by_business: businessId,
+                business_name: business?.name || '',
+                business_slug: business?.slug || '',
+                customer_id: customer.id,
+              },
+              redirectTo,
+            }
+          );
+          if (inviteError) {
+            console.error(`[invite-batch] invite error for ${customer.email}:`, inviteError);
+            failed++;
+          } else {
+            sent++;
+            invitedIds.push(customer.id);
           }
-        );
-
-        if (inviteError) {
-          console.error(`[invite-batch] invite error for ${customer.email}:`, inviteError);
+        } catch (err) {
+          console.error(`[invite-batch] unexpected error for ${customer.email}:`, err);
           failed++;
-        } else {
-          sent++;
-          invitedIds.push(customer.id);
         }
-      } catch (err) {
-        console.error(`[invite-batch] unexpected error for ${customer.email}:`, err);
-        failed++;
+      }));
+      // Small pause between batches to respect Supabase rate limits
+      if (i + CONCURRENCY < validCustomers.length) {
+        await new Promise(r => setTimeout(r, 150));
       }
     }
 

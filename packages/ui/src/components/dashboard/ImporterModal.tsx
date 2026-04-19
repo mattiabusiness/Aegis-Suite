@@ -386,6 +386,7 @@ export function ImporterModal({
   const [importResult, setImportResult] = React.useState<{ success: number; errors: number; importedIds: string[] } | null>(null);
   const [isInviting, setIsInviting] = React.useState(false);
   const [inviteDone, setInviteDone] = React.useState(false);
+  const [inviteProgress, setInviteProgress] = React.useState({ current: 0, total: 0 });
   const stepKeyRef = React.useRef(0);
   const [stepDir, setStepDir] = React.useState<'fwd' | 'bwd'>('fwd');
 
@@ -404,7 +405,7 @@ export function ImporterModal({
     setStep(1); setIsParsing(false); setParseError(null); setCounts(null);
     setParsedRows([]); setUpdateDuplicates(false); setIsCheckingDups(false);
     setIsImporting(false); setImportProgress({ current: 0, total: 0 });
-    setImportResult(null); setIsInviting(false); setInviteDone(false);
+    setImportResult(null); setIsInviting(false); setInviteDone(false); setInviteProgress({ current: 0, total: 0 });
     setStepDir('fwd'); stepKeyRef.current = 0;
   }
 
@@ -515,14 +516,21 @@ export function ImporterModal({
 
   async function handleSendInvites() {
     if (!importResult || importResult.importedIds.length === 0) return;
+    const ids = importResult.importedIds;
+    const CHUNK = 50;
     setIsInviting(true);
+    setInviteProgress({ current: 0, total: ids.length });
     try {
-      await fetch('/api/clients/invite-batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerIds: importResult.importedIds }),
-      });
-    } catch { /* stub */ }
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const chunk = ids.slice(i, i + CHUNK);
+        await fetch('/api/clients/invite-batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerIds: chunk }),
+        });
+        setInviteProgress({ current: Math.min(i + CHUNK, ids.length), total: ids.length });
+      }
+    } catch { /* non-critical — show done anyway */ }
     finally {
       setIsInviting(false);
       setInviteDone(true);
@@ -587,7 +595,7 @@ export function ImporterModal({
         <Step3
           isImporting={isImporting} importProgress={importProgress}
           importResult={importResult} invitableCount={invitableCount}
-          isInviting={isInviting} inviteDone={inviteDone}
+          isInviting={isInviting} inviteDone={inviteDone} inviteProgress={inviteProgress}
           onSendInvites={handleSendInvites} onSkipInvites={handleSkipInvites}
         />
       )}
@@ -988,11 +996,12 @@ interface Step3Props {
   invitableCount: number;
   isInviting: boolean;
   inviteDone: boolean;
+  inviteProgress: { current: number; total: number };
   onSendInvites: () => void;
   onSkipInvites: () => void;
 }
 
-function Step3({ isImporting, importProgress, importResult, invitableCount, isInviting, inviteDone, onSendInvites, onSkipInvites }: Step3Props) {
+function Step3({ isImporting, importProgress, importResult, invitableCount, isInviting, inviteDone, inviteProgress, onSendInvites, onSkipInvites }: Step3Props) {
   const progressPct = importProgress.total > 0
     ? Math.min(Math.round((importProgress.current / importProgress.total) * 100), 100)
     : 0;
@@ -1190,12 +1199,24 @@ function Step3({ isImporting, importProgress, importResult, invitableCount, isIn
                 />
               )}
               {isInviting ? (
-                <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /><span>Invio in corso...</span></>
+                <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <span>{inviteProgress.total > 0 ? `Invio ${inviteProgress.current}/${inviteProgress.total}...` : 'Invio in corso...'}</span></>
               ) : (
                 <><Mail className="w-3.5 h-3.5 relative z-10" /><span className="relative z-10">Invia inviti</span></>
               )}
             </button>
           </div>
+          {/* Invite progress bar */}
+          {isInviting && inviteProgress.total > 0 && (
+            <div style={{ marginTop: 10, height: 4, borderRadius: 99, background: 'rgba(168,85,247,0.12)', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 99,
+                background: 'linear-gradient(90deg, #9333ea, #a855f7)',
+                width: `${Math.round(inviteProgress.current / inviteProgress.total * 100)}%`,
+                transition: 'width 0.35s ease',
+              }} />
+            </div>
+          )}
         </div>
       )}
 
