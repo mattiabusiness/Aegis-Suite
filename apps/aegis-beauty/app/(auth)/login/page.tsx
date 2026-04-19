@@ -188,39 +188,42 @@ function LoginContent() {
     setRegisterError(''); setRegisterSuccess('');
 
     if (inviteData.isInvite) {
-      // QR code staff invite — user is NOT yet authenticated, needs signUp
+      // QR code staff invite — register via server-side admin API (no confirmation email)
       if (inviteData.isStaffInvite) {
         let specificErrorSet = false;
         try {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email: inviteData.email,
-            password: data.password,
-            options: {
-              emailRedirectTo: `${appUrl}/auth/callback`,
-              data: { full_name: data.fullName, phone: data.phone, staff_id: inviteData.staffId, invite_type: 'staff', terms_accepted_at: data.termsAcceptedAt },
-            },
+          const res = await fetch('/api/staff/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: inviteData.email,
+              password: data.password,
+              fullName: data.fullName,
+              phone: data.phone,
+              staffId: inviteData.staffId,
+              termsAcceptedAt: data.termsAcceptedAt,
+            }),
           });
-          console.log('[SignUp] result:', { userId: signUpData?.user?.id, hasSession: !!signUpData?.session, emailConfirmed: signUpData?.user?.email_confirmed_at });
-          if (signUpError) { setRegisterError(signUpError.message); specificErrorSet = true; throw signUpError; }
-
-          // Email confirmation DISABILITATA: sessione già disponibile → setup diretto
-          if (signUpData?.session) {
-            console.log('[SignUp] sessione immediata, chiamo setup API...');
-            try {
-              const res = await fetch('/api/staff/setup', { method: 'POST' });
-              const json = await res.json();
-              console.log('[SignUp] setup API response:', res.status, json);
-            } catch (setupErr) {
-              console.error('[SignUp] setup API error:', setupErr);
-            }
-            setRegisterSuccess('Registrazione completata! Reindirizzamento...');
-            setTimeout(() => { window.location.href = '/dashboard'; }, 800);
-            return;
+          const json = await res.json();
+          if (!res.ok) {
+            setRegisterError(json.error || 'Errore durante la registrazione.');
+            specificErrorSet = true;
+            throw new Error(json.error);
           }
 
-          // Email confirmation ABILITATA: attendi click sulla mail
-          setRegisterSuccess('Controlla la tua email per confermare l\'account e accedere.');
+          // Account creato con email già confermata → sign in diretto, nessuna mail
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: inviteData.email,
+            password: data.password,
+          });
+          if (signInError) {
+            setRegisterError(signInError.message);
+            specificErrorSet = true;
+            throw signInError;
+          }
+
+          setRegisterSuccess('Registrazione completata! Reindirizzamento...');
+          setTimeout(() => { window.location.href = '/dashboard'; }, 800);
           return;
         } catch (err) { if (!specificErrorSet) setRegisterError('Errore durante la registrazione.'); throw err; }
       }
