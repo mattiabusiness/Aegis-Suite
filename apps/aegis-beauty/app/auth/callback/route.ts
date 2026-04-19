@@ -125,8 +125,9 @@ export async function GET(request: NextRequest) {
       if (metadata.business_slug) params.set('business_slug', metadata.business_slug);
       if (metadata.customer_id) params.set('customer_id', metadata.customer_id);
       if (user?.id) params.set('user_id', user.id);
-      // Riusa `response` (che ha già i cookie di sessione scritti) cambiando solo la destinazione
-      response.headers.set('Location', new URL(`/register?${params.toString()}`, request.url).toString());
+      // Vai direttamente a /login — salta /register per evitare il bug useSearchParams() di Next.js 15
+      params.set('mode', 'register');
+      response.headers.set('Location', new URL(`/login?${params.toString()}`, request.url).toString());
       return response;
     }
 

@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
 
     // Build fallback QR URL — always available regardless of invite outcome
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://aegisbeauty.app';
-    const fallbackUrl = new URL(`${baseUrl}/register`);
+    const fallbackUrl = new URL(`${baseUrl}/login`);
+    fallbackUrl.searchParams.set('mode', 'register');
     fallbackUrl.searchParams.set('staff_invite', 'true');
     fallbackUrl.searchParams.set('email', email);
     fallbackUrl.searchParams.set('name', fullName);
