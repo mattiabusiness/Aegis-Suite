@@ -276,11 +276,11 @@ function StaffCard({
 
             {member.isActive && (
               <>
-                <MenuItem icon={Edit2} label="Modifica" onClick={() => { onEdit?.(); setShowMenu(false); }} />
-                {onManageServices && (
+                <MenuItem icon={Edit2} label={member.isIncomplete ? 'Completa' : 'Modifica'} onClick={() => { onEdit?.(); setShowMenu(false); }} />
+                {!member.isIncomplete && onManageServices && (
                   <MenuItem icon={Briefcase} label="Gestisci servizi" onClick={() => { onManageServices(); setShowMenu(false); }} />
                 )}
-                {onManageHours && (
+                {!member.isIncomplete && onManageHours && (
                   <MenuItem icon={Clock} label="Gestisci orari" onClick={() => { onManageHours(); setShowMenu(false); }} />
                 )}
                 {member.role !== 'owner' && (
