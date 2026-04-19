@@ -64,6 +64,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Inline setup — admin client bypasses RLS, no session cookie needed.
+    // Link staff.user_id first (sequential, then parallel for the rest).
+    await admin.from('staff').update({ user_id: created.user.id }).eq('id', staffId);
+
+    await Promise.all([
+      admin.from('business_members').insert({
+        user_id: created.user.id,
+        business_id: staffCheck.business_id,
+        role: 'staff',
+        is_active: true,
+      }),
+      admin.from('profiles').upsert({
+        id: created.user.id,
+        email: created.user.email,
+        full_name: fullName || '',
+        phone: phone || null,
+      }, { onConflict: 'id' }),
+    ]);
+
     return NextResponse.json({ success: true });
 
   } catch (e) {

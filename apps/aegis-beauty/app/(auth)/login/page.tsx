@@ -167,17 +167,27 @@ function LoginContent() {
 
       if (redirectParam) { window.location.href = redirectParam; return; }
 
-      // Customers are in the `customers` table (not business_members) — look up their business slug
+      // Customers are in the `customers` table (not business_members).
+      // Two-step query: get business_id first (avoids FK join which can fail silently
+      // if businesses RLS blocks the embedded select), then fetch the slug separately.
       const { data: customerRecord } = await supabase
         .from('customers')
-        .select('businesses(slug)')
+        .select('business_id')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .limit(1)
-        .maybeSingle() as { data: { businesses: { slug: string } | null } | null };
+        .maybeSingle() as { data: { business_id: string } | null };
 
-      const slug = (customerRecord?.businesses as { slug: string } | null)?.slug;
-      window.location.href = slug ? `/${slug}` : '/';
+      let targetUrl = '/';
+      if (customerRecord?.business_id) {
+        const { data: biz } = await supabase
+          .from('businesses')
+          .select('slug')
+          .eq('id', customerRecord.business_id)
+          .maybeSingle() as { data: { slug: string } | null };
+        if (biz?.slug) targetUrl = `/${biz.slug}/account`;
+      }
+      window.location.href = targetUrl;
       return;
     }
 
@@ -222,9 +232,8 @@ function LoginContent() {
             throw signInError;
           }
 
-          // Link staff.user_id + business_member + profile (browser sends session cookies automatically)
-          await fetch('/api/staff/setup', { method: 'POST' });
-
+          // Setup (staff.user_id + business_members + profile) is now done inline
+          // in /api/staff/register via the admin client — no second API call needed.
           setRegisterSuccess('Registrazione completata! Reindirizzamento...');
           setTimeout(() => { window.location.href = '/dashboard'; }, 800);
           return;

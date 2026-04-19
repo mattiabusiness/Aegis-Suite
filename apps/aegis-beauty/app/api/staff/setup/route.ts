@@ -35,11 +35,18 @@ export async function POST(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Find staff record by email (admin bypasses RLS — safe because email is verified by auth)
-    const { data: staffRecord, error: staffErr } = await adminClient
+    // Find staff record via staff_id stored in user metadata during registration.
+    // Using metadata avoids the case-sensitive email mismatch issue (Supabase auth
+    // lowercases emails, but the staff table stores them as entered by the manager).
+    const staffId = user.user_metadata?.staff_id as string | undefined;
+    if (!staffId) {
+      return NextResponse.json({ error: 'Staff non trovato' }, { status: 404 });
+    }
+
+    const { data: staffRecord } = await adminClient
       .from('staff')
       .select('id, business_id')
-      .eq('email', user.email)
+      .eq('id', staffId)
       .single();
 
     if (!staffRecord?.business_id) {
