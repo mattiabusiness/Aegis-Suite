@@ -253,12 +253,6 @@ export function BusinessContent({ business, services, staff, hours, categories }
     setPillsCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
   }, []);
 
-  // Measure scroll state after mount and whenever pills change
-  useEffect(() => {
-    const raf = requestAnimationFrame(updatePillsScroll);
-    return () => cancelAnimationFrame(raf);
-  }, [pills, updatePillsScroll]);
-
   const scrollPills = useCallback((direction: 'left' | 'right') => {
     const el = pillsScrollRef.current;
     if (!el) return;
@@ -293,6 +287,12 @@ export function BusinessContent({ business, services, staff, hours, categories }
     ];
     return { visibleCategories, uncategorized, hasCategories, pills };
   }, [categories, services]);
+
+  // Measure scroll state after mount and whenever pills change
+  useEffect(() => {
+    const raf = requestAnimationFrame(updatePillsScroll);
+    return () => cancelAnimationFrame(raf);
+  }, [pills, updatePillsScroll]);
 
   const [activeCat, setActiveCat] = useState<string | null>(pills[0]?.id ?? null);
 
