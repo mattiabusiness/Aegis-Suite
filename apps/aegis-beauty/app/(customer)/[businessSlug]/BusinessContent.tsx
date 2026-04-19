@@ -235,7 +235,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
   const slug   = business.slug;
   const pillsScrollRef = useRef<HTMLDivElement>(null);
   const [pillsCanScrollLeft, setPillsCanScrollLeft]   = useState(false);
-  const [pillsCanScrollRight, setPillsCanScrollRight] = useState(true);
+  const [pillsCanScrollRight, setPillsCanScrollRight] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -252,6 +252,12 @@ export function BusinessContent({ business, services, staff, hours, categories }
     setPillsCanScrollLeft(el.scrollLeft > 4);
     setPillsCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
   }, []);
+
+  // Measure scroll state after mount and whenever pills change
+  useEffect(() => {
+    const raf = requestAnimationFrame(updatePillsScroll);
+    return () => cancelAnimationFrame(raf);
+  }, [pills, updatePillsScroll]);
 
   const scrollPills = useCallback((direction: 'left' | 'right') => {
     const el = pillsScrollRef.current;
@@ -700,6 +706,7 @@ export function BusinessContent({ business, services, staff, hours, categories }
                       display: 'flex', gap: 8, overflowX: 'auto',
                       paddingBottom: 4,
                       scrollbarWidth: 'none', msOverflowStyle: 'none',
+                      justifyContent: (pillsCanScrollLeft || pillsCanScrollRight) ? 'flex-start' : 'center',
                     }}
                   >
                     {pills.map(pill => {
