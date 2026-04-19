@@ -74,13 +74,12 @@ export async function POST(request: NextRequest) {
     if (staffUpdateErr) console.error('[staff/register] staff update error:', staffUpdateErr);
 
     await Promise.all([
-      // upsert instead of insert — idempotent, won't throw on duplicate key
-      admin.from('business_members').upsert({
+      admin.from('business_members').insert({
         user_id: created.user.id,
         business_id: staffCheck.business_id,
         role: 'staff',
         is_active: true,
-      }, { onConflict: 'user_id,business_id', ignoreDuplicates: false }),
+      }),
       admin.from('profiles').upsert({
         id: created.user.id,
         email: created.user.email,
