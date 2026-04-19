@@ -2,14 +2,13 @@
 // AEGIS BEAUTY - API INVITE BATCH CLIENTS
 // File: apps/aegis-beauty/app/api/clients/invite-batch/route.ts
 //
-// Invia inviti email di benvenuto ai clienti importati.
-// STUB: aggiorna invited_at nel DB e logga gli inviti.
-// Struttura pronta per aggiungere chiamata Resend in P3.
+// Invia inviti Supabase ai clienti importati (singolo o batch).
+// Stessa logica di /api/appointments/create → inviteUserByEmail.
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerSupabaseClient, getCurrentUser } from '@aegis/core';
+import { createServerSupabaseClient, getCurrentUser, createAdminSupabaseClient } from '@aegis/core';
 
 // ============================================================================
 // POST /api/clients/invite-batch
@@ -36,10 +35,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!member) {
-      return NextResponse.json(
-        { error: 'Permessi insufficienti.' },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: 'Permessi insufficienti.' }, { status: 403 });
     }
 
     const businessId: string = member.business_id;
@@ -55,68 +51,89 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Massimo 500 clienti per batch' }, { status: 400 });
     }
 
-    // ── 4. Verify customers belong to this business and have email ───────────
+    // ── 4. Fetch business info (needed for invite metadata) ──────────────────
+    const admin = createAdminSupabaseClient() as any;
+
+    const { data: business } = await admin
+      .from('businesses')
+      .select('name, slug')
+      .eq('id', businessId)
+      .single();
+
+    // ── 5. Fetch customers — only those with email and not yet registered ─────
     const { data: customers, error: fetchError } = await (supabase as any)
       .from('customers')
-      .select('id, full_name, email')
-      .eq('business_id', businessId)          // RLS: solo clienti del business
+      .select('id, full_name, email, phone')
+      .eq('business_id', businessId)
       .in('id', customerIds)
-      .not('email', 'is', null);              // Solo quelli con email
+      .not('email', 'is', null)
+      .is('user_id', null);  // Skip already-registered customers
 
     if (fetchError) {
-      console.error('[/api/clients/invite-batch] Fetch error:', fetchError);
+      console.error('[invite-batch] fetch error:', fetchError);
       return NextResponse.json({ error: 'Errore nel recupero clienti' }, { status: 500 });
     }
 
-    const validCustomers: Array<{ id: string; full_name: string; email: string }> =
+    const validCustomers: Array<{ id: string; full_name: string; email: string; phone: string | null }> =
       customers ?? [];
 
     if (validCustomers.length === 0) {
       return NextResponse.json({ sent: 0, failed: 0 });
     }
 
-    // ── 5. Update invited_at in DB ───────────────────────────────────────────
-    const invitedAt = new Date().toISOString();
-    const validIds = validCustomers.map((c) => c.id);
+    // ── 6. Send invites via Supabase inviteUserByEmail ───────────────────────
+    const appUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://aegisbeauty.app';
+    const redirectTo = `${appUrl}/auth/callback?type=invite`;
 
-    const { error: updateError } = await (supabase as any)
-      .from('customers')
-      .update({ invited_at: invitedAt, updated_at: invitedAt })
-      .in('id', validIds)
-      .eq('business_id', businessId);
+    let sent = 0;
+    let failed = 0;
+    const invitedIds: string[] = [];
 
-    if (updateError) {
-      console.error('[/api/clients/invite-batch] Update error:', updateError);
+    for (const customer of validCustomers) {
+      try {
+        const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
+          customer.email.toLowerCase(),
+          {
+            data: {
+              full_name: customer.full_name,
+              phone: customer.phone || '',
+              invited_by_business: businessId,
+              business_name: business?.name || '',
+              business_slug: business?.slug || '',
+              customer_id: customer.id,
+            },
+            redirectTo,
+          }
+        );
+
+        if (inviteError) {
+          console.error(`[invite-batch] invite error for ${customer.email}:`, inviteError);
+          failed++;
+        } else {
+          sent++;
+          invitedIds.push(customer.id);
+        }
+      } catch (err) {
+        console.error(`[invite-batch] unexpected error for ${customer.email}:`, err);
+        failed++;
+      }
     }
 
-    // ── 6. STUB: Log inviti (sostituire con Resend in P3) ───────────────────
-    //
-    // TODO P3: Replace with Resend email sending
-    //
-    // import { Resend } from 'resend';
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // for (const customer of validCustomers) {
-    //   await resend.emails.send({
-    //     from: 'Aegis Beauty <noreply@aegisbeauty.it>',
-    //     to: customer.email,
-    //     subject: 'Sei stato invitato su Aegis Beauty',
-    //     react: WelcomeEmailTemplate({ customerName: customer.full_name }),
-    //   });
-    // }
-    //
-    console.log(
-      `[invite-batch] Stub: ${validCustomers.length} inviti da inviare per business ${businessId}:`,
-      validCustomers.map((c) => `${c.full_name} <${c.email}>`),
-    );
+    // ── 7. Update invited_at only for successful sends ───────────────────────
+    if (invitedIds.length > 0) {
+      const invitedAt = new Date().toISOString();
+      await (supabase as any)
+        .from('customers')
+        .update({ invited_at: invitedAt, updated_at: invitedAt })
+        .in('id', invitedIds)
+        .eq('business_id', businessId);
+    }
 
-    const failed = customerIds.length - validCustomers.length;
+    const skipped = customerIds.length - validCustomers.length;
+    return NextResponse.json({ sent, failed, skipped });
 
-    return NextResponse.json({
-      sent: validCustomers.length,
-      failed,
-    });
   } catch (err) {
-    console.error('[/api/clients/invite-batch] Error:', err);
+    console.error('[invite-batch] Error:', err);
     return NextResponse.json({ error: 'Errore interno del server' }, { status: 500 });
   }
 }
