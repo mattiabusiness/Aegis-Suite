@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
   const rawNext = requestUrl.searchParams.get('next') ?? '';
   const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard';
 
-  // Se non c'è code ma c'è type=invite, è implicit flow — gestito lato client
+  // Implicit flow (no code, token in hash) — manda a /login, il browser preserva il hash
   if (!code && type === 'invite') {
-    return NextResponse.redirect(new URL('/register?from_invite=true', request.url));
+    return NextResponse.redirect(new URL('/login?mode=register', request.url));
   }
 
   if (code) {

@@ -87,13 +87,13 @@ function LoginContent() {
     return 'login';
   });
 
-  // Process invite — handles both PKCE (URL params) and implicit (URL hash) flows,
-  // plus session-already-set fallback when redirect params are missing.
+  // Detect invite session — runs on every mount regardless of URL params.
+  // Covers: PKCE flow, implicit flow, and any redirect chain that loses params.
   useEffect(() => {
     const process = async () => {
       if (typeof window === 'undefined') return;
 
-      // ── 1. Implicit flow: access_token in hash ──
+      // ── 1. Implicit flow: access_token in URL hash ──
       if (window.location.hash) {
         const hash = window.location.hash.substring(1);
         const p = new URLSearchParams(hash);
@@ -119,26 +119,23 @@ function LoginContent() {
         }
       }
 
-      // ── 2. PKCE flow: URL params already set (inviteData initialized from searchParams).
-      //    If invite=true is in URL and name/email are already populated, nothing to do.
+      // ── 2. PKCE flow: params in URL, already loaded into inviteData via useState init ──
       if (searchParams.get('invite') === 'true' && searchParams.get('email')) return;
 
-      // ── 3. Fallback: session already active (PKCE redirect happened but params got lost).
-      //    Read metadata directly from the authenticated session.
-      if (searchParams.get('invite') === 'true' || searchParams.get('mode') === 'register') {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.user_metadata?.invited_by_business) {
-            const m = user.user_metadata;
-            setInviteData({
-              isInvite: true, isStaffInvite: false, staffId: '',
-              name: m.full_name || '', email: user.email || '',
-              phone: m.phone || '', businessName: m.business_name || '', businessSlug: m.business_slug || '',
-            });
-            setInitialMode('register');
-          }
-        } catch { /* silently ignore */ }
-      }
+      // ── 3. Universal fallback: check active session metadata regardless of URL params.
+      //    This fires even if the redirect chain lost all params.
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.user_metadata?.invited_by_business) {
+          const m = user.user_metadata;
+          setInviteData({
+            isInvite: true, isStaffInvite: false, staffId: '',
+            name: m.full_name || '', email: user.email || '',
+            phone: m.phone || '', businessName: m.business_name || '', businessSlug: m.business_slug || '',
+          });
+          setInitialMode('register');
+        }
+      } catch { /* silently ignore */ }
     };
     process();
   }, [supabase, searchParams]);

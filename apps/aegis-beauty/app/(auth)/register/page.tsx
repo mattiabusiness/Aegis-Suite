@@ -13,9 +13,10 @@ import { useEffect } from 'react';
 export default function RegisterPage() {
   useEffect(() => {
     // Read params from window.location — always accurate, no hydration timing issues
+    // Preserve hash so implicit flow (access_token in hash) survives the redirect
     const params = new URLSearchParams(window.location.search);
     params.set('mode', 'register');
-    window.location.replace(`/login?${params.toString()}`);
+    window.location.replace(`/login?${params.toString()}${window.location.hash}`);
   }, []);
 
   return null;
