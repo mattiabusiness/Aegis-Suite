@@ -299,19 +299,16 @@ export async function getCustomerByUserId(
   userId: string,
   businessId: string
 ) {
-  try {
-    const { data } = await supabase
-      .from('customers')
-      .select('id, user_id, business_id, full_name, email, phone, is_active, created_at, last_visit_at, total_visits, total_spent, notes, tags, preferences')
-      .eq('user_id', userId)
-      .eq('business_id', businessId)
-      .eq('is_active', true)
-      .single();
+  const { data, error } = await supabase
+    .from('customers')
+    .select('id, user_id, business_id, full_name, email, phone, is_active, created_at, last_visit_at, total_visits, total_spent, notes, tags, preferences')
+    .eq('user_id', userId)
+    .eq('business_id', businessId)
+    .eq('is_active', true)
+    .maybeSingle();
 
-    return data ?? null;
-  } catch {
-    return null;
-  }
+  if (error) console.error('[getCustomerByUserId] error:', JSON.stringify(error));
+  return data ?? null;
 }
 
 // ============================================================================

@@ -26,14 +26,14 @@ Senior Full-Stack Developer e UI/UX Architect di Aegis Suite.
 - Importatore universale clienti (Excel/CSV)
 - Interfaccia Cliente (3 pagine)
 - Responsive fatto 
-
+- Performance codice fatta
+- Sicurezza fatta
 ### IN CORSO:
-Security Audit    
+Finire PWA e sistema di notifiche
+
    
 ### DA FARE (in ordine): 
-Inserire Toggle ON/OFF per visibilità pagina pubblica business, nelle impostazioni gestore (default: ON)
-Inserire altre due piccole features
-Finire PWA e sistema di notifiche
+Test end to end di tutto
 
 ---
 

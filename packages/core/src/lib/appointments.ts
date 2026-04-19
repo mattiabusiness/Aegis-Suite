@@ -6,10 +6,16 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = any;
 
+// Customer-facing select: exclude private staff/internal notes
 const APPOINTMENT_SELECT = `
-  *,
+  id, business_id, customer_id, staff_id,
+  start_time, end_time, status,
+  customer_notes, cancelled_at, cancellation_reason,
+  confirmed_at, completed_at, total_price, deposit_paid,
+  payment_status, booked_online, source, reminder_sent_at,
+  created_at, updated_at,
   customers!inner(full_name, email, phone),
-  staff!inner(full_name, nickname),
+  staff(full_name, nickname),
   appointment_services(service_id, service_name, duration_minutes, price)
 `;
 

@@ -67,12 +67,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Create response to pass through
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  // Create response to pass through (official Supabase SSR pattern — passes full request
+  // so cookie updates in setAll are forwarded to downstream Server Components)
+  let response = NextResponse.next({ request });
 
   // Create Supabase client with cookie handling
   const supabase = createServerClient(
@@ -88,12 +85,8 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
-          // Re-create response with updated request headers
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
+          // Re-create response with updated request (reflects the mutated cookies)
+          response = NextResponse.next({ request });
           // Set cookies on response (for browser)
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
