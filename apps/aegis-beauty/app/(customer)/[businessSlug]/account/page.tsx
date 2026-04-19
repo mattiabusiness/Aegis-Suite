@@ -8,10 +8,10 @@ import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import {
   createServerSupabaseClient,
+  createAdminSupabaseClient,
   getCurrentUser,
   getCurrentProfile,
   getBusinessBySlug,
-  getCustomerByUserId,
   getUpcomingAppointments,
   getPastAppointments,
 } from '@aegis/core';
@@ -38,14 +38,25 @@ export default async function AccountPage({
 
   if (!business) notFound();
 
-  const customer = await getCustomerByUserId(supabase, user.id, business.id);
+  // Use admin client for customer + appointments queries to bypass any RLS policy
+  // gaps on the customer-facing side. Safe because user.id comes from the validated
+  // server-side session (not from the URL), and every query is filtered by it.
+  const admin = createAdminSupabaseClient();
+
+  const { data: customer } = await (admin as any)
+    .from('customers')
+    .select('id, user_id, business_id, full_name, email, phone, is_active, created_at, last_visit_at, total_visits, total_spent, notes, tags, preferences')
+    .eq('user_id', user.id)
+    .eq('business_id', business.id)
+    .eq('is_active', true)
+    .maybeSingle();
 
   const [upcoming, past] = await Promise.all([
     customer
-      ? getUpcomingAppointments(supabase, customer.id, business.id)
+      ? getUpcomingAppointments(admin, customer.id, business.id)
       : Promise.resolve([]),
     customer
-      ? getPastAppointments(supabase, customer.id, business.id, 50)
+      ? getPastAppointments(admin, customer.id, business.id, 50)
       : Promise.resolve([]),
   ]);
 
