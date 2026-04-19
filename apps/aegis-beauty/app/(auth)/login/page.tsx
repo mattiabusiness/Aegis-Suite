@@ -311,6 +311,8 @@ function LoginContent() {
       brandName="Aegis"
       brandSubtitle="Beauty"
       logo={<AegisLogo />}
+      termsHref={inviteData.isStaffInvite ? 'https://aegisbeauty.app/legal#terms-staff' : 'https://aegisbeauty.app/legal#terms-customer'}
+      privacyHref={inviteData.isStaffInvite ? 'https://aegisbeauty.app/legal#privacy-staff' : 'https://aegisbeauty.app/legal#privacy-customer'}
       loginWelcomeTitle="Bentornato!"
       loginWelcomeSubtitle="Accedi per gestire i tuoi appuntamenti"
       registerWelcomeTitle="Benvenuto!"

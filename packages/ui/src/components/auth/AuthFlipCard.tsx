@@ -40,6 +40,8 @@ export interface AuthFlipCardProps {
   loginWelcomeSubtitle?: string;
   registerWelcomeTitle?: string;
   registerWelcomeSubtitle?: string;
+  termsHref?: string;
+  privacyHref?: string;
 }
 
 export interface AuthFlipRegisterData {
@@ -140,6 +142,8 @@ export function AuthFlipCard({
   loginWelcomeSubtitle = 'Accedi per gestire il tuo business',
   registerWelcomeTitle = 'Benvenuto!',
   registerWelcomeSubtitle = 'Registrati per iniziare la tua avventura',
+  termsHref = 'https://aegisbeauty.app/legal#terms-customer',
+  privacyHref = 'https://aegisbeauty.app/legal#privacy-customer',
 }: AuthFlipCardProps) {
 
   const [internalMode, setInternalMode] = React.useState<'login' | 'register'>(initialMode);
@@ -337,7 +341,7 @@ export function AuthFlipCard({
                 <label className="afc-check">
                   <input type="checkbox" checked={regTerms} onChange={e => setRegTerms(e.target.checked)} className="afc-checkbox" />
                   <span className="afc-check-text">
-                    Accetto i <a href="https://aegisbeauty.app/legal#terms-customer" target="_blank" rel="noopener noreferrer" className="afc-a">Termini</a> e la <a href="https://aegisbeauty.app/legal#privacy-customer" target="_blank" rel="noopener noreferrer" className="afc-a">Privacy Policy</a>
+                    Accetto i <a href={termsHref} target="_blank" rel="noopener noreferrer" className="afc-a">Termini</a> e la <a href={privacyHref} target="_blank" rel="noopener noreferrer" className="afc-a">Privacy Policy</a>
                   </span>
                 </label>
                 <button type="submit" disabled={regLoading} className="afc-btn" onClick={doRipple}>

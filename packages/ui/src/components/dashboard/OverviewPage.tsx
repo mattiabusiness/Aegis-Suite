@@ -276,7 +276,7 @@ function QuickLinkCard({ slug, onQrClick }: { slug: string; onQrClick: () => voi
             onClick={handleCopy}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium"
             style={{
-              background: copied ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
+              background: copied ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #7c3aed, #a855f7)',
               color: '#fff',
               border: '1px solid transparent',
               boxShadow: copied ? '0 2px 8px rgba(5,150,105,0.25)' : '0 2px 8px rgba(147,51,234,0.25)',

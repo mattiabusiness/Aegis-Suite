@@ -158,10 +158,10 @@ export function QRCodeDisplay({
               onClick={handleCopy}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium"
               style={{
-                background: copied ? 'rgba(16,185,129,0.08)' : 'linear-gradient(135deg, #9333ea, #7c3aed)',
-                color: copied ? '#059669' : '#fff',
-                border: copied ? '1px solid rgba(16,185,129,0.2)' : '1px solid transparent',
-                boxShadow: copied ? 'none' : '0 2px 8px rgba(147,51,234,0.25)',
+                background: copied ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                color: '#fff',
+                border: '1px solid transparent',
+                boxShadow: copied ? '0 2px 8px rgba(16,185,129,0.25)' : '0 2px 8px rgba(147,51,234,0.25)',
                 transition: 'all 0.2s ease',
               }}
             >
