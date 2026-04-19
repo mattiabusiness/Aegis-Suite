@@ -65,28 +65,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Inline setup — admin client bypasses RLS, no session cookie needed.
-    // Update staff row: set user_id AND email (email may be null if manager
-    // created the staff record without filling it in — isIncomplete checks both).
+    //
+    // ORDER MATTERS: staff.user_id (and customers.user_id) has a FK constraint
+    // that references profiles(id). The profile row must exist before we can
+    // set user_id on staff — otherwise the FK check fails silently.
+    //
+    // Step 1: upsert profile first
+    await admin.from('profiles').upsert({
+      id: created.user.id,
+      email: created.user.email,
+      full_name: fullName || '',
+      phone: phone || null,
+    }, { onConflict: 'id' });
+
+    // Step 2: now safe to set staff.user_id (profile exists → FK satisfied)
     const { error: staffUpdateErr } = await admin
       .from('staff')
       .update({ user_id: created.user.id, email: email.toLowerCase() })
       .eq('id', staffId);
     if (staffUpdateErr) console.error('[staff/register] staff update error:', staffUpdateErr);
 
-    await Promise.all([
-      admin.from('business_members').insert({
-        user_id: created.user.id,
-        business_id: staffCheck.business_id,
-        role: 'staff',
-        is_active: true,
-      }),
-      admin.from('profiles').upsert({
-        id: created.user.id,
-        email: created.user.email,
-        full_name: fullName || '',
-        phone: phone || null,
-      }, { onConflict: 'id' }),
-    ]);
+    // Step 3: insert business_members (also references profiles via user_id)
+    await admin.from('business_members').insert({
+      user_id: created.user.id,
+      business_id: staffCheck.business_id,
+      role: 'staff',
+      is_active: true,
+    });
 
     return NextResponse.json({ success: true });
 

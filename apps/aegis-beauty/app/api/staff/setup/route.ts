@@ -53,7 +53,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Staff non trovato' }, { status: 404 });
     }
 
-    // Link staff.user_id
+    // Profile must exist before setting staff.user_id — FK constraint order.
+    await adminClient.from('profiles').upsert({
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name || '',
+      phone: user.user_metadata?.phone || null,
+    }, { onConflict: 'id' });
+
+    // Link staff.user_id (profile now exists → FK satisfied)
     await adminClient.from('staff').update({ user_id: user.id }).eq('id', staffRecord.id);
 
     // Create business_members row — ignore if already exists (idempotent)
@@ -66,14 +74,6 @@ export async function POST(request: NextRequest) {
     if (memberErr && !memberErr.message.includes('duplicate')) {
       console.error('[Setup API] business_members insert error:', memberErr.message);
     }
-
-    // Upsert profile
-    await adminClient.from('profiles').upsert({
-      id: user.id,
-      email: user.email,
-      full_name: user.user_metadata?.full_name || '',
-      phone: user.user_metadata?.phone || null,
-    }, { onConflict: 'id' });
 
     return NextResponse.json({
       businessId: staffRecord.business_id,
