@@ -695,16 +695,29 @@ export function StaffHoursModal({
   isOpen, onClose, onSave, staffName, businessHours, currentHours, useBusinessHours: initialUseBusinessHours, error,
 }: StaffHoursModalProps) {
   const [useBusinessHrs, setUseBusinessHrs] = React.useState(initialUseBusinessHours);
-  const [hours, setHours] = React.useState<DayHours[]>(currentHours || businessHours);
+  const [hours, setHours] = React.useState<DayHours[]>(currentHours?.length ? currentHours : businessHours);
   const [loading, setLoading] = React.useState(false);
   const SEL_W = 'w-[70px]';
 
+  // Refs to always read latest props inside the isOpen effect without adding
+  // them to the dependency array (avoids spurious resets when parent re-renders
+  // and businessHoursForModal gets a new array reference).
+  const currentHoursRef = React.useRef(currentHours);
+  const businessHoursRef = React.useRef(businessHours);
+  const initialModeRef = React.useRef(initialUseBusinessHours);
+  currentHoursRef.current = currentHours;
+  businessHoursRef.current = businessHours;
+  initialModeRef.current = initialUseBusinessHours;
+
   React.useEffect(() => {
     if (isOpen) {
-      setUseBusinessHrs(initialUseBusinessHours);
-      setHours(currentHours?.length ? currentHours : businessHours);
+      const ch = currentHoursRef.current;
+      const bh = businessHoursRef.current;
+      setUseBusinessHrs(initialModeRef.current);
+      setHours(ch?.length ? ch : bh);
     }
-  }, [isOpen, initialUseBusinessHours, currentHours, businessHours]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const updateDay = (index: number, field: keyof DayHours, value: string | boolean) => {
     setHours(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
@@ -750,7 +763,16 @@ export function StaffHoursModal({
                 border: `1px solid ${useBusinessHrs ? 'rgba(168,85,247,0.15)' : 'rgba(0,0,0,0.06)'}`,
                 transition: 'all 0.2s ease',
               }}
-              onClick={() => setUseBusinessHrs(!useBusinessHrs)}
+              onClick={() => {
+                const next = !useBusinessHrs;
+                setUseBusinessHrs(next);
+                // Switching to custom: pre-fill with saved staff hours or business hours as template
+                if (!next) {
+                  const ch = currentHoursRef.current;
+                  const bh = businessHoursRef.current;
+                  setHours(ch?.length ? ch : bh);
+                }
+              }}
             >
               <div>
                 <p className="text-sm font-medium text-gray-900">Usa orari del negozio</p>
