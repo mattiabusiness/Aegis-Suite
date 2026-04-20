@@ -67,6 +67,23 @@ export interface DayHours {
   closeTime2?: string;
 }
 
+// Default template used when business hours are not yet configured
+const DEFAULT_WEEK: DayHours[] = [
+  { dayOfWeek: 'monday',    dayLabel: 'Lunedì',    isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'tuesday',   dayLabel: 'Martedì',   isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'wednesday', dayLabel: 'Mercoledì', isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'thursday',  dayLabel: 'Giovedì',   isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'friday',    dayLabel: 'Venerdì',   isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'saturday',  dayLabel: 'Sabato',    isOpen: true,  openTime1: '09:00', closeTime1: '13:00' },
+  { dayOfWeek: 'sunday',    dayLabel: 'Domenica',  isOpen: false },
+];
+
+function resolveHours(custom: DayHours[] | undefined, business: DayHours[]): DayHours[] {
+  if (custom?.length) return custom;
+  if (business?.length) return business;
+  return DEFAULT_WEEK;
+}
+
 export interface StaffHoursModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -695,7 +712,7 @@ export function StaffHoursModal({
   isOpen, onClose, onSave, staffName, businessHours, currentHours, useBusinessHours: initialUseBusinessHours, error,
 }: StaffHoursModalProps) {
   const [useBusinessHrs, setUseBusinessHrs] = React.useState(initialUseBusinessHours);
-  const [hours, setHours] = React.useState<DayHours[]>(currentHours?.length ? currentHours : businessHours);
+  const [hours, setHours] = React.useState<DayHours[]>(() => resolveHours(currentHours, businessHours));
   const [loading, setLoading] = React.useState(false);
   const SEL_W = 'w-[70px]';
 
@@ -714,7 +731,7 @@ export function StaffHoursModal({
       const ch = currentHoursRef.current;
       const bh = businessHoursRef.current;
       setUseBusinessHrs(initialModeRef.current);
-      setHours(ch?.length ? ch : bh);
+      setHours(resolveHours(ch, bh));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -766,11 +783,10 @@ export function StaffHoursModal({
               onClick={() => {
                 const next = !useBusinessHrs;
                 setUseBusinessHrs(next);
-                // Switching to custom: pre-fill with saved staff hours or business hours as template
+                // Switching to custom: pre-fill with saved staff hours (if any), then
+                // business hours as template, then built-in default week
                 if (!next) {
-                  const ch = currentHoursRef.current;
-                  const bh = businessHoursRef.current;
-                  setHours(ch?.length ? ch : bh);
+                  setHours(resolveHours(currentHoursRef.current, businessHoursRef.current));
                 }
               }}
             >
