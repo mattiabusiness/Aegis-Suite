@@ -58,7 +58,13 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (password: string) => {
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) throw new Error(error.message);
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('different from the old password') || msg.includes('same as the old password')) {
+        throw new Error('La nuova password deve essere diversa da quella attuale.');
+      }
+      throw new Error(error.message);
+    }
     // After success the card shows the success state,
     // then the user clicks "Vai al login" → onBackToLogin
   };
