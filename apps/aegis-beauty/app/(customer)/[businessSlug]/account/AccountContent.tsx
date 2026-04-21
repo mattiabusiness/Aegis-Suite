@@ -238,7 +238,7 @@ function GlassPasswordInput({ label, value, onChange, placeholder }: {
           position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
           background: 'none', border: 'none', cursor: 'pointer', padding: 0,
         }}>
-          {show ? <EyeOff style={{ width: 15, height: 15, color: '#9ca3af' }} /> : <Eye style={{ width: 15, height: 15, color: '#9ca3af' }} />}
+          {show ? <Eye style={{ width: 15, height: 15, color: '#9ca3af' }} /> : <EyeOff style={{ width: 15, height: 15, color: '#9ca3af' }} />}
         </button>
       </div>
     </div>
