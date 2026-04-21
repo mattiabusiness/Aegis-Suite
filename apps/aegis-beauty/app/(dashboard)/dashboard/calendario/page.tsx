@@ -104,6 +104,10 @@ export default async function CalendarioPage() {
   // TRANSFORM DATA
   // ========================================================================
 
+  const bizData = businessResult.data as { shampoo_price: number; business_type: string | null } | null;
+  const shampooPrice = bizData?.shampoo_price ?? 3;
+  const businessType = bizData?.business_type ?? 'mixed';
+
   // Events
   const events: CalendarEventData[] = (appointmentsResult.data || []).map((a: Record<string, unknown>) => {
     const customer = a.customer as { full_name: string } | null;
@@ -173,9 +177,6 @@ export default async function CalendarioPage() {
     staffServicesMap[s.id] = (s.staff_services || []).map(ss => ss.service_id);
   }
 
-  const bizData = businessResult.data as { shampoo_price: number; business_type: string | null } | null;
-  const shampooPrice = bizData?.shampoo_price ?? 3;
-  const businessType = bizData?.business_type ?? 'mixed';
 
   return (
     <CalendarioContent
