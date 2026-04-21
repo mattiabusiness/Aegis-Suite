@@ -365,8 +365,8 @@ export function Step1Front({ business, services, staff, categories, bookingState
         </div>
       </div>
 
-      {/* Shampoo toggle */}
-      <div
+      {/* Shampoo toggle — solo hair_salon */}
+      {business.business_type === 'hair_salon' && <div
         onClick={e => { e.stopPropagation(); onUpdate({ includeShampoo: !bookingState.includeShampoo }); }}
         style={{
           display: 'flex', alignItems: 'center', gap: 10,
@@ -404,7 +404,7 @@ export function Step1Front({ business, services, staff, categories, bookingState
             )}
           </div>
         </div>
-      </div>
+      </div>}
 
       <div style={{ marginTop: 8 }}>
         <PrimaryButton disabled={!canNext} onClick={() => { if (canNext) onNext(); }}>

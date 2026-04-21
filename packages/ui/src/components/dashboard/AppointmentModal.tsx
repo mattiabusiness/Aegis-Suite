@@ -125,6 +125,8 @@ export interface AppointmentModalProps {
   onCustomerSearch?: (query: string) => Promise<Customer[]>;
   /** Prezzo shampoo del business (default 2) */
   shampooPrice?: number;
+  /** Tipo di business — shampoo visibile solo per hair_salon */
+  businessType?: string;
 }
 
 // ============================================================================
@@ -843,7 +845,7 @@ export function AppointmentModal({
   initialDate, initialTime, initialStaffId, initialCustomerId,
   isLoading = false, labels: customLabels,
   availableSlots, slotsLoading = false, slotsError, onSlotsNeeded,
-  lockedStaffId, allowedStaffIds, onCustomerSearch, shampooPrice,
+  lockedStaffId, allowedStaffIds, onCustomerSearch, shampooPrice, businessType,
 }: AppointmentModalProps) {
   const labels = { ...defaultLabels, ...customLabels };
   const timeSlots = React.useMemo(() => generateTimeSlots(), []);
@@ -1621,8 +1623,8 @@ export function AppointmentModal({
               {errors.time && <p className="text-xs" style={{ color: '#dc2626' }}>* {errors.time}</p>}
             </div>
 
-            {/* ── SHAMPOO ── */}
-            <div className="space-y-1.5">
+            {/* ── SHAMPOO ── solo hair_salon */}
+            {businessType === 'hair_salon' && <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                 <Droplets className="w-4 h-4" style={{ color: '#9333ea' }} />Shampoo
               </label>
@@ -1666,7 +1668,7 @@ export function AppointmentModal({
                   />
                 </button>
               </div>
-            </div>
+            </div>}
 
             {/* ── NOTES ── */}
             <div className="space-y-1.5">

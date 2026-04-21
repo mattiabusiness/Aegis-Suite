@@ -19,6 +19,7 @@ export interface BookingBusiness {
   cancellation_policy_hours: number;
   description:               string | null;
   shampoo_price?:            number;
+  business_type?:            string | null;
 }
 
 export interface BookingService {

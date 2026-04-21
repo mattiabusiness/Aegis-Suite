@@ -51,6 +51,7 @@ interface CalendarioContentProps {
   services: Service[];
   staffServices: StaffServicesMap;
   shampooPrice: number;
+  businessType: string;
 }
 
 // ============================================================================
@@ -110,6 +111,7 @@ export function CalendarioContent({
   services: initialServices,
   staffServices: initialStaffServices,
   shampooPrice,
+  businessType,
 }: CalendarioContentProps) {
   const supabase = useMemo(() => createClient(), []);
   const permissions = useStaffPermissions();
@@ -1023,6 +1025,7 @@ export function CalendarioContent({
           submit: 'Crea appuntamento',
         }}
         shampooPrice={shampooPrice}
+        businessType={businessType}
       />
 
       <style>{`

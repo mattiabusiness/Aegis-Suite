@@ -91,10 +91,10 @@ export default async function CalendarioPage() {
       .eq('is_active', true)
       .order('display_order'),
 
-    // Business shampoo price
+    // Business shampoo price + type
     supabase
       .from('businesses')
-      .select('shampoo_price')
+      .select('shampoo_price, business_type')
       .eq('id', businessId)
       .single(),
 
@@ -171,7 +171,9 @@ export default async function CalendarioPage() {
     staffServicesMap[s.id] = (s.staff_services || []).map(ss => ss.service_id);
   }
 
-  const shampooPrice = (businessResult.data as { shampoo_price: number } | null)?.shampoo_price ?? 3;
+  const bizData = businessResult.data as { shampoo_price: number; business_type: string | null } | null;
+  const shampooPrice = bizData?.shampoo_price ?? 3;
+  const businessType = bizData?.business_type ?? 'mixed';
 
   return (
     <CalendarioContent
@@ -183,6 +185,7 @@ export default async function CalendarioPage() {
       services={services}
       staffServices={staffServicesMap}
       shampooPrice={shampooPrice}
+      businessType={businessType}
     />
   );
 }

@@ -53,6 +53,7 @@ interface ServiziContentProps {
   initialCategories: CategoryData[];
   businessId: string;
   shampooPrice: number;
+  businessType: string;
 }
 
 // ============================================================================
@@ -64,6 +65,7 @@ export function ServiziContent({
   initialCategories,
   businessId,
   shampooPrice: initialShampooPrice,
+  businessType,
 }: ServiziContentProps) {
   const router = useRouter();
   const supabase = createClient();
@@ -442,8 +444,8 @@ export function ServiziContent({
           <style>{`@keyframes sl-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
         </div>
 
-        {/* Shampoo service — sempre visibile; titolare può modificare prezzo, staff solo lettura */}
-        <div
+        {/* Shampoo service — solo hair_salon; titolare può modificare prezzo, staff solo lettura */}
+        {businessType === 'hair_salon' && <div
           className="mb-6 rounded-2xl border overflow-hidden"
           style={{
             background: 'linear-gradient(135deg, rgba(168,85,247,0.06) 0%, rgba(124,58,237,0.04) 100%)',
@@ -540,7 +542,7 @@ export function ServiziContent({
               )}
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* Content */}
         <div className="mt-6 pb-8">

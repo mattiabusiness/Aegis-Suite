@@ -90,14 +90,15 @@ export default async function ServiziPage() {
     ? (allCategories || []).filter(c => usedCategoryIds.has(c.id))
     : (allCategories || []);
 
-  // Fetch shampoo price
+  // Fetch shampoo price + business type
   const { data: businessData } = await supabase
     .from('businesses')
-    .select('shampoo_price')
+    .select('shampoo_price, business_type')
     .eq('id', businessId)
-    .single() as { data: { shampoo_price: number } | null };
+    .single() as { data: { shampoo_price: number; business_type: string | null } | null };
 
   const shampooPrice = businessData?.shampoo_price ?? 3;
+  const businessType = businessData?.business_type ?? 'mixed';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (
@@ -106,6 +107,7 @@ export default async function ServiziPage() {
       initialCategories={categories as unknown as any[]}
       businessId={businessId}
       shampooPrice={shampooPrice}
+      businessType={businessType}
     />
   );
 }
