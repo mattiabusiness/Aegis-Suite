@@ -107,9 +107,14 @@ export async function middleware(request: NextRequest) {
 
   // ── Authenticated user on public routes → redirect to dashboard ──
   // Exception: staff invite QR links must pass through so the staff can register
+  // Exception: /reset-password must always be accessible — the recovery link itself
+  //   establishes the session via exchangeCodeForSession, so the user will be
+  //   "authenticated" the moment they land there. Redirecting them away would break
+  //   the flow before they can set their new password.
   const isStaffInvite = request.nextUrl.searchParams.get('staff_invite') === 'true';
   const hasNoAccess = request.nextUrl.searchParams.get('reason') === 'no_access';
-  if (isAuthenticated && isPublicRoute && !isStaffInvite && !hasNoAccess) {
+  const isResetPassword = pathname.startsWith('/reset-password');
+  if (isAuthenticated && isPublicRoute && !isStaffInvite && !hasNoAccess && !isResetPassword) {
     const url = request.nextUrl.clone();
     const rawRedirect = request.nextUrl.searchParams.get('redirect') ?? '';
     // Only honor relative paths that start with / but not // (prevents open redirect)
