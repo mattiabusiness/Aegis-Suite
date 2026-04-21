@@ -111,6 +111,9 @@ export function ResetPasswordCard({
   const [showPwd, setShowPwd] = React.useState(false);
   const [showConfirm, setShowConfirm] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [shake, setShake] = React.useState(false);
+
+  const doShake = () => { setShake(true); setTimeout(() => setShake(false), 450); };
 
   const accent = accentColor;
   const accentDark = '#7e22ce';
@@ -156,8 +159,8 @@ export function ResetPasswordCard({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (password.length < 8) { setError('La password deve essere di almeno 8 caratteri'); return; }
-    if (password !== confirm) { setError('Le password non corrispondono'); return; }
+    if (password.length < 8) { setError('La password deve essere di almeno 8 caratteri'); doShake(); return; }
+    if (password !== confirm) { setError('Le password non corrispondono'); doShake(); return; }
     setPageState('submitting');
     try {
       await onSubmit(password);
@@ -165,6 +168,7 @@ export function ResetPasswordCard({
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Errore durante il salvataggio. Riprova.');
       setPageState('ready');
+      doShake();
     }
   };
 
@@ -237,7 +241,7 @@ export function ResetPasswordCard({
     // ready | submitting
     const isSubmitting = pageState === 'submitting';
     return (
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={handleSubmit} noValidate className={shake ? 'rp-shake' : ''}>
         <div style={{ marginBottom: '1.25rem' }}>
           <div style={{ color: '#374151', fontWeight: 600, fontSize: '0.95rem', marginBottom: 4 }}>
             Nuova password
@@ -320,7 +324,7 @@ export function ResetPasswordCard({
 
         {error && (
           <div style={{ color: '#ef4444', fontSize: '0.8rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span>⚠</span> {error}
+            {error}
           </div>
         )}
 
@@ -391,6 +395,10 @@ export function ResetPasswordCard({
 
       <style>{`
         @keyframes rp-spin { to { transform: rotate(360deg); } }
+        .rp-shake { animation: rp-shk 0.45s ease-in-out; }
+        @keyframes rp-shk {
+          0%,100%{transform:translateX(0)} 15%,55%,85%{transform:translateX(-5px)} 35%,75%{transform:translateX(5px)}
+        }
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear { display: none; }
         input[type="password"]::-webkit-contacts-auto-fill-button,
