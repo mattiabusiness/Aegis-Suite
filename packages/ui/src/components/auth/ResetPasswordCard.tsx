@@ -391,6 +391,10 @@ export function ResetPasswordCard({
 
       <style>{`
         @keyframes rp-spin { to { transform: rotate(360deg); } }
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear { display: none; }
+        input[type="password"]::-webkit-contacts-auto-fill-button,
+        input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidden; display: none !important; }
       `}</style>
     </div>
   );
