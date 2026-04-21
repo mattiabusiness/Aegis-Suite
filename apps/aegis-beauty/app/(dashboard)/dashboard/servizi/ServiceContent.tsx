@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Droplets, Trash2 } from 'lucide-react';
@@ -87,6 +87,11 @@ export function ServiziContent({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<ServiceData | null>(null);
   const [deleteCategoryConfirm, setDeleteCategoryConfirm] = useState<CategoryData | null>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = (deleteConfirm || deleteCategoryConfirm) ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [deleteConfirm, deleteCategoryConfirm]);
 
   // Transform data for ServiceList component
   const serviceItems: ServiceItem[] = services.map(s => ({

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -103,7 +103,12 @@ export function StaffContent({
   const [error, setError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<StaffData | null>(null);
-  
+
+  useEffect(() => {
+    document.body.style.overflow = deleteConfirm ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [deleteConfirm]);
+
   // QR Code state
   const [qrCodeData, setQrCodeData] = useState<{
     isOpen: boolean;
