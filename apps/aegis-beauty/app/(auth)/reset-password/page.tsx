@@ -34,12 +34,21 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const handleSetSession = async ({ accessToken, refreshToken }: { accessToken: string; refreshToken: string }) => {
-    const { error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    return !error;
+  const handleSetSession = async ({ code, accessToken, refreshToken }: { code?: string; accessToken?: string; refreshToken?: string }) => {
+    if (code) {
+      // PKCE flow (default with @supabase/ssr): exchange code for session
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      return !error;
+    }
+    if (accessToken) {
+      // Implicit flow fallback
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || '',
+      });
+      return !error;
+    }
+    return false;
   };
 
   const handleSubmit = async (password: string) => {

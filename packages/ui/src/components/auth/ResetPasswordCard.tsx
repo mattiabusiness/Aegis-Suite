@@ -20,12 +20,12 @@ export interface ResetPasswordCardProps {
    */
   onSubmit: (password: string) => Promise<void>;
   /**
-   * Called to set the Supabase session from the hash tokens.
-   * Receives { accessToken, refreshToken }.
-   * Should call supabase.auth.setSession({ access_token, refresh_token }).
+   * Called to establish the Supabase session from the URL.
+   * With PKCE flow (default): receives { code } — call exchangeCodeForSession(code).
+   * With implicit flow: receives { accessToken, refreshToken } — call setSession(...).
    * Return true on success, false on failure.
    */
-  onSetSession: (tokens: { accessToken: string; refreshToken: string }) => Promise<boolean>;
+  onSetSession: (tokens: { code?: string; accessToken?: string; refreshToken?: string }) => Promise<boolean>;
   onBackToLogin?: () => void;
   accentColor?: string;
   logo?: React.ReactNode;
@@ -116,27 +116,38 @@ export function ResetPasswordCard({
   const accentDark = '#7e22ce';
   const strength = getStrength(password);
 
-  // On mount: parse URL hash, set Supabase session
+  // On mount: detect PKCE (?code=) or implicit (#type=recovery) token, establish session
   React.useEffect(() => {
     const init = async () => {
       if (typeof window === 'undefined') return;
 
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const type = params.get('type');
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token') || '';
-
-      if (type !== 'recovery' || !accessToken) {
-        setPageState('invalid');
+      // ── 1. PKCE flow: ?code= in query string (default with @supabase/ssr) ──
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get('code');
+      if (code) {
+        // Remove code from URL immediately (security)
+        window.history.replaceState(null, '', window.location.pathname);
+        const ok = await onSetSession({ code });
+        setPageState(ok ? 'ready' : 'invalid');
         return;
       }
 
-      // Clear the hash from the URL (security: don't keep tokens in address bar)
-      window.history.replaceState(null, '', window.location.pathname);
+      // ── 2. Implicit flow: #type=recovery&access_token= in hash ──
+      const hash = window.location.hash.substring(1);
+      const hashParams = new URLSearchParams(hash);
+      const type = hashParams.get('type');
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token') || '';
 
-      const ok = await onSetSession({ accessToken, refreshToken });
-      setPageState(ok ? 'ready' : 'invalid');
+      if (type === 'recovery' && accessToken) {
+        window.history.replaceState(null, '', window.location.pathname);
+        const ok = await onSetSession({ accessToken, refreshToken });
+        setPageState(ok ? 'ready' : 'invalid');
+        return;
+      }
+
+      // Nothing found
+      setPageState('invalid');
     };
     init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
