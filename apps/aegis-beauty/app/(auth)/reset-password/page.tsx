@@ -51,6 +51,11 @@ export default function ResetPasswordPage() {
     return false;
   };
 
+  const handleCheckExistingSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return !!session;
+  };
+
   const handleSubmit = async (password: string) => {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) throw new Error(error.message);
@@ -61,6 +66,7 @@ export default function ResetPasswordPage() {
   return (
     <ResetPasswordCard
       onSetSession={handleSetSession}
+      onCheckExistingSession={handleCheckExistingSession}
       onSubmit={handleSubmit}
       onBackToLogin={() => router.push('/login')}
       accentColor="#a855f7"

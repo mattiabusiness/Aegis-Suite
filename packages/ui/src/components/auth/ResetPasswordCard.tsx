@@ -26,6 +26,12 @@ export interface ResetPasswordCardProps {
    * Return true on success, false on failure.
    */
   onSetSession: (tokens: { code?: string; accessToken?: string; refreshToken?: string }) => Promise<boolean>;
+  /**
+   * Called as fallback when no token/code is found in the URL (e.g. user refreshed
+   * the page after already consuming the recovery link).
+   * Should call supabase.auth.getSession() and return true if a session exists.
+   */
+  onCheckExistingSession: () => Promise<boolean>;
   onBackToLogin?: () => void;
   accentColor?: string;
   logo?: React.ReactNode;
@@ -99,6 +105,7 @@ function getStrength(pwd: string): { score: number; label: string; color: string
 export function ResetPasswordCard({
   onSubmit,
   onSetSession,
+  onCheckExistingSession,
   onBackToLogin,
   accentColor = '#a855f7',
   logo,
@@ -149,8 +156,10 @@ export function ResetPasswordCard({
         return;
       }
 
-      // Nothing found
-      setPageState('invalid');
+      // ── 3. No token in URL — check if a session already exists (user refreshed
+      //    the page after the recovery code was already consumed) ──
+      const hasSession = await onCheckExistingSession();
+      setPageState(hasSession ? 'ready' : 'invalid');
     };
     init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
