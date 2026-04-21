@@ -31,6 +31,10 @@ export interface CalendarEventData {
   staffId?: string;
   /** Whether shampoo was requested for this appointment */
   includeShampoo?: boolean;
+  /** Price of the service (for display in detail modal) */
+  servicePrice?: number;
+  /** Business shampoo price (for display in shampoo card) */
+  shampooPrice?: number;
 }
 
 export interface CalendarEventProps {
@@ -472,10 +476,15 @@ export function EventDetailModal({
         {/* Header */}
         <div className="px-6 pt-7 pb-4">
           <h2 className="text-lg font-bold text-gray-900 pr-8">{event.title}</h2>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="px-2.5 py-1 text-xs font-semibold rounded-full" style={{ background: sc.bg, color: sc.color }}>
               {status.label}
             </span>
+            {event.servicePrice !== undefined && (
+              <span className="px-2.5 py-1 text-xs font-semibold rounded-full" style={{ background: 'rgba(168,85,247,0.08)', color: '#7c3aed' }}>
+                €{event.servicePrice % 1 === 0 ? event.servicePrice.toFixed(0) : event.servicePrice.toFixed(2)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -487,7 +496,6 @@ export function EventDetailModal({
             { icon: Clock, label: 'Orario', value: `${formatTime(new Date(event.startTime))} – ${formatTime(new Date(event.endTime))}` },
             { icon: User, label: 'Cliente', value: event.customerName || 'N/A' },
             { icon: Scissors, label: 'Operatore', value: event.staffName || 'N/A' },
-            ...(event.includeShampoo ? [{ icon: Droplets, label: 'Shampoo', value: '✓ Incluso' }] : []),
           ].map((row, i) => (
             <div key={i} className="flex items-center justify-between p-3.5 rounded-xl"
               style={{ background: 'rgba(0,0,0,0.025)', border: '1px solid rgba(0,0,0,0.06)', transition: 'all 0.15s ease' }}
@@ -498,6 +506,28 @@ export function EventDetailModal({
               <span className="text-sm font-semibold text-gray-900">{row.value}</span>
             </div>
           ))}
+
+          {/* Shampoo card — solo se richiesto */}
+          {event.includeShampoo && (
+            <div className="flex items-center gap-3 p-3.5 rounded-xl"
+              style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.08), rgba(124,58,237,0.05))', border: '1px solid rgba(168,85,247,0.22)' }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}
+              >
+                <Droplets className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900">Shampoo incluso</p>
+                <p className="text-xs text-gray-500 mt-0.5">Lavaggio richiesto dal cliente</p>
+              </div>
+              {event.shampooPrice !== undefined && event.shampooPrice > 0 && (
+                <span className="text-sm font-bold flex-shrink-0" style={{ color: '#7c3aed' }}>
+                  +€{event.shampooPrice % 1 === 0 ? event.shampooPrice.toFixed(0) : event.shampooPrice.toFixed(2)}
+                </span>
+              )}
+            </div>
+          )}
 
           {event.notes && (
             <div className="p-3.5 rounded-xl" style={{ background: 'rgba(168,85,247,0.07)', border: '1px solid rgba(168,85,247,0.18)' }}>

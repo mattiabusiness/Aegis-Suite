@@ -56,7 +56,7 @@ export default async function CalendarioPage() {
         id, start_time, end_time, status, staff_notes, staff_id, include_shampoo,
         customer:customers(full_name),
         staff:staff(full_name, color),
-        appointment_services(service_name)
+        appointment_services(service_name, price)
       `)
       .eq('business_id', businessId)
       .gte('start_time', startOfWeek.toISOString())
@@ -108,7 +108,7 @@ export default async function CalendarioPage() {
   const events: CalendarEventData[] = (appointmentsResult.data || []).map((a: Record<string, unknown>) => {
     const customer = a.customer as { full_name: string } | null;
     const staff = a.staff as { full_name: string; color: string | null } | null;
-    const services = a.appointment_services as Array<{ service_name: string }> | null;
+    const services = a.appointment_services as Array<{ service_name: string; price: number }> | null;
 
     return {
       id: a.id as string,
@@ -122,6 +122,8 @@ export default async function CalendarioPage() {
       status: (a.status as CalendarEventData['status']) || 'confirmed',
       notes: a.staff_notes as string | undefined,
       includeShampoo: (a.include_shampoo as boolean) || false,
+      servicePrice: services?.[0]?.price,
+      shampooPrice: bizData?.shampoo_price ?? 3,
     };
   });
 

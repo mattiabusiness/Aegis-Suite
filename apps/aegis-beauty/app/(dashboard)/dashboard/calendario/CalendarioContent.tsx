@@ -205,10 +205,10 @@ export function CalendarioContent({
       const query = supabase
         .from('appointments')
         .select(`
-          id, start_time, end_time, status, staff_notes,
+          id, start_time, end_time, status, staff_notes, include_shampoo,
           customer:customers(full_name),
           staff:staff(full_name, color),
-          appointment_services(service_name)
+          appointment_services(service_name, price)
         `)
         .eq('business_id', businessId)
         .gte('start_time', range.start)
@@ -227,7 +227,7 @@ export function CalendarioContent({
       const mapped: CalendarEventData[] = (appointments || []).map((a: Record<string, unknown>) => {
         const customer = a.customer as { full_name: string } | null;
         const staff = a.staff as { full_name: string; color: string | null } | null;
-        const services = a.appointment_services as Array<{ service_name: string }> | null;
+        const services = a.appointment_services as Array<{ service_name: string; price: number }> | null;
 
         return {
           id: a.id as string,
@@ -240,6 +240,9 @@ export function CalendarioContent({
           staffId: (a.staff_id as string) || undefined,
           status: a.status as CalendarEventData['status'],
           notes: a.staff_notes as string | undefined,
+          includeShampoo: (a.include_shampoo as boolean) || false,
+          servicePrice: services?.[0]?.price,
+          shampooPrice,
         };
       });
 
