@@ -504,16 +504,20 @@ export function AccountContent({
       const updates: Promise<unknown>[] = [
         sb.from('profiles').upsert({ id: userId, full_name: fullName, phone: phone || null, email }),
       ];
-      if (email !== (profile?.email ?? userEmail)) {
+      const emailChanging = email !== (profile?.email ?? userEmail);
+      if (emailChanging) {
         const emailRedirectTo = `${window.location.origin}/auth/callback?next=/${business.slug}/account`;
         updates.push(supabase.auth.updateUser({ email }, { emailRedirectTo }));
-        toast.info('Controlla la tua nuova email per confermare il cambio.');
       }
       if (customer && prefs !== (customer as { preferences?: string }).preferences) {
         updates.push(sb.from('customers').update({ preferences: prefs }).eq('id', customer.id).eq('user_id', userId));
       }
       await Promise.all(updates);
-      toast.success('Profilo aggiornato.');
+      if (emailChanging) {
+        toast.info('Controlla la tua nuova email per confermare il cambio.');
+      } else {
+        toast.success('Profilo aggiornato.');
+      }
     } catch { toast.error('Errore durante il salvataggio. Riprova.'); }
     finally { setSaving(false); }
   }, [supabase, userId, fullName, phone, email, profile, userEmail, customer, prefs]);
