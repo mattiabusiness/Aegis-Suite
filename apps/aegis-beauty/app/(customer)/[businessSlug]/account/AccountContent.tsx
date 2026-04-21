@@ -505,7 +505,8 @@ export function AccountContent({
         sb.from('profiles').upsert({ id: userId, full_name: fullName, phone: phone || null, email }),
       ];
       if (email !== (profile?.email ?? userEmail)) {
-        updates.push(supabase.auth.updateUser({ email }));
+        const emailRedirectTo = `${window.location.origin}/auth/callback?next=/${business.slug}/account`;
+        updates.push(supabase.auth.updateUser({ email }, { emailRedirectTo }));
         toast.info('Controlla la tua nuova email per confermare il cambio.');
       }
       if (customer && prefs !== (customer as { preferences?: string }).preferences) {
