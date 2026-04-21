@@ -43,6 +43,7 @@ import {
 interface StatisticheContentProps {
   businessId: string;
   businessType: string;
+  shampooPrice?: number;
   staff: Array<{ id: string; display_name: string; color: string; hasEmail?: boolean }>;
   services: Array<{ id: string; name: string; price: number }>;
   roiData: Record<string, unknown> | null;
@@ -55,6 +56,7 @@ interface AppointmentRow {
   start_time: string;
   created_at: string;
   customer_id: string | null;
+  include_shampoo: boolean;
 }
 
 interface AppointmentServiceRow {
@@ -138,7 +140,9 @@ function generateInsights(
   staff: Array<{ id: string; display_name: string }>,
   prevAppointments: AppointmentRow[],
   prevServices: AppointmentServiceRow[],
+  shampooPriceForBiz = 0,
 ): InsightItem[] {
+  const shampooRev = (a: AppointmentRow) => (a.include_shampoo ? shampooPriceForBiz : 0);
   const insights: InsightItem[] = [];
   const completed = appointments.filter(a => a.status === 'completed');
   const noShows = appointments.filter(a => a.status === 'no_show');
@@ -150,12 +154,12 @@ function generateInsights(
   }
 
   // ===== 1. Revenue forecast (moving average 3 months) =====
-  const curRevenue = appointmentServices
-    .filter(s => completed.some(a => a.id === s.appointment_id))
-    .reduce((sum, s) => sum + s.price, 0);
-  const prevRevenue = prevServices
-    .filter(s => prevCompleted.some(a => a.id === s.appointment_id))
-    .reduce((sum, s) => sum + s.price, 0);
+  const completedIds = new Set(completed.map(a => a.id));
+  const prevCompletedIds = new Set(prevCompleted.map(a => a.id));
+  const curRevenue = appointmentServices.filter(s => completedIds.has(s.appointment_id)).reduce((sum, s) => sum + s.price, 0)
+    + completed.reduce((sum, a) => sum + shampooRev(a), 0);
+  const prevRevenue = prevServices.filter(s => prevCompletedIds.has(s.appointment_id)).reduce((sum, s) => sum + s.price, 0)
+    + prevCompleted.reduce((sum, a) => sum + shampooRev(a), 0);
 
   if (curRevenue > 0 && prevRevenue > 0) {
     const avgRevenue = Math.round((curRevenue + prevRevenue) / 2);
@@ -235,7 +239,7 @@ function generateInsights(
     const day = new Date(a.start_time).getDay();
     const rev = appointmentServices
       .filter(s => s.appointment_id === a.id)
-      .reduce((sum, s) => sum + s.price, 0);
+      .reduce((sum, s) => sum + s.price, 0) + shampooRev(a);
     dayRevenue[day] = (dayRevenue[day] || 0) + rev;
   });
   const dayEntries = Object.entries(dayRevenue).sort(([, a], [, b]) => a - b);
@@ -256,7 +260,7 @@ function generateInsights(
     completed.forEach(a => {
       if (!a.staff_id) return;
       staffRev[a.staff_id] = (staffRev[a.staff_id] || 0) +
-        appointmentServices.filter(s => s.appointment_id === a.id).reduce((sum, s) => sum + s.price, 0);
+        appointmentServices.filter(s => s.appointment_id === a.id).reduce((sum, s) => sum + s.price, 0) + shampooRev(a);
     });
     const bestId = Object.entries(staffRev).sort(([, a], [, b]) => b - a)[0]?.[0];
     const bestMember = staff.find(s => s.id === bestId);
@@ -304,7 +308,9 @@ function generateStaffInsights(
   appointmentServices: AppointmentServiceRow[],
   prevAppointments: AppointmentRow[],
   prevServices: AppointmentServiceRow[],
+  shampooPriceForBiz = 0,
 ): InsightItem[] {
+  const shampooRev = (a: AppointmentRow) => (a.include_shampoo ? shampooPriceForBiz : 0);
   const insights: InsightItem[] = [];
   const completed = appointments.filter(a => a.status === 'completed');
   const noShows = appointments.filter(a => a.status === 'no_show');
@@ -330,12 +336,12 @@ function generateStaffInsights(
   }
 
   // ===== 2. Ticket medio personale =====
-  const curRevenue = appointmentServices
-    .filter(s => completed.some(a => a.id === s.appointment_id))
-    .reduce((sum, s) => sum + s.price, 0);
-  const prevRevenue = prevServices
-    .filter(s => prevCompleted.some(a => a.id === s.appointment_id))
-    .reduce((sum, s) => sum + s.price, 0);
+  const sCompletedIds = new Set(completed.map(a => a.id));
+  const sPrevCompletedIds = new Set(prevCompleted.map(a => a.id));
+  const curRevenue = appointmentServices.filter(s => sCompletedIds.has(s.appointment_id)).reduce((sum, s) => sum + s.price, 0)
+    + completed.reduce((sum, a) => sum + shampooRev(a), 0);
+  const prevRevenue = prevServices.filter(s => sPrevCompletedIds.has(s.appointment_id)).reduce((sum, s) => sum + s.price, 0)
+    + prevCompleted.reduce((sum, a) => sum + shampooRev(a), 0);
   if (completed.length > 0 && curRevenue > 0) {
     const avgTicket = curRevenue / completed.length;
     const prevAvgTicket = prevCompleted.length > 0 && prevRevenue > 0 ? prevRevenue / prevCompleted.length : 0;
@@ -446,7 +452,7 @@ function parseROI(roiData: Record<string, unknown> | null): ROIStats | null {
 // COMPONENT
 // ============================================================================
 
-export function StatisticheContent({ businessId, businessType, staff, services, roiData }: StatisticheContentProps) {
+export function StatisticheContent({ businessId, businessType, shampooPrice = 3, staff, services, roiData }: StatisticheContentProps) {
   const permissions = useStaffPermissions();
   // Tab attivo: 'mine' = le mie statistiche (filtrate per staff), 'business' = tutto il business
   const [activeStatsTab, setActiveStatsTab] = useState<'mine' | 'business'>('mine');
@@ -480,9 +486,10 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
     setLoading(true);
     const { start, end, prevStart, prevEnd } = getPeriodDates(p);
 
+    const apptSelect = 'id, staff_id, status, start_time, created_at, customer_id, include_shampoo';
     const curQuery = supabase
       .from('appointments')
-      .select('id, staff_id, status, start_time, created_at, customer_id')
+      .select(apptSelect)
       .eq('business_id', businessId)
       .gte('start_time', formatDateISO(start))
       .lt('start_time', formatDateISO(end));
@@ -490,11 +497,14 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
 
     const prevQuery = supabase
       .from('appointments')
-      .select('id, staff_id, status, start_time, created_at, customer_id')
+      .select(apptSelect)
       .eq('business_id', businessId)
       .gte('start_time', formatDateISO(prevStart))
       .lt('start_time', formatDateISO(prevEnd));
     if (filterByCurrentStaff) prevQuery.eq('staff_id', permissions.currentStaffId!);
+
+    const shampooPriceForBiz = businessType === 'hair_salon' ? shampooPrice : 0;
+    const shampooRev = (a: AppointmentRow) => (a.include_shampoo ? shampooPriceForBiz : 0);
 
     const [{ data: currentAppts }, { data: prevAppts }] = await Promise.all([curQuery, prevQuery]) as [
       { data: AppointmentRow[] | null },
@@ -534,8 +544,10 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
     const completedIds = new Set(completed.map(a => a.id));
     const prevCompletedIds = new Set(prevCompleted.map(a => a.id));
 
-    const curRevenue = currentServices.filter(s => completedIds.has(s.appointment_id)).reduce((sum, s) => sum + s.price, 0);
-    const prevRevenue = prevServices.filter(s => prevCompletedIds.has(s.appointment_id)).reduce((sum, s) => sum + s.price, 0);
+    const curShampooRevenue = completed.reduce((sum, a) => sum + shampooRev(a), 0);
+    const prevShampooRevenue = prevCompleted.reduce((sum, a) => sum + shampooRev(a), 0);
+    const curRevenue = currentServices.filter(s => completedIds.has(s.appointment_id)).reduce((sum, s) => sum + s.price, 0) + curShampooRevenue;
+    const prevRevenue = prevServices.filter(s => prevCompletedIds.has(s.appointment_id)).reduce((sum, s) => sum + s.price, 0) + prevShampooRevenue;
 
     const curCustomers = new Set(current.filter(a => a.customer_id).map(a => a.customer_id)).size;
     const prevCustomers = new Set(prev.filter(a => a.customer_id).map(a => a.customer_id)).size;
@@ -563,7 +575,7 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       const key = useMonths
         ? `${new Date(a.start_time).getFullYear()}-${String(new Date(a.start_time).getMonth() + 1).padStart(2, '0')}`
         : a.start_time.slice(0, 10);
-      revenueByDate[key] = (revenueByDate[key] || 0) + (svcByAppt.get(a.id) ?? []).reduce((sum, s) => sum + s.price, 0);
+      revenueByDate[key] = (revenueByDate[key] || 0) + (svcByAppt.get(a.id) ?? []).reduce((sum, s) => sum + s.price, 0) + shampooRev(a);
     });
 
     current.forEach(a => {
@@ -585,6 +597,12 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       serviceStats[s.service_name].count++;
       serviceStats[s.service_name].revenue += s.price;
     });
+    if (shampooPriceForBiz > 0) {
+      const shampooAppts = completed.filter(a => a.include_shampoo);
+      if (shampooAppts.length > 0) {
+        serviceStats['Shampoo'] = { count: shampooAppts.length, revenue: shampooAppts.length * shampooPriceForBiz };
+      }
+    }
     setTopServicesData(Object.entries(serviceStats).sort(([, a], [, b]) => b.revenue - a.revenue).slice(0, 5).map(([name, data]) => ({ name, count: data.count, revenue: data.revenue })));
 
     // Popular Hours (kept as fallback)
@@ -598,7 +616,7 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       if (!a.staff_id) return;
       if (!staffStats[a.staff_id]) staffStats[a.staff_id] = { appointments: 0, revenue: 0 };
       staffStats[a.staff_id].appointments++;
-      staffStats[a.staff_id].revenue += (svcByAppt.get(a.id) ?? []).reduce((sum, s) => sum + s.price, 0);
+      staffStats[a.staff_id].revenue += (svcByAppt.get(a.id) ?? []).reduce((sum, s) => sum + s.price, 0) + shampooRev(a);
     });
     setStaffPerfData(staff.map(s => ({ name: s.display_name, color: s.color, appointments: staffStats[s.id]?.appointments || 0, revenue: staffStats[s.id]?.revenue || 0, isIncomplete: !s.hasEmail })).sort((a, b) => b.revenue - a.revenue));
 
@@ -622,7 +640,7 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
       const jsDay = new Date(a.start_time).getDay(); // 0=Sun
       const mappedDay = jsDay === 0 ? 6 : jsDay - 1; // 0=Mon...6=Sun
       dayRevenueMap[mappedDay].appointments++;
-      dayRevenueMap[mappedDay].revenue += (svcByAppt.get(a.id) ?? []).reduce((sum, s) => sum + s.price, 0);
+      dayRevenueMap[mappedDay].revenue += (svcByAppt.get(a.id) ?? []).reduce((sum, s) => sum + s.price, 0) + shampooRev(a);
     });
 
     setDayRevenue(
@@ -660,8 +678,8 @@ export function StatisticheContent({ businessId, businessType, staff, services, 
     // Enhanced Insights — versione personalizzata per lo staff
     setInsights(
       filterByCurrentStaff
-        ? generateStaffInsights(current, currentServices, prev, prevServices)
-        : generateInsights(current, currentServices, staff, prev, prevServices)
+        ? generateStaffInsights(current, currentServices, prev, prevServices, shampooPriceForBiz)
+        : generateInsights(current, currentServices, staff, prev, prevServices, shampooPriceForBiz)
     );
     setLoading(false);
   }, [businessId, staff, supabase, filterByCurrentStaff, permissions.currentStaffId]);

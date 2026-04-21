@@ -28,12 +28,12 @@ export default async function StatistichePage() {
 
   // Fetch business, staff e services in parallelo
   const [businessResult, staffResult, servicesResult] = await Promise.all([
-    supabase.from('businesses').select('roi_data, business_type').eq('id', businessId).single(),
+    supabase.from('businesses').select('roi_data, business_type, shampoo_price').eq('id', businessId).single(),
     supabase.from('staff').select('id, full_name, color, email').eq('business_id', businessId).eq('is_active', true),
     supabase.from('services').select('id, name, price').eq('business_id', businessId),
   ]);
 
-  const business = businessResult.data as { roi_data: Record<string, unknown> | null; business_type: string | null } | null;
+  const business = businessResult.data as { roi_data: Record<string, unknown> | null; business_type: string | null; shampoo_price: number | null } | null;
   const staffData = staffResult.data as Array<{ id: string; full_name: string; color: string; email: string | null }> | null;
   const servicesData = servicesResult.data as Array<{ id: string; name: string; price: number }> | null;
 
@@ -41,6 +41,7 @@ export default async function StatistichePage() {
     <StatisticheContent
       businessId={businessId}
       businessType={business?.business_type || 'mixed'}
+      shampooPrice={business?.shampoo_price ?? 3}
       staff={(staffData || []).map(s => ({ id: s.id, display_name: s.full_name, color: s.color, hasEmail: !!s.email }))}
       services={servicesData || []}
       roiData={business?.roi_data || null}
