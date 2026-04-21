@@ -78,6 +78,10 @@ const KEYFRAMES = `
 @keyframes stShimmer { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
 @keyframes stRipple { 0%{transform:scale(0);opacity:1} 100%{transform:scale(6);opacity:0} }
 @keyframes stCheck { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear { display: none; }
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidden; display: none !important; }
 @keyframes stBounceUp { 0%{transform:translateY(0)} 40%{transform:translateY(-8px)} 70%{transform:translateY(2px)} 100%{transform:translateY(0)} }
 @keyframes stBounceDown { 0%{transform:translateY(0)} 40%{transform:translateY(8px)} 70%{transform:translateY(-2px)} 100%{transform:translateY(0)} }
 @keyframes stDotIn { from { opacity:0; transform:scale(0); } to { opacity:1; transform:scale(1); } }

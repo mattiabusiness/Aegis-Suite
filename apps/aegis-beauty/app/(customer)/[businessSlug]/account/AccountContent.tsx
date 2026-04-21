@@ -91,6 +91,10 @@ const fieldContainerVariants = {
 // ============================================================================
 
 const KEYFRAMES = `
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear { display: none; }
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidden; display: none !important; }
 @keyframes book-shimmer {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
