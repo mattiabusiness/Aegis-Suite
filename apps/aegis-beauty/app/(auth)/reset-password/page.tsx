@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
       onSetSession={handleSetSession}
       onCheckExistingSession={handleCheckExistingSession}
       onSubmit={handleSubmit}
-      onBackToLogin={() => router.push('/login')}
+      onBackToLogin={async () => { await supabase.auth.signOut(); router.push('/login'); }}
       accentColor="#a855f7"
       logo={<AegisLogo />}
       brandName="Aegis"
