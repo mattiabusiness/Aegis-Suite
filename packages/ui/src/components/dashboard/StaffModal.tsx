@@ -69,13 +69,13 @@ export interface DayHours {
 
 // Default template used when business hours are not yet configured
 const DEFAULT_WEEK: DayHours[] = [
-  { dayOfWeek: 'monday',    dayLabel: 'Lunedì',    isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
-  { dayOfWeek: 'tuesday',   dayLabel: 'Martedì',   isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
-  { dayOfWeek: 'wednesday', dayLabel: 'Mercoledì', isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
-  { dayOfWeek: 'thursday',  dayLabel: 'Giovedì',   isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
-  { dayOfWeek: 'friday',    dayLabel: 'Venerdì',   isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
-  { dayOfWeek: 'saturday',  dayLabel: 'Sabato',    isOpen: true,  openTime1: '09:00', closeTime1: '13:00' },
-  { dayOfWeek: 'sunday',    dayLabel: 'Domenica',  isOpen: false },
+  { dayOfWeek: 'monday',    dayLabel: 'Lun', isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'tuesday',   dayLabel: 'Mar', isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'wednesday', dayLabel: 'Mer', isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'thursday',  dayLabel: 'Gio', isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'friday',    dayLabel: 'Ven', isOpen: true,  openTime1: '09:00', closeTime1: '18:00' },
+  { dayOfWeek: 'saturday',  dayLabel: 'Sab', isOpen: true,  openTime1: '09:00', closeTime1: '13:00' },
+  { dayOfWeek: 'sunday',    dayLabel: 'Dom', isOpen: false },
 ];
 
 function resolveHours(custom: DayHours[] | undefined, business: DayHours[]): DayHours[] {
@@ -714,7 +714,7 @@ export function StaffHoursModal({
   const [useBusinessHrs, setUseBusinessHrs] = React.useState(initialUseBusinessHours);
   const [hours, setHours] = React.useState<DayHours[]>(() => resolveHours(currentHours, businessHours));
   const [loading, setLoading] = React.useState(false);
-  const SEL_W = 'w-[70px]';
+  const SEL_W = 'w-[80px]';
 
   // Refs to always read latest props inside the isOpen effect without adding
   // them to the dependency array (avoids spurious resets when parent re-renders
@@ -835,7 +835,7 @@ export function StaffHoursModal({
                     </div>
 
                     {/* Day label */}
-                    <span className="text-xs font-medium text-gray-900 w-10 flex-shrink-0">{day.dayLabel}</span>
+                    <span className="text-xs font-medium text-gray-900 w-7 flex-shrink-0">{day.dayLabel}</span>
 
                     {/* Times */}
                     {day.isOpen && (
