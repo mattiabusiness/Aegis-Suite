@@ -61,20 +61,37 @@ export function ForgotPasswordCard({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [sent, setSent] = React.useState(false);
+  const [shake, setShake] = React.useState(false);
 
   const accent = accentColor;
   const accentDark = '#7e22ce';
 
+  const doShake = () => { setShake(true); setTimeout(() => setShake(false), 450); };
+
+  const translateError = (msg: string): string => {
+    const lower = msg.toLowerCase();
+    const secondsMatch = lower.match(/only request this after (\d+) second/);
+    if (secondsMatch) {
+      return `Per sicurezza puoi richiedere un nuovo link tra ${secondsMatch[1]} secondi.`;
+    }
+    if (lower.includes('rate limit') || lower.includes('too many requests')) {
+      return 'Troppi tentativi. Riprova tra qualche minuto.';
+    }
+    return msg;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) { setError('Inserisci la tua email'); return; }
+    if (!email.trim()) { setError('Inserisci la tua email'); doShake(); return; }
     setError('');
     setLoading(true);
     try {
       await onSubmit(email.trim().toLowerCase());
       setSent(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Errore durante l\'invio. Riprova.');
+      const raw = err instanceof Error ? err.message : 'Errore durante l\'invio. Riprova.';
+      setError(translateError(raw));
+      doShake();
     } finally {
       setLoading(false);
     }
@@ -168,7 +185,7 @@ export function ForgotPasswordCard({
           </div>
         ) : (
           /* Form state */
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit} noValidate className={shake ? 'fp-shake' : ''}>
             <div style={{ marginBottom: '1.25rem' }}>
               <div style={{ color: '#374151', fontWeight: 600, fontSize: '0.95rem', marginBottom: 4 }}>
                 Password dimenticata?
@@ -197,7 +214,7 @@ export function ForgotPasswordCard({
 
             {error && (
               <div style={{ color: '#ef4444', fontSize: '0.8rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span>⚠</span> {error}
+                {error}
               </div>
             )}
 
@@ -232,6 +249,10 @@ export function ForgotPasswordCard({
 
       <style>{`
         @keyframes fp-spin { to { transform: rotate(360deg); } }
+        .fp-shake { animation: fp-shk 0.45s ease-in-out; }
+        @keyframes fp-shk {
+          0%,100%{transform:translateX(0)} 15%,55%,85%{transform:translateX(-5px)} 35%,75%{transform:translateX(5px)}
+        }
       `}</style>
     </div>
   );
