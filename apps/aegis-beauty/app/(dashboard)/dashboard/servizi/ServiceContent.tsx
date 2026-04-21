@@ -6,8 +6,9 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { Droplets } from 'lucide-react';
+import { Droplets, Trash2 } from 'lucide-react';
 import {
   ServiceList,
   ServiceModal,
@@ -592,77 +593,113 @@ export function ServiziContent({
       />
 
       {/* Delete Service Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div 
-            className="fixed inset-0 bg-black/50 transition-opacity"
+      {deleteConfirm && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0"
             onClick={() => setDeleteConfirm(null)}
+            style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
           />
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Elimina servizio
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Sei sicuro di voler eliminare <strong>{deleteConfirm.name}</strong>? 
-                Questa azione non può essere annullata.
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setDeleteConfirm(null)}
-                  disabled={isDeleting}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Annulla
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  disabled={isDeleting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                >
-                  {isDeleting ? 'Eliminazione...' : 'Elimina'}
-                </button>
-              </div>
+          <div
+            className="relative w-full max-w-sm"
+            style={{
+              background: 'rgba(255,255,255,0.97)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              borderRadius: 24,
+              border: '1px solid rgba(168,85,247,0.35)',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.12), 0 8px 32px rgba(147,51,234,0.12), 0 0 0 1px rgba(168,85,247,0.2), 0 0 40px rgba(168,85,247,0.18), 0 0 80px rgba(147,51,234,0.08)',
+              padding: 28,
+            }}
+          >
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none" style={{ width: 200, height: 100, background: 'radial-gradient(ellipse, rgba(168,85,247,0.1) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(239,68,68,0.08)' }}>
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <h3 className="text-base font-semibold text-gray-900 mb-1.5">Elimina servizio</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Sei sicuro di voler eliminare <span className="font-semibold text-gray-800">{deleteConfirm.name}</span>? Questa azione non può essere annullata.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-700"
+                style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.06)', transition: 'all 0.15s ease' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.07)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+              >
+                Annulla
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white"
+                style={{ background: isDeleting ? '#fca5a5' : 'linear-gradient(135deg, #dc2626, #ef4444)', boxShadow: isDeleting ? 'none' : '0 2px 8px rgba(239,68,68,0.3)', transition: 'all 0.15s ease' }}
+                onMouseEnter={(e) => { if (!isDeleting) e.currentTarget.style.boxShadow = '0 4px 16px rgba(239,68,68,0.4)'; }}
+                onMouseLeave={(e) => { if (!isDeleting) e.currentTarget.style.boxShadow = '0 2px 8px rgba(239,68,68,0.3)'; }}
+              >
+                {isDeleting ? 'Eliminazione...' : 'Elimina'}
+              </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Category Confirmation Modal */}
-      {deleteCategoryConfirm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div 
-            className="fixed inset-0 bg-black/50 transition-opacity"
+      {deleteCategoryConfirm && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0"
             onClick={() => setDeleteCategoryConfirm(null)}
+            style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
           />
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Elimina categoria
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Sei sicuro di voler eliminare la categoria <strong>{deleteCategoryConfirm.name}</strong>? 
-                I servizi associati non verranno eliminati ma perderanno la categoria.
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setDeleteCategoryConfirm(null)}
-                  disabled={isDeleting}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Annulla
-                </button>
-                <button
-                  onClick={confirmDeleteCategory}
-                  disabled={isDeleting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                >
-                  {isDeleting ? 'Eliminazione...' : 'Elimina'}
-                </button>
-              </div>
+          <div
+            className="relative w-full max-w-sm"
+            style={{
+              background: 'rgba(255,255,255,0.97)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              borderRadius: 24,
+              border: '1px solid rgba(168,85,247,0.35)',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.12), 0 8px 32px rgba(147,51,234,0.12), 0 0 0 1px rgba(168,85,247,0.2), 0 0 40px rgba(168,85,247,0.18), 0 0 80px rgba(147,51,234,0.08)',
+              padding: 28,
+            }}
+          >
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none" style={{ width: 200, height: 100, background: 'radial-gradient(ellipse, rgba(168,85,247,0.1) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(239,68,68,0.08)' }}>
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <h3 className="text-base font-semibold text-gray-900 mb-1.5">Elimina categoria</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Sei sicuro di voler eliminare la categoria <span className="font-semibold text-gray-800">{deleteCategoryConfirm.name}</span>? I servizi associati non verranno eliminati ma perderanno la categoria.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteCategoryConfirm(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-700"
+                style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.06)', transition: 'all 0.15s ease' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.07)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; }}
+              >
+                Annulla
+              </button>
+              <button
+                onClick={confirmDeleteCategory}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white"
+                style={{ background: isDeleting ? '#fca5a5' : 'linear-gradient(135deg, #dc2626, #ef4444)', boxShadow: isDeleting ? 'none' : '0 2px 8px rgba(239,68,68,0.3)', transition: 'all 0.15s ease' }}
+                onMouseEnter={(e) => { if (!isDeleting) e.currentTarget.style.boxShadow = '0 4px 16px rgba(239,68,68,0.4)'; }}
+                onMouseLeave={(e) => { if (!isDeleting) e.currentTarget.style.boxShadow = '0 2px 8px rgba(239,68,68,0.3)'; }}
+              >
+                {isDeleting ? 'Eliminazione...' : 'Elimina'}
+              </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
