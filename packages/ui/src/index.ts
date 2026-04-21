@@ -27,6 +27,10 @@ export { ProgressBar } from './components/ui/progress-bar';
 // ============================================================================
 
 export { AuthFlipCard } from './components/auth/AuthFlipCard';
+export { ForgotPasswordCard } from './components/auth/ForgotPasswordCard';
+export type { ForgotPasswordCardProps } from './components/auth/ForgotPasswordCard';
+export { ResetPasswordCard } from './components/auth/ResetPasswordCard';
+export type { ResetPasswordCardProps } from './components/auth/ResetPasswordCard';
 
 // ============================================================================
 // DASHBOARD COMPONENTS
