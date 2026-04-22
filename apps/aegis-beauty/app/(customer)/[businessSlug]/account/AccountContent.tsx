@@ -504,24 +504,14 @@ export function AccountContent({
       const updates: Promise<unknown>[] = [
         sb.from('profiles').upsert({ id: userId, full_name: fullName, phone: phone || null, email }),
       ];
-      const emailChanging = email !== (profile?.email ?? userEmail);
-      if (emailChanging) {
-        const emailRedirectTo = `${window.location.origin}/auth/callback?next=/${business.slug}/account`;
-        updates.push(supabase.auth.updateUser({ email }, { emailRedirectTo }));
-        // customers.email viene aggiornato dal callback /auth/callback dopo la doppia conferma (old + new)
-      }
       if (customer && prefs !== (customer as { preferences?: string }).preferences) {
         updates.push(sb.from('customers').update({ preferences: prefs }).eq('id', customer.id).eq('user_id', userId));
       }
       await Promise.all(updates);
-      if (emailChanging) {
-        toast.info('Controlla la tua nuova email per confermare il cambio.');
-      } else {
-        toast.success('Profilo aggiornato.');
-      }
+      toast.success('Profilo aggiornato.');
     } catch { toast.error('Errore durante il salvataggio. Riprova.'); }
     finally { setSaving(false); }
-  }, [supabase, userId, fullName, phone, email, profile, userEmail, customer, prefs]);
+  }, [supabase, userId, fullName, phone, email, customer, prefs]);
 
   // ── Password update ───────────────────────────────────────────────────────
 
@@ -626,7 +616,8 @@ export function AccountContent({
               <GlassInput
                 label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 placeholder="mario@example.com"
-                hint={email !== (profile?.email ?? userEmail) ? 'Il cambio email richiede conferma al nuovo indirizzo.' : undefined}
+                disabled
+                hint="Per modificare l'email contatta il supporto."
               />
             </motion.div>
             <motion.div variants={itemVariants}>
