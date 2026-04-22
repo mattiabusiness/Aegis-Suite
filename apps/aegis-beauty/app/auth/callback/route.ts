@@ -135,6 +135,12 @@ export async function GET(request: NextRequest) {
     // CONFERMA EMAIL STANDARD (titolare / cliente)
     // ================================================================
     if (user?.id) {
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
@@ -148,6 +154,14 @@ export async function GET(request: NextRequest) {
           user_full_name: metadata.full_name || '',
           user_phone: metadata.phone || null,
         });
+      }
+
+      // Sync email in customers table (email change confirmed — keep in sync with auth.users)
+      if (user.email) {
+        await supabaseAdmin
+          .from('customers')
+          .update({ email: user.email })
+          .eq('user_id', user.id);
       }
     }
 
