@@ -17,6 +17,15 @@ import {
 import { notify } from '@/lib/notify';
 import type { PushPayload } from '@aegis/core';
 
+/** Parse date+time as Europe/Rome local time, return correct UTC Date. */
+function parseAsRomeTime(dateStr: string, timeStr: string): Date {
+  const naive = new Date(`${dateStr}T${timeStr}:00.000Z`);
+  const romeStr = naive.toLocaleString('en-US', { timeZone: 'Europe/Rome' });
+  const romeAsUtcMs = new Date(romeStr).getTime();
+  const offsetMs = naive.getTime() - romeAsUtcMs;
+  return new Date(naive.getTime() + offsetMs);
+}
+
 interface CreateBookingBody {
   businessId:      string;
   serviceId:       string;
@@ -139,7 +148,9 @@ export async function POST(request: NextRequest) {
     // STEP 3: Calculate times
     // ========================================================================
 
-    const startTime = new Date(`${date}T${time}:00`);
+    // Interpret date+time as Europe/Rome local time (UTC+1/+2 depending on DST).
+    // Without this, the UTC server parses "10:00" as 10:00 UTC → stored 2h ahead in Italy.
+    const startTime = parseAsRomeTime(date, time);
     const endTime   = new Date(startTime.getTime() + (service as { duration_minutes: number }).duration_minutes * 60000);
 
     if (isNaN(startTime.getTime())) {

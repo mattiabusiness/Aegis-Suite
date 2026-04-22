@@ -11,6 +11,15 @@ import { createServerSupabaseClient, getCurrentUser, createAdminSupabaseClient }
 // TYPES
 // ============================================================================
 
+/** Parse date+time as Europe/Rome local time, return correct UTC Date. */
+function parseAsRomeTime(dateStr: string, timeStr: string): Date {
+  const naive = new Date(`${dateStr}T${timeStr}:00.000Z`);
+  const romeStr = naive.toLocaleString('en-US', { timeZone: 'Europe/Rome' });
+  const romeAsUtcMs = new Date(romeStr).getTime();
+  const offsetMs = naive.getTime() - romeAsUtcMs;
+  return new Date(naive.getTime() + offsetMs);
+}
+
 interface CreateAppointmentRequest {
   customerId: string | null;
   customerFirstName: string;
@@ -184,7 +193,8 @@ export async function POST(request: NextRequest) {
     // STEP 3: Calculate appointment times
     // ========================================================================
     
-    const startTime = new Date(`${date}T${time}:00`);
+    // Interpret as Europe/Rome local time — UTC server would shift by +1/+2h otherwise.
+    const startTime = parseAsRomeTime(date, time);
     const endTime = new Date(startTime.getTime() + service.duration_minutes * 60000);
     
     // ========================================================================
