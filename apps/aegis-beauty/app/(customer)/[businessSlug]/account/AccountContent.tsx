@@ -508,6 +508,7 @@ export function AccountContent({
       if (emailChanging) {
         const emailRedirectTo = `${window.location.origin}/auth/callback?next=/${business.slug}/account`;
         updates.push(supabase.auth.updateUser({ email }, { emailRedirectTo }));
+        // customers.email viene aggiornato dal callback /auth/callback dopo la doppia conferma (old + new)
       }
       if (customer && prefs !== (customer as { preferences?: string }).preferences) {
         updates.push(sb.from('customers').update({ preferences: prefs }).eq('id', customer.id).eq('user_id', userId));
