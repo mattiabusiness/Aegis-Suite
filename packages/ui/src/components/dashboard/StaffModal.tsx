@@ -420,8 +420,8 @@ export function StaffModal({
           e.preventDefault();
           setFormError('');
           if (!formData.fullName.trim()) { setFormError('Inserisci il nome completo *'); doShake(); return; }
-          if (!formData.email.trim()) { setFormError('Inserisci l\'email *'); doShake(); return; }
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { setFormError('Email non valida *'); doShake(); return; }
+          if (!isEditing && !formData.email.trim()) { setFormError('Inserisci l\'email *'); doShake(); return; }
+          if (!isEditing && formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { setFormError('Email non valida *'); doShake(); return; }
           if (!formData.phone.trim()) { setFormError('Inserisci il telefono *'); doShake(); return; }
 
           setLoading(true);
@@ -458,8 +458,10 @@ export function StaffModal({
               {/* Email + Telefono */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-400">*</span></label>
-                  <input type="email" value={formData.email} onChange={(e) => update('email', e.target.value)} placeholder="email@esempio.it" maxLength={254} className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={inputStyle} {...focusHandlers} />
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Email {!isEditing && <span className="text-red-400">*</span>}
+                  </label>
+                  <input type="email" value={formData.email} onChange={(e) => update('email', e.target.value)} placeholder="email@esempio.it" maxLength={254} disabled={isEditing} className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={{ ...inputStyle, ...(isEditing ? { opacity: 0.55, cursor: 'not-allowed', background: 'rgba(0,0,0,0.04)' } : {}) }} {...(isEditing ? {} : focusHandlers)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefono <span className="text-red-400">*</span></label>
