@@ -41,6 +41,8 @@ export interface SignUpData {
   phone?: string;
   redirectTo?: string;
   termsAcceptedAt?: string;
+  /** Slug del business da cui si registra il cliente (auto-crea record customers nel callback) */
+  businessSlug?: string;
 }
 
 export interface SignInData {
@@ -69,6 +71,7 @@ export async function signUp(
           full_name: data.fullName,
           phone: data.phone,
           ...(data.termsAcceptedAt ? { terms_accepted_at: data.termsAcceptedAt } : {}),
+          ...(data.businessSlug ? { business_slug: data.businessSlug } : {}),
         },
       },
     });

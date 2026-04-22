@@ -270,13 +270,26 @@ function LoginContent() {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
     const redirectPath = searchParams.get('redirect') || '/';
+
+    // Detect if registering from a business public page (e.g. /slug or /slug/prenota)
+    // Known system roots that are NOT business slugs:
+    const SYSTEM_ROOTS = ['dashboard', 'login', 'register', 'onboarding', 'api', 'auth',
+      'legal', 'demo', 'start', 'forgot-password', 'reset-password'];
+    const slugMatch = redirectPath.match(/^\/([a-z0-9][a-z0-9-]*)(?:\/.*)?$/);
+    const businessSlug = slugMatch && !SYSTEM_ROOTS.includes(slugMatch[1])
+      ? slugMatch[1] : undefined;
+
+    // If registering from a business page, send them to /{slug}/account after confirmation
+    const nextPath = businessSlug ? `/${businessSlug}/account` : redirectPath;
+
     const result = await signUp(supabase, {
       email: data.email,
       password: data.password,
       fullName: data.fullName,
       phone: data.phone,
-      redirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+      redirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`,
       termsAcceptedAt: data.termsAcceptedAt,
+      businessSlug,
     });
     if (!result.success) { setRegisterError(result.error || 'Errore'); throw new Error(result.error); }
     setRegisterSuccess("Registrazione completata! Controlla la tua email per confermare l'account.");

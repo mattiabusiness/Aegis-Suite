@@ -151,6 +151,65 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // ================================================================
+    // CUSTOMER SELF-REGISTRATION (dal link del business pubblico)
+    // Se business_slug è nei metadata, crea o linka il record customers
+    // ================================================================
+    if (user?.id && metadata.business_slug) {
+      try {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+
+        const { data: business } = await supabaseAdmin
+          .from('businesses')
+          .select('id')
+          .eq('slug', metadata.business_slug)
+          .eq('is_active', true)
+          .single();
+
+        if (business?.id) {
+          // Check if a customer record exists by user_id OR by email (imported by owner)
+          const { data: existing } = await supabaseAdmin
+            .from('customers')
+            .select('id, user_id')
+            .eq('business_id', business.id)
+            .or(`user_id.eq.${user.id},email.ilike.${user.email}`)
+            .maybeSingle();
+
+          if (existing && !existing.user_id) {
+            // Owner had already imported this customer — just link the user_id
+            await supabaseAdmin
+              .from('customers')
+              .update({ user_id: user.id, is_active: true })
+              .eq('id', existing.id);
+          } else if (!existing) {
+            // Brand-new customer — create the record
+            const { data: prof } = await supabaseAdmin
+              .from('profiles')
+              .select('full_name, email, phone')
+              .eq('id', user.id)
+              .maybeSingle();
+
+            await supabaseAdmin.from('customers').insert({
+              business_id: business.id,
+              user_id:     user.id,
+              full_name:   (prof?.full_name) || metadata.full_name || 'Cliente',
+              email:       user.email || '',
+              phone:       (prof?.phone) || metadata.phone || null,
+              source:      'online',
+              is_active:   true,
+            });
+          }
+        }
+      } catch (e) {
+        console.error('[Callback] Errore creazione customer:', e);
+        // Non-critical: procedi comunque con il redirect
+      }
+    }
+
     // Ritorna la response con sessione nei cookie
     response.headers.set('Location', new URL(next, request.url).toString());
     return response;
