@@ -23,7 +23,7 @@ export function VideoSection() {
         >
           {videoId ? (
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
               title="Aegis Beauty — Demo"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
