@@ -137,11 +137,11 @@ export function DemoContent() {
           </div>
 
           {/* Calendly inline widget */}
-          <div style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
+          <div style={{ overflow: 'hidden', borderRadius: 16 }}>
             <div
               className="calendly-inline-widget demo-calendly-wrap"
               data-url={CALENDLY_URL}
-              style={{ minWidth: '320px', height: '700px' }}
+              style={{ minWidth: '320px', height: '1050px' }}
             />
           </div>
         </div>
@@ -152,13 +152,11 @@ export function DemoContent() {
         @media (max-width: 540px) {
           .demo-info-grid { grid-template-columns: 1fr !important; }
         }
-        @media (max-width: 640px) {
-          .demo-calendly-wrap { height: 620px !important; }
-        }
-        .demo-calendly-wrap iframe {
-          filter: invert(1) hue-rotate(180deg) !important;
-        }
+        .demo-calendly-wrap iframe { border: none !important; }
         .demo-calendly-wrap::-webkit-scrollbar { display: none; }
+        @media (max-width: 640px) {
+          .demo-calendly-wrap { height: 900px !important; }
+        }
       `}</style>
     </>
   );
