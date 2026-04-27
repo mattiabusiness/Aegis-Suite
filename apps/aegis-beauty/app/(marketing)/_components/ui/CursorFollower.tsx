@@ -42,23 +42,30 @@ export function CursorFollower() {
   }, []);
 
   return (
-    <div
-      ref={dotRef}
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: 10,
-        height: 10,
-        borderRadius: '50%',
-        background: 'rgba(168, 85, 247, 0.7)',
-        boxShadow: '0 0 12px rgba(168, 85, 247, 0.5)',
-        pointerEvents: 'none',
-        zIndex: 9999,
-        willChange: 'transform',
-        mixBlendMode: 'screen',
-      }}
-    />
+    <>
+      <div
+        ref={dotRef}
+        aria-hidden="true"
+        className="aegis-cursor-dot"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: 10,
+          height: 10,
+          borderRadius: '50%',
+          background: 'rgba(168, 85, 247, 0.7)',
+          boxShadow: '0 0 12px rgba(168, 85, 247, 0.5)',
+          pointerEvents: 'none',
+          zIndex: 9999,
+          willChange: 'transform',
+          mixBlendMode: 'screen',
+          transform: 'translate(-200px, -200px)',
+        }}
+      />
+      <style>{`
+        @media (pointer: coarse) { .aegis-cursor-dot { display: none !important; } }
+      `}</style>
+    </>
   );
 }

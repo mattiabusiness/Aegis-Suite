@@ -5,22 +5,61 @@
 // File: apps/aegis-beauty/app/(marketing)/demo/_DemoContent.tsx
 // ============================================================================
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ArrowLeft, Calendar, Clock, Video } from 'lucide-react';
 import { Navbar } from '../_components/Navbar';
 import { Footer } from '../_components/Footer';
 
+declare global {
+  interface Window {
+    Calendly?: {
+      initInlineWidget: (opts: {
+        url: string;
+        parentElement: HTMLElement;
+        prefill?: Record<string, string>;
+        utm?: Record<string, string>;
+      }) => void;
+    };
+  }
+}
+
+const CALENDLY_URL =
+  'https://calendly.com/mattia-businessgrowth/30min' +
+  '?hide_gdpr_banner=1' +
+  '&hide_landing_page_details=1' +
+  '&primary_color=7C3AED' +
+  '&background_color=0a0a0f' +
+  '&text_color=f8fafc' +
+  '&color_scheme=dark';
+
 export function DemoContent() {
+  const embedRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    const el = embedRef.current;
+    if (!el) return;
+
+    const init = () => {
+      if (window.Calendly) {
+        window.Calendly.initInlineWidget({ url: CALENDLY_URL, parentElement: el });
+      }
+    };
+
+    if (window.Calendly) {
+      init();
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://assets.calendly.com/assets/external/widget.js';
     script.async = true;
+    script.onload = init;
     document.head.appendChild(script);
+
     return () => {
-      document.head.removeChild(script);
+      if (document.head.contains(script)) document.head.removeChild(script);
     };
   }, []);
-
 
   return (
     <>
@@ -133,12 +172,13 @@ export function DemoContent() {
               overflow: 'hidden',
               border: '1px solid rgba(124,58,237,0.2)',
               boxShadow: '0 0 40px rgba(124,58,237,0.08)',
+              backgroundColor: '#0a0a0f',
             }}
           >
             <div
-              className="calendly-inline-widget demo-calendly-wrap w-full rounded-xl overflow-hidden"
-              data-url="https://calendly.com/mattia-businessgrowth/30min?hide_gdpr_banner=1&hide_landing_page_details=1&primary_color=7C3AED&background_color=0a0a0f&text_color=f8fafc&color_scheme=dark"
-              style={{ minWidth: '320px', height: '700px', scrollbarWidth: 'none', msOverflowStyle: 'none', backgroundColor: '#0a0a0f' }}
+              ref={embedRef}
+              className="demo-calendly-wrap"
+              style={{ minWidth: '320px', height: '700px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             />
           </div>
         </div>
@@ -152,7 +192,8 @@ export function DemoContent() {
         @media (max-width: 640px) {
           .demo-calendly-wrap { height: 650px !important; }
         }
-        .calendly-inline-widget::-webkit-scrollbar { display: none; }
+        .demo-calendly-wrap::-webkit-scrollbar { display: none; }
+        .demo-calendly-wrap iframe { background-color: #0a0a0f !important; }
       `}</style>
     </>
   );

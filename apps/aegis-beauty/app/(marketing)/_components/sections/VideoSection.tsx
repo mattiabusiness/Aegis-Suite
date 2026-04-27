@@ -45,7 +45,7 @@ export function VideoSection() {
               Aegis Beauty in azione
             </h2>
             <p style={{ color: '#64748B', fontSize: 15, maxWidth: 460, margin: '0 auto', lineHeight: 1.6 }}>
-              Prenotazioni, gestione staff, promemoria automatici — tutto in un&apos;unica piattaforma.
+              L&apos;intero ecosistema del tuo salone, semplificato in un unico tocco.
             </p>
           </div>
         </ScrollReveal>

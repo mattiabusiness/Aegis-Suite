@@ -99,26 +99,38 @@ export function Navbar() {
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
+                gap: 8,
                 padding: '8px 20px',
                 borderRadius: 10,
                 background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
                 color: '#fff',
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: 14,
                 textDecoration: 'none',
-                boxShadow: '0 0 20px rgba(124,58,237,0.35)',
+                boxShadow: '0 6px 24px rgba(124,58,237,0.38), 0 2px 8px rgba(0,0,0,0.3)',
                 transition: 'transform 0.2s, box-shadow 0.2s',
+                position: 'relative',
+                overflow: 'hidden',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.03)';
-                e.currentTarget.style.boxShadow = '0 0 28px rgba(124,58,237,0.55)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 10px 32px rgba(124,58,237,0.55), 0 2px 8px rgba(0,0,0,0.3)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(124,58,237,0.35)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 6px 24px rgba(124,58,237,0.38), 0 2px 8px rgba(0,0,0,0.3)';
               }}
             >
-              Prenota demo
+              <div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                animation: 'navShimmer 2.8s ease-in-out infinite',
+              }} />
+              <span style={{ position: 'relative', zIndex: 1 }}>Prenota demo</span>
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
             </Link>
 
             <button
@@ -174,6 +186,10 @@ export function Navbar() {
         @media (max-width: 768px) {
           .marketing-nav-desktop { display: none !important; }
           .marketing-hamburger { display: flex !important; }
+        }
+        @keyframes navShimmer {
+          0%, 100% { transform: translateX(-100%); }
+          50% { transform: translateX(100%); }
         }
         @keyframes breathe {
           0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px transparent); }

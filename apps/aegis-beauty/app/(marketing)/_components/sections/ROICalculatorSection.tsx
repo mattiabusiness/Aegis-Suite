@@ -177,7 +177,7 @@ export function ROICalculatorSection() {
     <section
       style={{
         backgroundColor: '#0D0D16',
-        padding: '64px 24px',
+        padding: '48px 24px',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -236,10 +236,10 @@ export function ROICalculatorSection() {
           >
 
             {/* ── LEFT: Inputs ── */}
-            <div style={{ padding: '36px 36px', borderRight: '1px solid rgba(124,58,237,0.1)' }}>
+            <div style={{ padding: '28px 32px', borderRight: '1px solid rgba(124,58,237,0.1)' }}>
 
               {/* Type tabs */}
-              <div style={{ marginBottom: 28 }}>
+              <div style={{ marginBottom: 20 }}>
                 <p style={{
                   fontSize: 11, color: '#475569', fontWeight: 600,
                   letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 12px',
@@ -275,7 +275,7 @@ export function ROICalculatorSection() {
               </div>
 
               {/* Slider 1 — Phone minutes */}
-              <div style={{ marginBottom: 28 }}>
+              <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 700, color: '#E2E8F0', margin: 0 }}>
@@ -346,13 +346,13 @@ export function ROICalculatorSection() {
 
             {/* ── RIGHT: Results ── */}
             <div style={{
-              padding: '36px 36px',
+              padding: '28px 32px',
               display: 'flex', flexDirection: 'column',
               background: 'rgba(124,58,237,0.02)',
             }}>
 
               {/* Big number */}
-              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ textAlign: 'center', marginBottom: 14 }}>
                 <p style={{
                   fontSize: 11, color: '#7c3aed', fontWeight: 700,
                   letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px',
@@ -381,8 +381,8 @@ export function ROICalculatorSection() {
 
               {/* Bar chart */}
               <div style={{
-                padding: '16px 16px 12px',
-                borderRadius: 16, marginBottom: 14,
+                padding: '12px 16px 10px',
+                borderRadius: 16, marginBottom: 10,
                 background: 'rgba(124,58,237,0.04)',
                 border: '1px solid rgba(124,58,237,0.1)',
               }}>
@@ -390,7 +390,7 @@ export function ROICalculatorSection() {
               </div>
 
               {/* Stats grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                 <div style={{
                   padding: '12px 10px', borderRadius: 12, textAlign: 'center',
                   background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.1)',

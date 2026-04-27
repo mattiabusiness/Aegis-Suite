@@ -101,7 +101,7 @@ export function Hero() {
           zIndex: 2,
           maxWidth: 860,
           margin: '0 auto',
-          padding: '120px 24px 80px',
+          padding: '88px 24px 60px',
           textAlign: 'center',
           display: 'flex',
           flexDirection: 'column',
