@@ -64,6 +64,7 @@ export function PioneersSection() {
 
           {/* Card */}
           <div
+            className="pioneers-card"
             style={{
               padding: '48px 40px',
               borderRadius: 24,
@@ -173,6 +174,9 @@ export function PioneersSection() {
       </div>
 
       <style>{`
+        @media (max-width: 480px) {
+          .pioneers-card { padding: 32px 20px !important; }
+        }
         @keyframes borderGlow {
           0%, 100% { box-shadow: 0 0 0 1px rgba(124,58,237,0.1), 0 25px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05); }
           50% { box-shadow: 0 0 0 1px rgba(124,58,237,0.3), 0 25px 60px rgba(124,58,237,0.1), inset 0 1px 0 rgba(255,255,255,0.05); }

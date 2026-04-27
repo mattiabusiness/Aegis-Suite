@@ -136,9 +136,9 @@ export function DemoContent() {
             }}
           >
             <div
-              className="calendly-inline-widget w-full rounded-xl overflow-hidden"
-              data-url="https://calendly.com/mattia-businessgrowth/30min?hide_gdpr_banner=1&hide_landing_page_details=1&primary_color=7C3AED&background_color=0a0a0f&text_color=f8fafc"
-              style={{ minWidth: '320px', height: '1000px', scrollbarWidth: 'none', msOverflowStyle: 'none', backgroundColor: '#0a0a0f' }}
+              className="calendly-inline-widget demo-calendly-wrap w-full rounded-xl overflow-hidden"
+              data-url="https://calendly.com/mattia-businessgrowth/30min?hide_gdpr_banner=1&hide_landing_page_details=1&primary_color=7C3AED&background_color=0a0a0f&text_color=f8fafc&color_scheme=dark"
+              style={{ minWidth: '320px', height: '700px', scrollbarWidth: 'none', msOverflowStyle: 'none', backgroundColor: '#0a0a0f' }}
             />
           </div>
         </div>
@@ -146,7 +146,12 @@ export function DemoContent() {
       <Footer />
 
       <style>{`
-        @media (max-width: 540px) { .demo-info-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 540px) {
+          .demo-info-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .demo-calendly-wrap { height: 650px !important; }
+        }
         .calendly-inline-widget::-webkit-scrollbar { display: none; }
       `}</style>
     </>

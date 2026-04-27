@@ -256,6 +256,7 @@ export function ROICalculatorSection() {
                     <button
                       key={tab.key}
                       onClick={() => handleTypeChange(tab.key)}
+                      className="roi-mk-tab-btn"
                       style={{
                         flex: 1, padding: '9px 0', borderRadius: 9,
                         fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer',
@@ -331,7 +332,7 @@ export function ROICalculatorSection() {
 
               {/* Disclaimer */}
               <p style={{
-                fontSize: 11, color: '#1e293b', marginTop: 24, lineHeight: 1.6,
+                fontSize: 11, color: '#475569', marginTop: 24, lineHeight: 1.6,
                 display: 'flex', alignItems: 'flex-start', gap: 6,
               }}>
                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -515,7 +516,16 @@ export function ROICalculatorSection() {
         }
         @media (max-width: 540px) {
           .roi-mk-grid > div {
-            padding: 36px 24px !important;
+            padding: 28px 20px !important;
+          }
+          .roi-mk-tab-btn {
+            font-size: 11px !important;
+            padding: 8px 4px !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .roi-mk-tab-btn {
+            font-size: 10px !important;
           }
         }
       `}</style>
