@@ -173,6 +173,7 @@ export function DemoContent() {
               border: '1px solid rgba(124,58,237,0.2)',
               boxShadow: '0 0 40px rgba(124,58,237,0.08)',
               backgroundColor: '#0a0a0f',
+              filter: 'invert(1) hue-rotate(180deg)',
             }}
           >
             <div
