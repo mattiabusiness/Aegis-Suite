@@ -5,23 +5,11 @@
 // File: apps/aegis-beauty/app/(marketing)/demo/_DemoContent.tsx
 // ============================================================================
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock, Video } from 'lucide-react';
 import { Navbar } from '../_components/Navbar';
 import { Footer } from '../_components/Footer';
 
-declare global {
-  interface Window {
-    Calendly?: {
-      initInlineWidget: (opts: {
-        url: string;
-        parentElement: HTMLElement;
-        prefill?: Record<string, string>;
-        utm?: Record<string, string>;
-      }) => void;
-    };
-  }
-}
 
 const CALENDLY_URL =
   'https://calendly.com/mattia-businessgrowth/30min' +
@@ -33,29 +21,12 @@ const CALENDLY_URL =
   '&color_scheme=dark';
 
 export function DemoContent() {
-  const embedRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    const el = embedRef.current;
-    if (!el) return;
-
-    const init = () => {
-      if (window.Calendly) {
-        window.Calendly.initInlineWidget({ url: CALENDLY_URL, parentElement: el });
-      }
-    };
-
-    if (window.Calendly) {
-      init();
-      return;
-    }
-
+    if (document.querySelector('script[src*="calendly"]')) return;
     const script = document.createElement('script');
     script.src = 'https://assets.calendly.com/assets/external/widget.js';
     script.async = true;
-    script.onload = init;
     document.head.appendChild(script);
-
     return () => {
       if (document.head.contains(script)) document.head.removeChild(script);
     };
@@ -177,8 +148,8 @@ export function DemoContent() {
           >
             <div style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
               <div
-                ref={embedRef}
-                className="demo-calendly-wrap"
+                className="calendly-inline-widget demo-calendly-wrap"
+                data-url={CALENDLY_URL}
                 style={{ minWidth: '320px', height: '700px', scrollbarWidth: 'none', msOverflowStyle: 'none', backgroundColor: '#ffffff' }}
               />
             </div>
