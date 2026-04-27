@@ -138,22 +138,10 @@ export function DemoContent() {
 
           {/* Calendly inline widget */}
           <div
-            style={{
-              borderRadius: 20,
-              overflow: 'hidden',
-              border: '1px solid rgba(124,58,237,0.2)',
-              boxShadow: '0 0 40px rgba(124,58,237,0.08)',
-              backgroundColor: '#0a0a0f',
-            }}
-          >
-            <div style={{ filter: 'invert(1) hue-rotate(180deg)' }}>
-              <div
-                className="calendly-inline-widget demo-calendly-wrap"
-                data-url={CALENDLY_URL}
-                style={{ minWidth: '320px', height: '700px', scrollbarWidth: 'none', msOverflowStyle: 'none', backgroundColor: '#ffffff' }}
-              />
-            </div>
-          </div>
+            className="calendly-inline-widget demo-calendly-wrap"
+            data-url={CALENDLY_URL}
+            style={{ minWidth: '320px', height: '900px' }}
+          />
         </div>
       </main>
       <Footer />
