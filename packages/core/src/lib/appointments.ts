@@ -6,18 +6,50 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = any;
 
-// Customer-facing select: exclude private staff/internal notes
-const APPOINTMENT_SELECT = `
+// Flat select — no PostgREST relationship syntax.
+// Related data (staff, services) fetched in separate queries to avoid
+// FK-resolution failures with the admin client.
+const FLAT_SELECT = `
   id, business_id, customer_id, staff_id,
   start_time, end_time, status,
   customer_notes, cancelled_at, cancellation_reason,
   confirmed_at, completed_at, total_price, deposit_paid,
   payment_status, booked_online, source, reminder_sent_at,
-  created_at, updated_at,
-  customers(full_name, email, phone),
-  staff(full_name, nickname),
-  appointment_services(service_id, service_name, duration_minutes, price)
+  created_at, updated_at
 `;
+
+async function attachRelations(supabase: AnySupabaseClient, appointments: any[]) {
+  if (!appointments.length) return appointments;
+
+  const ids     = appointments.map((a) => a.id);
+  const staffIds = [...new Set(appointments.map((a) => a.staff_id).filter(Boolean))];
+
+  const [{ data: services }, { data: staffList }] = await Promise.all([
+    supabase
+      .from('appointment_services')
+      .select('appointment_id, service_id, service_name, duration_minutes, price')
+      .in('appointment_id', ids),
+    staffIds.length > 0
+      ? supabase.from('staff').select('id, full_name, nickname').in('id', staffIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const staffMap: Record<string, unknown> = {};
+  for (const s of (staffList ?? [])) staffMap[(s as any).id] = s;
+
+  const svcMap: Record<string, unknown[]> = {};
+  for (const svc of (services ?? [])) {
+    const aid = (svc as any).appointment_id;
+    if (!svcMap[aid]) svcMap[aid] = [];
+    svcMap[aid].push(svc);
+  }
+
+  return appointments.map((a) => ({
+    ...a,
+    staff:                staffMap[a.staff_id] ?? null,
+    appointment_services: svcMap[a.id] ?? [],
+  }));
+}
 
 /**
  * Appuntamenti futuri del cliente (non cancellati)
@@ -29,15 +61,15 @@ export async function getUpcomingAppointments(
 ) {
   const { data, error } = await supabase
     .from('appointments')
-    .select(APPOINTMENT_SELECT)
+    .select(FLAT_SELECT)
     .eq('customer_id', customerId)
     .eq('business_id', businessId)
     .gte('start_time', new Date().toISOString())
     .neq('status', 'cancelled')
     .order('start_time', { ascending: true });
 
-  if (error) console.error('[getUpcomingAppointments] error:', JSON.stringify(error));
-  return data ?? [];
+  if (error) { console.error('[getUpcomingAppointments]', JSON.stringify(error)); return []; }
+  return attachRelations(supabase, data ?? []);
 }
 
 /**
@@ -51,15 +83,15 @@ export async function getPastAppointments(
 ) {
   const { data, error } = await supabase
     .from('appointments')
-    .select(APPOINTMENT_SELECT)
+    .select(FLAT_SELECT)
     .eq('customer_id', customerId)
     .eq('business_id', businessId)
     .lt('start_time', new Date().toISOString())
     .order('start_time', { ascending: false })
     .limit(limit);
 
-  if (error) console.error('[getPastAppointments] error:', JSON.stringify(error));
-  return data ?? [];
+  if (error) { console.error('[getPastAppointments]', JSON.stringify(error)); return []; }
+  return attachRelations(supabase, data ?? []);
 }
 
 /**
