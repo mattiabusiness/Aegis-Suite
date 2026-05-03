@@ -45,7 +45,7 @@ export default async function AccountPage({
 
   const { data: customer } = await (admin as any)
     .from('customers')
-    .select('id, user_id, business_id, full_name, email, phone, is_active, created_at, last_visit_at, total_visits, total_spent, notes, tags, preferences')
+    .select('id, user_id, business_id, full_name, email, phone, is_active, created_at, last_visit_at, total_spent, notes, tags, preferences')
     .eq('user_id', user.id)
     .eq('business_id', business.id)
     .eq('is_active', true)
