@@ -14,7 +14,7 @@ const APPOINTMENT_SELECT = `
   confirmed_at, completed_at, total_price, deposit_paid,
   payment_status, booked_online, source, reminder_sent_at,
   created_at, updated_at,
-  customers!inner(full_name, email, phone),
+  customers(full_name, email, phone),
   staff(full_name, nickname),
   appointment_services(service_id, service_name, duration_minutes, price)
 `;
@@ -27,7 +27,7 @@ export async function getUpcomingAppointments(
   customerId: string,
   businessId: string
 ) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('appointments')
     .select(APPOINTMENT_SELECT)
     .eq('customer_id', customerId)
@@ -36,6 +36,7 @@ export async function getUpcomingAppointments(
     .neq('status', 'cancelled')
     .order('start_time', { ascending: true });
 
+  if (error) console.error('[getUpcomingAppointments] error:', JSON.stringify(error));
   return data ?? [];
 }
 
@@ -48,7 +49,7 @@ export async function getPastAppointments(
   businessId: string,
   limit = 10
 ) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('appointments')
     .select(APPOINTMENT_SELECT)
     .eq('customer_id', customerId)
@@ -57,6 +58,7 @@ export async function getPastAppointments(
     .order('start_time', { ascending: false })
     .limit(limit);
 
+  if (error) console.error('[getPastAppointments] error:', JSON.stringify(error));
   return data ?? [];
 }
 
