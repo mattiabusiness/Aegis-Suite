@@ -148,7 +148,9 @@ function LoginContent() {
     const result = await signIn(supabase, data);
     if (!result.success) { setLoginError(result.error || 'Errore durante il login'); throw new Error(result.error); }
 
-    const redirectParam = searchParams.get('redirect');
+    const rawRedirect = searchParams.get('redirect') ?? '';
+    // Block external redirects — only allow relative paths (open redirect prevention)
+    const redirectParam = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : null;
 
     // IMPORTANT: use window.location.href (full page reload) instead of router.push
     // so the server receives the new session cookies in the next request.
@@ -191,7 +193,7 @@ function LoginContent() {
       return;
     }
 
-    window.location.href = redirectParam || '/dashboard';
+    window.location.href = redirectParam ?? '/dashboard';
   };
 
   const handleRegister = async (data: { fullName: string; email: string; phone: string; password: string; termsAcceptedAt: string }) => {
@@ -269,7 +271,9 @@ function LoginContent() {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-    const redirectPath = searchParams.get('redirect') || '/';
+    const rawRedirectPath = searchParams.get('redirect') ?? '/';
+    // Sanitize redirect path — only allow relative paths
+    const redirectPath = rawRedirectPath.startsWith('/') && !rawRedirectPath.startsWith('//') ? rawRedirectPath : '/';
 
     // Detect if registering from a business public page (e.g. /slug or /slug/prenota)
     // Known system roots that are NOT business slugs:

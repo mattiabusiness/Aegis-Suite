@@ -251,3 +251,30 @@ Applicare i fix nell'ordine: Fix 3 prima (logging immediato), poi Fix 2 (sicuro)
 Se il problema persiste dopo tutti e 3, considerare di usare `createAdminSupabaseClient()` nel `account/page.tsx` per le query customer/appointments (filtrando sempre per `user.id` dalla sessione autenticata — sicuro perché il `user.id` viene dal JWT validato, non dall'URL).
 
 ---
+
+# 🐛 BUG APERTO — Orari staff vuoti nel modal "Gestisci orari"
+
+## Sintomo
+Nel modal `StaffHoursModal`, quando si disattiva il toggle "Usa orari del negozio", i campi orario appaiono visivamente vuoti nonostante gli orari del business esistano. L'utente dovrebbe vedere gli orari del business pre-impostati come punto di partenza.
+
+## Cosa è stato fatto
+- Aggiunta logica `resolveHours(custom, business, DEFAULT_WEEK)` a tre livelli di fallback
+- Corretto bug `useState([] || array)` — array vuoto è truthy, risolto con lazy initializer
+- Rimosso spurious reset del `useEffect` tramite refs + `[isOpen]` deps
+- Aggiunto `DEFAULT_WEEK` con valori 09:00–18:00 come fallback finale
+- Fix visivo: etichette giorni abbreviate (`Lun/Mar/Mer`…) → no overflow
+- Fix visivo: `SEL_W` da `70px` → `80px` → select time non viene più troncata
+
+## Problema residuo
+I campi orario appaiono ancora vuoti nonostante i fix. L'ipotesi più probabile è che `businessHoursForModal` in `StaffContent.tsx` venga costruito in un formato diverso da quello che `resolveHours` si aspetta (es. `openTime1` vs `open_time`, oppure `isOpen` vs `is_open`). Non è stato ancora investigato in profondità.
+
+## File coinvolti
+| File | Ruolo |
+|---|---|
+| `packages/ui/src/components/dashboard/StaffModal.tsx` | Modal con `resolveHours`, `DEFAULT_WEEK`, `StaffHoursModal` |
+| `apps/aegis-beauty/app/(dashboard)/dashboard/staff/StaffContent.tsx` | Costruisce `businessHoursForModal` e lo passa al modal |
+
+## Prossimo passo
+Fare `console.log(businessHoursForModal)` e `console.log(currentHours)` all'apertura del modal e verificare se i dati arrivano con la forma corretta (campi camelCase vs snake_case, array vuoto vs array con dati).
+
+---

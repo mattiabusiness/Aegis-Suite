@@ -51,8 +51,6 @@ export default async function AccountPage({
     .eq('is_active', true)
     .maybeSingle();
 
-  console.log('[account/page] user.id:', user.id, '| business.id:', business.id, '| customer:', customer ? customer.id : 'NULL');
-
   const [upcoming, past] = await Promise.all([
     customer
       ? getUpcomingAppointments(admin, customer.id, business.id)
@@ -61,8 +59,6 @@ export default async function AccountPage({
       ? getPastAppointments(admin, customer.id, business.id, 50)
       : Promise.resolve([]),
   ]);
-
-  console.log('[account/page] upcoming:', upcoming.length, '| past:', past.length);
 
   // Fallback a user_metadata se il profilo non è ancora stato creato nel DB
   const meta = user.user_metadata ?? {};

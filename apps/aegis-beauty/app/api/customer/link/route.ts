@@ -37,6 +37,20 @@ export async function POST(request: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
+  // Verify ownership: the customer record's email must match the authenticated user's email.
+  // Prevents an attacker from linking their user_id to a foreign customer record
+  // by guessing a valid customerId with user_id = null.
+  const { data: customerCheck } = await supabaseAdmin
+    .from('customers')
+    .select('id, email')
+    .eq('id', customerId)
+    .is('user_id', null)
+    .single();
+
+  if (!customerCheck || customerCheck.email?.toLowerCase() !== user.email?.toLowerCase()) {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
+  }
+
   // Only link if user_id is still null — prevents overwriting an existing link
   const { error } = await supabaseAdmin
     .from('customers')

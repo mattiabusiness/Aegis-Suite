@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     if (!email || !password || !staffId) {
       return NextResponse.json({ error: 'Campi obbligatori mancanti' }, { status: 400 });
     }
-    if (typeof email !== 'string' || email.length > 254) {
+    if (typeof email !== 'string' || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Email non valida' }, { status: 400 });
     }
     if (typeof password !== 'string' || password.length < 6) {

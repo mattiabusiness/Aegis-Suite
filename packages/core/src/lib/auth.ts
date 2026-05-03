@@ -370,6 +370,7 @@ function translateAuthError(error: AuthError): string {
     'Unable to validate email address: invalid format': 'Formato email non valido',
     'Email rate limit exceeded': 'Troppi tentativi. Riprova tra qualche minuto',
     'For security purposes, you can only request this once every 60 seconds': 'Attendi 60 secondi prima di riprovare',
+    'Error sending confirmation email': 'Impossibile inviare l\'email di conferma. Riprova tra qualche minuto.',
   };
 
   return errorMessages[error.message] || error.message;

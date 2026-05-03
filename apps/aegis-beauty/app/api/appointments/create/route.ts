@@ -96,8 +96,21 @@ export async function POST(request: NextRequest) {
     // STEP 2: Handle customer (existing or new)
     // ========================================================================
     
+    // Verify provided customerId belongs to this business (prevents cross-tenant access)
+    if (!isNewCustomer && customerId) {
+      const { data: customerOwnership } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('id', customerId)
+        .eq('business_id', businessId)
+        .single();
+      if (!customerOwnership) {
+        return NextResponse.json({ error: 'Cliente non trovato' }, { status: 404 });
+      }
+    }
+
     let finalCustomerId = customerId;
-    
+
     if (isNewCustomer) {
       if (!customerFirstName || !customerLastName || !customerPhone || !customerEmail) {
         return NextResponse.json({ error: 'Dati cliente incompleti' }, { status: 400 });
@@ -189,10 +202,24 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    // Verify provided staffId belongs to this business (prevents cross-tenant assignment)
+    if (staffId) {
+      const { data: staffOwnership } = await supabase
+        .from('staff')
+        .select('id')
+        .eq('id', staffId)
+        .eq('business_id', businessId)
+        .eq('is_active', true)
+        .single();
+      if (!staffOwnership) {
+        return NextResponse.json({ error: 'Staff non trovato' }, { status: 404 });
+      }
+    }
+
     // ========================================================================
     // STEP 3: Calculate appointment times
     // ========================================================================
-    
+
     // Interpret as Europe/Rome local time — UTC server would shift by +1/+2h otherwise.
     const startTime = parseAsRomeTime(date, time);
     const endTime = new Date(startTime.getTime() + service.duration_minutes * 60000);
