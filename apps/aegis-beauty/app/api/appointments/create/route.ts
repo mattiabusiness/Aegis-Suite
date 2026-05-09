@@ -96,9 +96,11 @@ export async function POST(request: NextRequest) {
     // STEP 2: Handle customer (existing or new)
     // ========================================================================
     
-    // Verify provided customerId belongs to this business (prevents cross-tenant access)
+    // Verify provided customerId belongs to this business (prevents cross-tenant access).
+    // Uses admin client — memberCheck above already confirmed caller belongs to this business.
     if (!isNewCustomer && customerId) {
-      const { data: customerOwnership } = await supabase
+      const adminClient = createAdminSupabaseClient();
+      const { data: customerOwnership } = await adminClient
         .from('customers')
         .select('id')
         .eq('id', customerId)
@@ -202,9 +204,11 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Verify provided staffId belongs to this business (prevents cross-tenant assignment)
+    // Verify provided staffId belongs to this business (prevents cross-tenant assignment).
+    // Uses admin client — memberCheck above already confirmed caller belongs to this business.
     if (staffId) {
-      const { data: staffOwnership } = await supabase
+      const adminClient = createAdminSupabaseClient();
+      const { data: staffOwnership } = await adminClient
         .from('staff')
         .select('id')
         .eq('id', staffId)
