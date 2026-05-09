@@ -76,12 +76,17 @@ export async function POST(request: NextRequest) {
     if (!memberCheck) {
       return NextResponse.json({ error: 'Non hai accesso a questo business' }, { status: 403 });
     }
-    
+
+    // After membership is confirmed, use admin client for all DB ops.
+    // Staff RLS policies may restrict reads/writes on services, customers, appointments.
+    // Security is guaranteed: user.id and businessId are both server-validated above.
+    const admin = createAdminSupabaseClient() as any;
+
     // ========================================================================
     // STEP 1: Get service details (for duration)
     // ========================================================================
-    
-    const { data: service, error: serviceError } = await supabase
+
+    const { data: service, error: serviceError } = await admin
       .from('services')
       .select('id, name, duration_minutes, price')
       .eq('id', serviceId)
@@ -99,8 +104,7 @@ export async function POST(request: NextRequest) {
     // Verify provided customerId belongs to this business (prevents cross-tenant access).
     // Uses admin client — memberCheck above already confirmed caller belongs to this business.
     if (!isNewCustomer && customerId) {
-      const adminClient = createAdminSupabaseClient();
-      const { data: customerOwnership } = await adminClient
+      const { data: customerOwnership } = await admin
         .from('customers')
         .select('id')
         .eq('id', customerId)
@@ -128,19 +132,19 @@ export async function POST(request: NextRequest) {
       }
       
       // Check if customer with same email already exists
-      const { data: existingCustomer } = await supabase
+      const { data: existingCustomer } = await admin
         .from('customers')
         .select('id')
         .eq('business_id', businessId)
         .eq('email', customerEmail.toLowerCase())
         .single();
-      
+
       if (existingCustomer) {
         finalCustomerId = existingCustomer.id;
       } else {
         const fullName = `${customerFirstName} ${customerLastName}`.trim();
-        
-        const { data: newCustomer, error: customerError } = await supabase
+
+        const { data: newCustomer, error: customerError } = await admin
           .from('customers')
           .insert({
             business_id: businessId,
@@ -163,15 +167,13 @@ export async function POST(request: NextRequest) {
         // Send invite email if requested
         if (sendInvite) {
           try {
-            const adminClient = createAdminSupabaseClient();
-
-            const { data: business } = await supabase
+            const { data: business } = await admin
               .from('businesses')
               .select('name, slug')
               .eq('id', businessId)
               .single();
 
-            const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+            const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(
               customerEmail.toLowerCase(),
               {
                 data: {
@@ -192,7 +194,7 @@ export async function POST(request: NextRequest) {
               // L'appuntamento è già stato creato a questo punto (viene dopo)
             } else {
               // Invite inviato con successo → aggiorna invited_at sul record cliente
-              await supabase
+              await admin
                 .from('customers')
                 .update({ invited_at: new Date().toISOString() })
                 .eq('id', finalCustomerId);
@@ -207,8 +209,7 @@ export async function POST(request: NextRequest) {
     // Verify provided staffId belongs to this business (prevents cross-tenant assignment).
     // Uses admin client — memberCheck above already confirmed caller belongs to this business.
     if (staffId) {
-      const adminClient = createAdminSupabaseClient();
-      const { data: staffOwnership } = await adminClient
+      const { data: staffOwnership } = await admin
         .from('staff')
         .select('id')
         .eq('id', staffId)
@@ -238,7 +239,7 @@ export async function POST(request: NextRequest) {
       // Auto-assign: find first staff who (1) can do the service AND (2) is free at this slot.
       // If no one qualifies → return error (do NOT fall through to RPC auto-assign).
 
-      const { data: eligibleStaff } = await supabase
+      const { data: eligibleStaff } = await admin
         .from('staff')
         .select('id')
         .eq('business_id', businessId)
@@ -248,12 +249,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Nessuno staff disponibile' }, { status: 409 });
       }
 
-      // Step A: which staff can do this service?
-      // Every staff always has explicit rows in staff_services (auto-assigned on creation).
-      // So we just check who has THIS service listed.
       const allStaffIds = eligibleStaff.map(s => s.id);
 
-      const { data: serviceLinks } = await supabase
+      const { data: serviceLinks } = await admin
         .from('staff_services')
         .select('staff_id')
         .in('staff_id', allStaffIds)
@@ -267,8 +265,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Nessuno staff può eseguire questo servizio' }, { status: 409 });
       }
 
-      // Step B: among candidates, find the first free in this time slot
-      const { data: conflicts } = await supabase
+      const { data: conflicts } = await admin
         .from('appointments')
         .select('staff_id')
         .eq('business_id', businessId)
@@ -291,7 +288,7 @@ export async function POST(request: NextRequest) {
     // STEP 5: Create appointment
     // ========================================================================
 
-    const { data: newAppt, error: insertError } = await supabase
+    const { data: newAppt, error: insertError } = await admin
       .from('appointments')
       .insert({
         business_id:     businessId,
@@ -318,7 +315,7 @@ export async function POST(request: NextRequest) {
     // STEP 5: Create appointment_services link
     // ========================================================================
     
-    await supabase
+    await admin
       .from('appointment_services')
       .insert({
         appointment_id: appointmentId,
@@ -328,12 +325,12 @@ export async function POST(request: NextRequest) {
         price: service.price,
         display_order: 0,
       });
-    
+
     // ========================================================================
     // STEP 6: Return success
     // ========================================================================
-    
-    const { data: fullAppointment } = await supabase
+
+    const { data: fullAppointment } = await admin
       .from('appointments')
       .select(`
         id, start_time, end_time, status, notes,
