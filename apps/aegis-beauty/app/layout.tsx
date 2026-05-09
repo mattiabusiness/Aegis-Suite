@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 
@@ -8,6 +8,10 @@ const inter = Inter({
   variable: '--font-inter',
   display: 'swap',
 });
+
+export const viewport: Viewport = {
+  themeColor: '#7C3AED',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://aegisbeauty.app'),
@@ -75,7 +79,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://aegisbeauty.app',
   },
-  themeColor: '#7C3AED',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
