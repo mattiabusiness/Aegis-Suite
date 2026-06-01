@@ -82,7 +82,7 @@ const IMG_BASE: React.CSSProperties = {
 function FeatureMedia({ feat }: { feat: Feature }) {
   if (feat.imageSecondary) {
     return (
-      <div style={{ position: 'relative', width: '100%', paddingBottom: 32 }}>
+      <div style={{ position: 'relative', width: '100%', paddingBottom: 52 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={feat.image} alt={feat.title} style={IMG_BASE} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -96,7 +96,7 @@ function FeatureMedia({ feat }: { feat: Feature }) {
             position: 'absolute',
             width: '38%',
             right: -14,
-            bottom: 0,
+            bottom: -18,
             boxShadow:
               '0 0 0 1px rgba(124,58,237,0.12), 0 0 50px rgba(124,58,237,0.22), 0 24px 50px rgba(0,0,0,0.6)',
           }}
