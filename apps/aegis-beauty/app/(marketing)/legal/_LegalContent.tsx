@@ -86,9 +86,25 @@ export function LegalContent() {
         )}
       </div>
 
-      <main style={{ minHeight: '100vh', backgroundColor: '#0A0A0F', paddingTop: 88 }}>
+      <main style={{ minHeight: '100vh', backgroundColor: '#0A0A0F', paddingTop: 88, position: 'relative' }}>
+        {/* Ambient glow (clipped wrapper — keeps sticky sidebar intact) */}
+        <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 520, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: -120,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 900,
+              height: 500,
+              borderRadius: '50%',
+              background: 'radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 65%)',
+            }}
+          />
+        </div>
+
         <div
-          style={{ maxWidth: 1160, margin: '0 auto', padding: '48px 24px 80px', display: 'grid', gridTemplateColumns: '250px 1fr', gap: 60, alignItems: 'start' }}
+          style={{ maxWidth: 1160, margin: '0 auto', padding: '48px 24px 80px', display: 'grid', gridTemplateColumns: '250px 1fr', gap: 60, alignItems: 'start', position: 'relative', zIndex: 1 }}
           className="legal-layout"
         >
           {/* Sticky sidebar */}
@@ -152,7 +168,7 @@ export function LegalContent() {
           <div style={{ minWidth: 0 }}>
             {/* Page title */}
             <div style={{ marginBottom: 56 }}>
-              <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', fontWeight: 800, letterSpacing: '-0.03em', color: '#F8FAFC', margin: '0 0 10px', lineHeight: 1.2 }}>
+              <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 10px', lineHeight: 1.2, background: 'linear-gradient(120deg, #F8FAFC 30%, #c084fc 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', display: 'inline-block' }}>
                 Privacy &amp; Legal
               </h1>
               <p style={{ fontSize: 14, color: '#475569', margin: 0 }}>

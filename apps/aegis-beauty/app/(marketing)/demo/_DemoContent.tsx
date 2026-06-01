@@ -94,9 +94,27 @@ export function DemoContent() {
           backgroundColor: '#0A0A0F',
           paddingTop: 100,
           paddingBottom: 80,
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px' }}>
+        {/* Ambient glow */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: -100,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 900,
+            height: 600,
+            borderRadius: '50%',
+            background: 'radial-gradient(ellipse, rgba(124,58,237,0.1) 0%, transparent 65%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
           {/* Back link */}
           <a
             href="/"
@@ -141,12 +159,20 @@ export function DemoContent() {
                 fontSize: 'clamp(2rem, 5vw, 3rem)',
                 fontWeight: 800,
                 letterSpacing: '-0.03em',
-                color: '#F8FAFC',
                 margin: '0 0 16px',
                 lineHeight: 1.15,
               }}
             >
-              Parliamoci.{' '}
+              <span
+                style={{
+                  background: 'linear-gradient(120deg, #F8FAFC 30%, #c084fc 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                Parliamoci.
+              </span>{' '}
               <br />
               <span style={{ color: '#a855f7' }}>Senza impegno.</span>
             </h1>
@@ -173,14 +199,40 @@ export function DemoContent() {
               <div
                 key={i}
                 style={{
-                  padding: '20px 16px',
-                  borderRadius: 14,
+                  padding: '24px 16px',
+                  borderRadius: 16,
                   background: 'rgba(124,58,237,0.04)',
-                  border: '1px solid rgba(124,58,237,0.1)',
+                  border: '1px solid rgba(124,58,237,0.12)',
                   textAlign: 'center',
+                  transition: 'transform 0.25s, background 0.25s, border-color 0.25s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.background = 'rgba(124,58,237,0.07)';
+                  e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.background = 'rgba(124,58,237,0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(124,58,237,0.12)';
                 }}
               >
-                <Icon size={22} color="#a855f7" style={{ marginBottom: 8 }} />
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 11,
+                    margin: '0 auto 12px',
+                    background: 'linear-gradient(135deg, rgba(124,58,237,0.22), rgba(168,85,247,0.1))',
+                    border: '1px solid rgba(168,85,247,0.25)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 20px rgba(124,58,237,0.15)',
+                  }}
+                >
+                  <Icon size={20} color="#a855f7" />
+                </div>
                 <p style={{ fontSize: 15, fontWeight: 700, color: '#F8FAFC', margin: '0 0 4px' }}>
                   {label}
                 </p>
