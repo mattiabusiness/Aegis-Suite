@@ -21,7 +21,7 @@ function AegisLogo() {
     <img
       src="/logo-verticale.png"
       alt="Aegis Beauty"
-      style={{ width: 116, height: 'auto', display: 'block' }}
+      style={{ width: 168, height: 'auto', display: 'block' }}
     />
   );
 }

@@ -420,8 +420,8 @@ export function Sidebar({
           <div
             className="flex items-center overflow-hidden"
             style={{
-              height: 44,
-              width: collapsed ? 40 : 168,
+              height: 48,
+              width: collapsed ? 46 : 156,
               flexShrink: 0,
               transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
@@ -430,7 +430,7 @@ export function Sidebar({
               src={logo}
               alt={brandName}
               style={{
-                height: 40,
+                height: 46,
                 width: 'auto',
                 maxWidth: 'none',
                 objectFit: 'contain',

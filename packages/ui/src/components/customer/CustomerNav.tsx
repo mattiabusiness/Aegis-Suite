@@ -278,7 +278,7 @@ export function DesktopHeader({ business, currentPath, theme, onNavigate, brandL
         <img
           src="/logo-orizzontale.png"
           alt={brandLabel}
-          style={{ height: 30, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
+          style={{ height: 42, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
         />
       </div>
     </nav>

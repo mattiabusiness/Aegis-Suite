@@ -383,7 +383,7 @@ export function DashboardMobileHeader({
             <img
               src="/logo-orizzontale.png"
               alt={brandLabel}
-              style={{ height: 28, width: 'auto', objectFit: 'contain', opacity: 0.95 }}
+              style={{ height: 38, width: 'auto', objectFit: 'contain', opacity: 0.95 }}
             />
           </div>
         </div>
