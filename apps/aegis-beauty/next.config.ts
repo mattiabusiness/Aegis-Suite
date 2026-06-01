@@ -17,7 +17,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["web-push", "zeptomail"],
   images: {
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 3600,
+    minimumCacheTTL: 2592000, // 30 days — product screenshots are static, avoid re-optimization
+
     remotePatterns: [
       {
         protocol: "https",

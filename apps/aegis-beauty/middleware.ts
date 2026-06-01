@@ -67,6 +67,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Public marketing pages — no auth needed. Short-circuit BEFORE creating the
+  // Supabase client so the homepage/demo/legal never trigger a getUser() network
+  // round-trip on every visit (keeps these pages CDN-fast and Vercel cost-free).
+  if (pathname === '/' || pathname === '/demo' || pathname === '/legal') {
+    return NextResponse.next();
+  }
+
   // Create response to pass through (official Supabase SSR pattern — passes full request
   // so cookie updates in setAll are forwarded to downstream Server Components)
   let response = NextResponse.next({ request });
