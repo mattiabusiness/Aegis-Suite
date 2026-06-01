@@ -3,9 +3,10 @@
 // ============================================================================
 // AEGIS BEAUTY - SOLUTION SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/SolutionSection.tsx
-// Alternating premium SaaS layout — text + product screenshots
+// Alternating premium SaaS layout — 3D tilt, ambient glow, scroll connector
 // ============================================================================
 
+import { useEffect, useRef, useState } from 'react';
 import {
   Calendar,
   Users,
@@ -79,6 +80,46 @@ const IMG_BASE: React.CSSProperties = {
     '0 0 0 1px rgba(124,58,237,0.08), 0 0 60px rgba(124,58,237,0.16), 0 28px 60px rgba(0,0,0,0.55)',
 };
 
+// ─── 3D Tilt wrapper (desktop pointer only) ─────────────────────────────────
+
+function TiltCard({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    const rotY = (px - 0.5) * 9;
+    const rotX = (0.5 - py) * 9;
+    el.style.transform = `perspective(1100px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.02)`;
+  };
+
+  const handleLeave = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = 'perspective(1100px) rotateX(0deg) rotateY(0deg) scale(1)';
+  };
+
+  return (
+    <div
+      ref={ref}
+      onMouseMove={handleMove}
+      onMouseLeave={handleLeave}
+      style={{
+        position: 'relative',
+        zIndex: 1,
+        transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1)',
+        transformStyle: 'preserve-3d',
+        willChange: 'transform',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 function FeatureMedia({ feat }: { feat: Feature }) {
   if (feat.imageSecondary) {
     return (
@@ -111,6 +152,23 @@ function FeatureMedia({ feat }: { feat: Feature }) {
 }
 
 export function SolutionSection() {
+  const rowsRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const el = rowsRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const center = window.innerHeight / 2;
+      const p = (center - rect.top) / rect.height;
+      setProgress(Math.min(1, Math.max(0, p)));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <section id="solution" style={{ backgroundColor: '#0D0D16', padding: '100px 24px', scrollMarginTop: 80, overflow: 'hidden' }}>
       <div style={{ maxWidth: 1140, margin: '0 auto' }}>
@@ -152,8 +210,19 @@ export function SolutionSection() {
           </div>
         </ScrollReveal>
 
-        {/* Alternating feature rows */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 100 }}>
+        {/* Alternating feature rows + scroll connector */}
+        <div ref={rowsRef} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 100 }}>
+
+          {/* Connector spine (desktop) */}
+          <div className="sol-spine" aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 2, transform: 'translateX(-50%)', pointerEvents: 'none', zIndex: 0 }}>
+            {/* Track */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(124,58,237,0.12) 8%, rgba(124,58,237,0.12) 92%, transparent)' }} />
+            {/* Progress fill */}
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: `${progress * 100}%`, background: 'linear-gradient(to bottom, rgba(168,85,247,0.7), rgba(124,58,237,0.5))', boxShadow: '0 0 12px rgba(168,85,247,0.5)', transition: 'height 0.1s linear' }} />
+            {/* Leading dot */}
+            <div style={{ position: 'absolute', top: `calc(${progress * 100}% - 5px)`, left: '50%', transform: 'translateX(-50%)', width: 10, height: 10, borderRadius: '50%', background: '#a855f7', boxShadow: '0 0 16px rgba(168,85,247,0.9), 0 0 4px #fff', opacity: progress > 0.01 && progress < 0.99 ? 1 : 0, transition: 'opacity 0.3s' }} />
+          </div>
+
           {features.map((feat, i) => {
             const Icon = feat.icon;
             const reverse = i % 2 === 1;
@@ -162,6 +231,8 @@ export function SolutionSection() {
                 <div
                   className="solution-row"
                   style={{
+                    position: 'relative',
+                    zIndex: 1,
                     display: 'flex',
                     flexDirection: reverse ? 'row-reverse' : 'row',
                     alignItems: 'center',
@@ -191,9 +262,12 @@ export function SolutionSection() {
                         fontSize: 'clamp(1.4rem, 2.4vw, 1.9rem)',
                         fontWeight: 800,
                         letterSpacing: '-0.02em',
-                        color: '#F8FAFC',
                         margin: '0 0 14px',
                         lineHeight: 1.2,
+                        background: 'linear-gradient(120deg, #F8FAFC 25%, #c084fc 75%, #a855f7 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
                       }}
                     >
                       {feat.title}
@@ -204,8 +278,22 @@ export function SolutionSection() {
                   </div>
 
                   {/* Media */}
-                  <div className="solution-media" style={{ flex: 1, minWidth: 0 }}>
-                    <FeatureMedia feat={feat} />
+                  <div className="solution-media" style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+                    {/* Ambient glow */}
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute',
+                        inset: '-12% -10%',
+                        background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.30) 0%, rgba(124,58,237,0.08) 45%, transparent 72%)',
+                        filter: 'blur(44px)',
+                        zIndex: 0,
+                        pointerEvents: 'none',
+                      }}
+                    />
+                    <TiltCard>
+                      <FeatureMedia feat={feat} />
+                    </TiltCard>
                   </div>
                 </div>
               </ScrollReveal>
@@ -223,6 +311,7 @@ export function SolutionSection() {
           .solution-text, .solution-media {
             width: 100% !important;
           }
+          .sol-spine { display: none !important; }
         }
       `}</style>
     </section>
