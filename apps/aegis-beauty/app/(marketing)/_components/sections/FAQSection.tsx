@@ -118,8 +118,24 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section style={{ background: 'linear-gradient(180deg, #0A0A0F 0%, #080010 100%)', padding: '100px 24px' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+    <section style={{ background: 'linear-gradient(180deg, #0A0A0F 0%, #080010 100%)', padding: '100px 24px', position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient glow */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 800,
+          height: 400,
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(124,58,237,0.07) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div style={{ maxWidth: 760, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <ScrollReveal direction="up">
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -145,9 +161,12 @@ export function FAQSection() {
                 fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)',
                 fontWeight: 800,
                 letterSpacing: '-0.02em',
-                color: '#F8FAFC',
                 margin: 0,
                 lineHeight: 1.2,
+                background: 'linear-gradient(120deg, #F8FAFC 25%, #c084fc 80%, #a855f7 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}
             >
               Le domande che stai già facendo.

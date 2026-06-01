@@ -1,14 +1,30 @@
 // ============================================================================
 // AEGIS BEAUTY - WHY SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/WhySection.tsx
-// Asymmetric layout: text 60% left, geometric SVG pattern 40% right
+// Asymmetric layout: text 60% left, living geometric system 40% right
 // ============================================================================
 
 import { ScrollReveal } from '../ui/ScrollReveal';
 
 export function WhySection() {
   return (
-    <section style={{ backgroundColor: '#0D0D16', padding: '100px 24px', overflow: 'hidden' }}>
+    <section style={{ backgroundColor: '#0D0D16', padding: '100px 24px', overflow: 'hidden', position: 'relative' }}>
+      {/* Ambient glow */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          right: '8%',
+          transform: 'translateY(-50%)',
+          width: 600,
+          height: 600,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 65%)',
+          pointerEvents: 'none',
+        }}
+      />
+
       <div
         style={{
           maxWidth: 1100,
@@ -17,6 +33,8 @@ export function WhySection() {
           gridTemplateColumns: '1fr 1fr',
           gap: 80,
           alignItems: 'center',
+          position: 'relative',
+          zIndex: 1,
         }}
         className="why-grid"
       >
@@ -45,9 +63,12 @@ export function WhySection() {
                 fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)',
                 fontWeight: 800,
                 letterSpacing: '-0.02em',
-                color: '#F8FAFC',
                 margin: '0 0 24px',
                 lineHeight: 1.2,
+                background: 'linear-gradient(120deg, #F8FAFC 25%, #c084fc 80%, #a855f7 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}
             >
               Non mi piaceva come andavano le cose.
@@ -68,7 +89,7 @@ export function WhySection() {
           </div>
         </ScrollReveal>
 
-        {/* Geometric SVG pattern */}
+        {/* Living geometric system */}
         <ScrollReveal direction="right">
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <GeometricPattern />
@@ -80,13 +101,16 @@ export function WhySection() {
         @media (max-width: 768px) {
           .why-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
         }
-        @keyframes geoRotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes geoSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes geoSpinRev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+        @keyframes geoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes geoCorePulse {
+          0%, 100% { opacity: 0.55; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.18); }
         }
-        @keyframes geoFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-12px); }
+        @keyframes dotP {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.4); }
         }
       `}</style>
     </section>
@@ -94,88 +118,100 @@ export function WhySection() {
 }
 
 function GeometricPattern() {
+  const center = { transformOrigin: '170px 170px' };
+
   return (
-    <div style={{ position: 'relative', width: 320, height: 320 }}>
+    <div style={{ position: 'relative', width: 340, height: 340 }}>
+      {/* Soft radial glow behind */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: '10%',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 65%)',
+          filter: 'blur(30px)',
+        }}
+      />
+
       <svg
-        width="320"
-        height="320"
-        viewBox="0 0 320 320"
+        width="340"
+        height="340"
+        viewBox="0 0 340 340"
         fill="none"
         style={{ position: 'absolute', inset: 0, animation: 'geoFloat 6s ease-in-out infinite' }}
       >
-        {/* Outer ring */}
-        <circle
-          cx="160"
-          cy="160"
-          r="140"
-          stroke="rgba(124,58,237,0.12)"
-          strokeWidth="1"
-          strokeDasharray="8 6"
-        />
-        {/* Mid ring (slow rotate) */}
-        <circle
-          cx="160"
-          cy="160"
-          r="100"
-          stroke="rgba(168,85,247,0.15)"
-          strokeWidth="1"
-          strokeDasharray="4 8"
-          style={{ transformOrigin: '160px 160px', animation: 'geoRotate 30s linear infinite' }}
-        />
-        {/* Inner ring */}
-        <circle
-          cx="160"
-          cy="160"
-          r="60"
-          stroke="rgba(192,132,252,0.2)"
-          strokeWidth="1"
-        />
-        {/* Center hex */}
+        <defs>
+          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#c084fc" />
+            <stop offset="100%" stopColor="#7c3aed" />
+          </linearGradient>
+          <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#c084fc" />
+            <stop offset="100%" stopColor="#7c3aed" />
+          </radialGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Outer dashed ring — slow counter-rotation */}
+        <g style={{ ...center, animation: 'geoSpinRev 50s linear infinite' }}>
+          <circle cx="170" cy="170" r="150" stroke="rgba(124,58,237,0.14)" strokeWidth="1" strokeDasharray="8 7" />
+          {/* Ring accent dots */}
+          {[0, 60, 120, 180, 240, 300].map((deg, i) => {
+            const rad = (deg * Math.PI) / 180;
+            const x = 170 + 150 * Math.cos(rad);
+            const y = 170 + 150 * Math.sin(rad);
+            return (
+              <circle key={i} cx={x} cy={y} r="3.5" fill="rgba(168,85,247,0.5)"
+                style={{ animation: `dotP ${1.6 + i * 0.3}s ease-in-out infinite`, animationDelay: `${i * 0.22}s` }} />
+            );
+          })}
+        </g>
+
+        {/* Mid ring — rotation */}
+        <g style={{ ...center, animation: 'geoSpin 30s linear infinite' }}>
+          <circle cx="170" cy="170" r="108" stroke="url(#ringGrad)" strokeOpacity="0.5" strokeWidth="1.2" strokeDasharray="3 9" />
+        </g>
+
+        {/* Orbiting node on mid ring */}
+        <g style={{ ...center, animation: 'geoSpin 8s linear infinite' }}>
+          <circle cx="170" cy="62" r="5" fill="#a855f7" filter="url(#glow)" />
+        </g>
+        {/* Orbiting node on outer ring (opposite) */}
+        <g style={{ ...center, animation: 'geoSpinRev 12s linear infinite' }}>
+          <circle cx="320" cy="170" r="4" fill="#c084fc" filter="url(#glow)" />
+        </g>
+
+        {/* Inner ring (static) */}
+        <circle cx="170" cy="170" r="66" stroke="rgba(192,132,252,0.22)" strokeWidth="1" />
+
+        {/* Connection lines from core to inner ring */}
+        {[0, 60, 120, 180, 240, 300].map((deg, i) => {
+          const rad = (deg * Math.PI) / 180;
+          const x = 170 + 66 * Math.cos(rad);
+          const y = 170 + 66 * Math.sin(rad);
+          return <line key={i} x1="170" y1="170" x2={x} y2={y} stroke="rgba(124,58,237,0.1)" strokeWidth="1" />;
+        })}
+
+        {/* Center hexagon */}
         <polygon
-          points="160,120 194,140 194,180 160,200 126,180 126,140"
-          fill="rgba(124,58,237,0.08)"
-          stroke="rgba(168,85,247,0.3)"
+          points="170,128 207,149 207,191 170,212 133,191 133,149"
+          fill="rgba(124,58,237,0.1)"
+          stroke="url(#ringGrad)"
+          strokeOpacity="0.5"
           strokeWidth="1.5"
         />
-        {/* Dot accents on ring */}
-        {[0, 60, 120, 180, 240, 300].map((deg, i) => {
-          const rad = (deg * Math.PI) / 180;
-          const x = 160 + 140 * Math.cos(rad);
-          const y = 160 + 140 * Math.sin(rad);
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r="4"
-              fill="rgba(168,85,247,0.5)"
-              style={{
-                animation: `dotP ${1.5 + i * 0.3}s ease-in-out infinite`,
-                animationDelay: `${i * 0.25}s`,
-              }}
-            />
-          );
-        })}
-        {/* Lines from center to ring dots */}
-        {[0, 60, 120, 180, 240, 300].map((deg, i) => {
-          const rad = (deg * Math.PI) / 180;
-          const x = 160 + 100 * Math.cos(rad);
-          const y = 160 + 100 * Math.sin(rad);
-          return (
-            <line
-              key={i}
-              x1="160"
-              y1="160"
-              x2={x}
-              y2={y}
-              stroke="rgba(124,58,237,0.1)"
-              strokeWidth="1"
-            />
-          );
-        })}
-        {/* Center dot */}
-        <circle cx="160" cy="160" r="8" fill="rgba(124,58,237,0.6)" />
-        <circle cx="160" cy="160" r="4" fill="#a855f7" />
+
+        {/* Pulsing core */}
+        <circle cx="170" cy="170" r="14" fill="url(#coreGrad)" filter="url(#glow)"
+          style={{ transformOrigin: '170px 170px', animation: 'geoCorePulse 3s ease-in-out infinite' }} />
+        <circle cx="170" cy="170" r="5" fill="#F8FAFC" />
       </svg>
     </div>
   );
