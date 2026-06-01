@@ -67,7 +67,23 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
 
 export function StatsSection() {
   return (
-    <section style={{ backgroundColor: '#0D0D16', padding: '80px 24px' }}>
+    <section style={{ backgroundColor: '#0D0D16', padding: '80px 24px', position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient glow */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 800,
+          height: 360,
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
+
       <div
         style={{
           maxWidth: 900,
@@ -75,6 +91,8 @@ export function StatsSection() {
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 32,
+          position: 'relative',
+          zIndex: 1,
         }}
         className="stats-grid"
       >
@@ -83,10 +101,11 @@ export function StatsSection() {
             key={i}
             style={{
               textAlign: 'center',
-              padding: '36px 24px',
+              padding: '40px 24px',
               borderRadius: 20,
               background: 'rgba(124,58,237,0.04)',
-              border: '1px solid rgba(124,58,237,0.1)',
+              border: '1px solid rgba(124,58,237,0.14)',
+              boxShadow: '0 0 0 1px rgba(124,58,237,0.05), 0 0 40px rgba(124,58,237,0.06), 0 16px 40px rgba(0,0,0,0.35)',
             }}
           >
             <div

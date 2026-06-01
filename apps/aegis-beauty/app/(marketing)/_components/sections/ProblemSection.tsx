@@ -31,8 +31,24 @@ const problems = [
 
 export function ProblemSection() {
   return (
-    <section style={{ backgroundColor: '#0A0A0F', padding: '100px 24px' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+    <section style={{ backgroundColor: '#0A0A0F', padding: '100px 24px', position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient glow */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 900,
+          height: 500,
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(124,58,237,0.07) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <ScrollReveal>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
@@ -82,6 +98,7 @@ export function ProblemSection() {
               <ScrollReveal key={i} delay={i * 150}>
                 <div
                   style={{
+                    position: 'relative',
                     padding: 32,
                     borderRadius: 20,
                     background: 'rgba(124,58,237,0.04)',
@@ -92,6 +109,7 @@ export function ProblemSection() {
                     cursor: 'default',
                     height: '100%',
                     boxSizing: 'border-box',
+                    overflow: 'hidden',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-4px)';
@@ -104,8 +122,28 @@ export function ProblemSection() {
                       '0 0 0 1px rgba(124,58,237,0.08), 0 8px 32px rgba(0,0,0,0.3)';
                   }}
                 >
+                  {/* Watermark number */}
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      top: -8,
+                      right: 12,
+                      fontSize: 88,
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      letterSpacing: '-0.04em',
+                      color: 'transparent',
+                      WebkitTextStroke: '1px rgba(168,85,247,0.12)',
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
                   <div
                     style={{
+                      position: 'relative',
                       width: 48,
                       height: 48,
                       borderRadius: 12,
@@ -115,22 +153,27 @@ export function ProblemSection() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginBottom: 20,
+                      boxShadow: '0 0 20px rgba(124,58,237,0.15)',
                     }}
                   >
                     <Icon size={22} color="#a855f7" />
                   </div>
                   <h3
                     style={{
+                      position: 'relative',
                       fontSize: 18,
                       fontWeight: 700,
-                      color: '#F8FAFC',
                       margin: '0 0 12px',
                       lineHeight: 1.3,
+                      background: 'linear-gradient(120deg, #F8FAFC 30%, #c084fc 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
                     }}
                   >
                     {problem.title}
                   </h3>
-                  <p style={{ fontSize: 15, color: '#64748B', margin: 0, lineHeight: 1.7 }}>
+                  <p style={{ position: 'relative', fontSize: 15, color: '#64748B', margin: 0, lineHeight: 1.7 }}>
                     {problem.description}
                   </p>
                 </div>

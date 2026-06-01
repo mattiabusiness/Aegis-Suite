@@ -6,7 +6,7 @@
 // ============================================================================
 
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
 
 export function CTASection() {
@@ -93,6 +93,24 @@ export function CTASection() {
             Prenota la tua demo gratuita
             <ArrowRight size={20} />
           </Link>
+
+          {/* Reassurance microcopy */}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: '8px 22px',
+              marginTop: 28,
+            }}
+          >
+            {['Nessuna carta di credito', 'Setup in 30 minuti', 'Cancelli quando vuoi'].map((t) => (
+              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#64748B' }}>
+                <Check size={14} color="#a855f7" strokeWidth={2.5} />
+                {t}
+              </span>
+            ))}
+          </div>
         </ScrollReveal>
       </div>
     </section>

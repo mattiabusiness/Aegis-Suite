@@ -169,6 +169,11 @@ export function PioneersSection() {
             >
               {isFull ? 'Entra in lista d\'attesa' : 'Unisciti ai Pioneers'}
             </Link>
+
+            {/* Reassurance microcopy */}
+            <p style={{ fontSize: 13, color: '#475569', margin: '18px 0 0', lineHeight: 1.5 }}>
+              Nessuna carta di credito · Setup in 30 minuti · Cancelli quando vuoi
+            </p>
           </div>
         </ScrollReveal>
       </div>

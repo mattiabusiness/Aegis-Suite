@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, Sparkles } from 'lucide-react';
+import { ChevronDown, Sparkles, Check } from 'lucide-react';
 import Link from 'next/link';
 import { FloatingParticles } from '@aegis/ui';
 
@@ -277,6 +277,25 @@ export function Hero() {
           >
             Diventa Pioneer
           </a>
+        </motion.div>
+
+        {/* Reassurance microcopy */}
+        <motion.div
+          variants={itemVariants}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: '8px 22px',
+            marginTop: 4,
+          }}
+        >
+          {['Nessuna carta di credito', 'Setup in 30 minuti', 'Cancelli quando vuoi'].map((t) => (
+            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#64748B' }}>
+              <Check size={14} color="#a855f7" strokeWidth={2.5} />
+              {t}
+            </span>
+          ))}
         </motion.div>
       </motion.div>
 

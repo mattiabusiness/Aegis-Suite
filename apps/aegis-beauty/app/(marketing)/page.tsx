@@ -9,9 +9,14 @@ import type { Metadata } from 'next';
 import { Navbar } from './_components/Navbar';
 import { HeroLoader } from './_components/HeroLoader';
 import { Footer } from './_components/Footer';
+import { ScrollProgress } from './_components/ui/ScrollProgress';
+import { StickyMobileCTA } from './_components/ui/StickyMobileCTA';
+import { SectionDivider } from './_components/ui/SectionDivider';
 import { VideoSection } from './_components/sections/VideoSection';
 import { ProblemSection } from './_components/sections/ProblemSection';
 import { SolutionSection } from './_components/sections/SolutionSection';
+import { TrustBar } from './_components/sections/TrustBar';
+import { ComparisonSection } from './_components/sections/ComparisonSection';
 import { PioneersSection } from './_components/sections/PioneersSection';
 import { WhySection } from './_components/sections/WhySection';
 import { FounderSection } from './_components/sections/FounderSection';
@@ -80,21 +85,35 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
+      <ScrollProgress />
       <Navbar />
       <main>
         <HeroLoader />
         <VideoSection />
+        <SectionDivider />
         <ProblemSection />
+        <SectionDivider />
         <SolutionSection />
+        <SectionDivider />
+        <TrustBar />
+        <SectionDivider />
         <ROICalculatorSection />
+        <SectionDivider />
+        <ComparisonSection />
+        <SectionDivider />
         <PioneersSection />
+        <SectionDivider />
         <WhySection />
+        <SectionDivider />
         <FounderSection />
+        <SectionDivider />
         <StatsSection />
+        <SectionDivider />
         <FAQSection />
         <CTASection />
       </main>
       <Footer />
+      <StickyMobileCTA />
     </>
   );
 }
