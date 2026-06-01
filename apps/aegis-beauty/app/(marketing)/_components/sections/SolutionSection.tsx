@@ -3,6 +3,7 @@
 // ============================================================================
 // AEGIS BEAUTY - SOLUTION SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/SolutionSection.tsx
+// Alternating premium SaaS layout — text + product screenshots
 // ============================================================================
 
 import {
@@ -15,52 +16,107 @@ import {
 } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
 
-const features = [
+type Feature = {
+  icon: typeof Calendar;
+  title: string;
+  description: string;
+  image: string;
+  imageSecondary?: string;
+};
+
+const features: Feature[] = [
   {
     icon: Calendar,
     title: 'Prenotazioni senza caos.',
     description:
       'Calendario intelligente, disponibilità in tempo reale, nessun doppio appuntamento. I tuoi clienti prenotano quando vogliono. Tu trovi tutto già organizzato.',
+    image: '/product-calendario.png',
   },
   {
     icon: Users,
     title: 'CRM che conosce i tuoi clienti.',
     description:
       'Nome, storico, preferenze, note del professionista. Ogni cliente ha la sua scheda completa. Non dimentichi più nulla — e loro lo sentono.',
+    image: '/product-clienti.png',
   },
   {
     icon: BarChart3,
     title: 'Dati che guidano le decisioni.',
     description:
       'Quali servizi rendono di più. Quali ore sono sempre piene. Quanto vale ogni cliente nel tempo. Smetti di andare a sensazione — inizia a crescere con certezza.',
+    image: '/product-statistiche.png',
   },
   {
     icon: Settings,
     title: 'Staff gestito senza attriti.',
     description:
       'Permessi granulari per ogni collaboratrice, inviti via QR code, orari personalizzati. La tua squadra lavora in autonomia — senza toccare quello che non deve toccare.',
+    image: '/product-staff.png',
   },
   {
     icon: Smartphone,
     title: 'Il tuo brand. Non il nostro.',
     description:
       'Pagina prenotazione personalizzata con il nome e il brand del tuo salone. I tuoi clienti vedono te — non una piattaforma generica. White-label puro, zero commissioni.',
+    image: '/product-prenota.png',
+    imageSecondary: '/product-brand.png',
   },
   {
     icon: Bell,
     title: 'Promemoria automatici.',
     description:
       'Email e notifiche push prima di ogni appuntamento. I no-show calano. I clienti arrivano puntuali. Tu pensi al lavoro — non ai messaggi di reminder su WhatsApp.',
+    image: '/product-overview.png',
   },
 ];
 
+const IMG_BASE: React.CSSProperties = {
+  width: '100%',
+  display: 'block',
+  borderRadius: 16,
+  border: '1px solid rgba(168,85,247,0.28)',
+  boxShadow:
+    '0 0 0 1px rgba(124,58,237,0.08), 0 0 60px rgba(124,58,237,0.16), 0 28px 60px rgba(0,0,0,0.55)',
+};
+
+function FeatureMedia({ feat }: { feat: Feature }) {
+  if (feat.imageSecondary) {
+    return (
+      <div style={{ position: 'relative', width: '100%', paddingBottom: 32 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={feat.image} alt={feat.title} style={IMG_BASE} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={feat.imageSecondary}
+          alt=""
+          aria-hidden="true"
+          className="sol-float"
+          style={{
+            ...IMG_BASE,
+            position: 'absolute',
+            width: '38%',
+            right: -14,
+            bottom: 0,
+            boxShadow:
+              '0 0 0 1px rgba(124,58,237,0.12), 0 0 50px rgba(124,58,237,0.22), 0 24px 50px rgba(0,0,0,0.6)',
+          }}
+        />
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={feat.image} alt={feat.title} style={IMG_BASE} />
+  );
+}
+
 export function SolutionSection() {
   return (
-    <section id="solution" style={{ backgroundColor: '#0D0D16', padding: '100px 24px', scrollMarginTop: 80 }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+    <section id="solution" style={{ backgroundColor: '#0D0D16', padding: '100px 24px', scrollMarginTop: 80, overflow: 'hidden' }}>
+      <div style={{ maxWidth: 1140, margin: '0 auto' }}>
         {/* Header */}
         <ScrollReveal>
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <div style={{ textAlign: 'center', marginBottom: 80 }}>
             <span
               style={{
                 display: 'inline-block',
@@ -96,60 +152,61 @@ export function SolutionSection() {
           </div>
         </ScrollReveal>
 
-        {/* Features grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
-          }}
-          className="solution-grid"
-        >
+        {/* Alternating feature rows */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 100 }}>
           {features.map((feat, i) => {
             const Icon = feat.icon;
+            const reverse = i % 2 === 1;
             return (
-              <ScrollReveal key={i} delay={i * 80}>
+              <ScrollReveal key={i}>
                 <div
+                  className="solution-row"
                   style={{
-                    padding: '28px 24px',
-                    borderRadius: 16,
-                    background: 'rgba(124,58,237,0.03)',
-                    border: '1px solid rgba(124,58,237,0.1)',
-                    transition: 'transform 0.25s, background 0.25s, border-color 0.25s',
-                    cursor: 'default',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.02)';
-                    e.currentTarget.style.background = 'rgba(124,58,237,0.07)';
-                    e.currentTarget.style.borderColor = 'rgba(124,58,237,0.22)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.background = 'rgba(124,58,237,0.03)';
-                    e.currentTarget.style.borderColor = 'rgba(124,58,237,0.1)';
+                    display: 'flex',
+                    flexDirection: reverse ? 'row-reverse' : 'row',
+                    alignItems: 'center',
+                    gap: 64,
                   }}
                 >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 10,
-                      background: 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(168,85,247,0.1))',
-                      border: '1px solid rgba(168,85,247,0.25)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 16,
-                    }}
-                  >
-                    <Icon size={20} color="#a855f7" />
+                  {/* Text */}
+                  <div className="solution-text" style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 12,
+                        background: 'linear-gradient(135deg, rgba(124,58,237,0.22), rgba(168,85,247,0.1))',
+                        border: '1px solid rgba(168,85,247,0.28)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 22,
+                        boxShadow: '0 0 24px rgba(124,58,237,0.18)',
+                      }}
+                    >
+                      <Icon size={22} color="#a855f7" />
+                    </div>
+                    <h3
+                      style={{
+                        fontSize: 'clamp(1.4rem, 2.4vw, 1.9rem)',
+                        fontWeight: 800,
+                        letterSpacing: '-0.02em',
+                        color: '#F8FAFC',
+                        margin: '0 0 14px',
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {feat.title}
+                    </h3>
+                    <p style={{ fontSize: 16, color: '#94A3B8', margin: 0, lineHeight: 1.75 }}>
+                      {feat.description}
+                    </p>
                   </div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#F8FAFC', margin: '0 0 8px', lineHeight: 1.3 }}>
-                    {feat.title}
-                  </h3>
-                  <p style={{ fontSize: 14, color: '#64748B', margin: 0, lineHeight: 1.6 }}>
-                    {feat.description}
-                  </p>
+
+                  {/* Media */}
+                  <div className="solution-media" style={{ flex: 1, minWidth: 0 }}>
+                    <FeatureMedia feat={feat} />
+                  </div>
                 </div>
               </ScrollReveal>
             );
@@ -158,8 +215,15 @@ export function SolutionSection() {
       </div>
 
       <style>{`
-        @media (max-width: 900px) { .solution-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-        @media (max-width: 540px) { .solution-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 900px) {
+          .solution-row {
+            flex-direction: column !important;
+            gap: 32px !important;
+          }
+          .solution-text, .solution-media {
+            width: 100% !important;
+          }
+        }
       `}</style>
     </section>
   );
