@@ -17,20 +17,12 @@ import { createClient, signIn, signUp } from '@aegis/core';
 
 function AegisLogo() {
   return (
-    <div style={{
-      width: 60,
-      height: 60,
-      borderRadius: '1rem',
-      background: 'linear-gradient(135deg, #3b0764, #6d28d9)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      boxShadow: '0 0 30px rgba(168,85,247,0.35)',
-    }}>
-      <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-      </svg>
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/logo-verticale.png"
+      alt="Aegis Beauty"
+      style={{ width: 116, height: 'auto', display: 'block' }}
+    />
   );
 }
 
@@ -325,8 +317,8 @@ function LoginContent() {
       initialPhone={inviteData.phone}
       inviteMode={inviteData.isInvite}
       accentColor="#a855f7"
-      brandName="Aegis"
-      brandSubtitle="Beauty"
+      brandName=""
+      brandSubtitle=""
       logo={<AegisLogo />}
       termsHref={inviteData.isStaffInvite ? 'https://aegisbeauty.app/legal#terms-staff' : 'https://aegisbeauty.app/legal#terms-customer'}
       privacyHref={inviteData.isStaffInvite ? 'https://aegisbeauty.app/legal#privacy-staff' : 'https://aegisbeauty.app/legal#privacy-customer'}

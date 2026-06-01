@@ -13,7 +13,7 @@ type Row = { label: string; aegis: string; market: string };
 
 const rows: Row[] = [
   { label: 'Commissioni per prenotazione', aegis: 'Zero, per sempre', market: 'Fino al 30%' },
-  { label: 'Il brand sulla pagina', aegis: 'Solo il tuo', market: 'Il loro logo' },
+  { label: 'Il brand sulla pagina', aegis: 'Solo il tuo', market: 'Diversi brand' },
   { label: 'I clienti restano tuoi', aegis: 'Sempre', market: 'Sono loro' },
   { label: 'Concorrenti accanto a te', aegis: 'Mai', market: 'Sì, sempre' },
   { label: 'CRM e storico clienti', aegis: 'Completo e tuo', market: 'Limitato' },

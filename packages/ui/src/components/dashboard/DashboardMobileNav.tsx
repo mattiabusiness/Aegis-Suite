@@ -35,18 +35,6 @@ const THEME_GRADIENT: Record<string, [string, string]> = {
 };
 
 // ============================================================================
-// AEGIS LOGO
-// ============================================================================
-
-function AegisLogo() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14, color: '#fff' }}>
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-    </svg>
-  );
-}
-
-// ============================================================================
 // DASHBOARD MOBILE HEADER
 // ============================================================================
 
@@ -390,19 +378,13 @@ export function DashboardMobileHeader({
           </button>
 
           {/* Aegis brand: icon + label */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(255,255,255,0.18)',
-              border: '1px solid rgba(255,255,255,0.28)',
-              flexShrink: 0,
-            }}>
-              <AegisLogo />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '0.78rem', color: 'rgba(255,255,255,0.92)', letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
-              {brandLabel}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-orizzontale.png"
+              alt={brandLabel}
+              style={{ height: 28, width: 'auto', objectFit: 'contain', opacity: 0.95 }}
+            />
           </div>
         </div>
       </header>

@@ -415,40 +415,63 @@ export function Sidebar({
           transition: 'padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        {/* Logo */}
-        <div
-          className="flex-shrink-0 rounded-xl flex items-center justify-center"
-          style={{
-            width: 42,
-            height: 42,
-            background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(126,34,206,0.4))',
-            border: '1px solid rgba(168,85,247,0.25)',
-            boxShadow: '0 4px 16px rgba(168,85,247,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
-            animation: 'none',
-          }}
-        >
-          {typeof logo === 'string' ? (
-            <img src={logo} alt={brandName} className="w-6 h-6 object-contain" />
-          ) : (
-            logo
-          )}
-        </div>
+        {typeof logo === 'string' ? (
+          /* Image logo lockup — full horizontal when expanded, cropped emblem when collapsed */
+          <div
+            className="flex items-center overflow-hidden"
+            style={{
+              height: 44,
+              width: collapsed ? 40 : 168,
+              flexShrink: 0,
+              transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            <img
+              src={logo}
+              alt={brandName}
+              style={{
+                height: 40,
+                width: 'auto',
+                maxWidth: 'none',
+                objectFit: 'contain',
+                objectPosition: 'left center',
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Logo node (fallback) */}
+            <div
+              className="flex-shrink-0 rounded-xl flex items-center justify-center"
+              style={{
+                width: 42,
+                height: 42,
+                background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(126,34,206,0.4))',
+                border: '1px solid rgba(168,85,247,0.25)',
+                boxShadow: '0 4px 16px rgba(168,85,247,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+                animation: 'none',
+              }}
+            >
+              {logo}
+            </div>
 
-        {/* Brand — smooth collapse */}
-        <span
-          className="ml-3 font-bold text-white whitespace-nowrap"
-          style={{
-            fontSize: '1.05rem',
-            letterSpacing: '-0.01em',
-            fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)",
-            opacity: collapsed ? 0 : 1,
-            maxWidth: collapsed ? 0 : 160,
-            overflow: 'hidden',
-            transition: 'opacity 0.25s ease, max-width 0.3s cubic-bezier(0.4,0,0.2,1)',
-          }}
-        >
-          {brandName}
-        </span>
+            {/* Brand — smooth collapse */}
+            <span
+              className="ml-3 font-bold text-white whitespace-nowrap"
+              style={{
+                fontSize: '1.05rem',
+                letterSpacing: '-0.01em',
+                fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)",
+                opacity: collapsed ? 0 : 1,
+                maxWidth: collapsed ? 0 : 160,
+                overflow: 'hidden',
+                transition: 'opacity 0.25s ease, max-width 0.3s cubic-bezier(0.4,0,0.2,1)',
+              }}
+            >
+              {brandName}
+            </span>
+          </>
+        )}
 
         {/* Collapse button — always visible, bigger hit area */}
         <div

@@ -51,17 +51,6 @@ function useNav(basePath: string, currentPath: string) {
   return { activeIndex };
 }
 
-// ============================================================================
-// AEGIS LOGO
-// ============================================================================
-
-function AegisLogo({ size }: { size: number }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: size, height: size, color: '#fff' }}>
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-    </svg>
-  );
-}
 
 // ============================================================================
 // BOTTOM NAV (mobile — lg:hidden)
@@ -284,23 +273,13 @@ export function DesktopHeader({ business, currentPath, theme, onNavigate, brandL
       </div>
 
       {/* Right: Aegis brand */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, flex: 1, justifyContent: 'flex-end' }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(255,255,255,0.15)',
-          border: '1px solid rgba(255,255,255,0.22)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
-        }}>
-          <AegisLogo size={16} />
-        </div>
-        <span style={{
-          color: '#fff', fontSize: '0.95rem', fontWeight: 700,
-          letterSpacing: '-0.02em', opacity: 0.88,
-          fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)",
-        }}>
-          {brandLabel}
-        </span>
+      <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-orizzontale.png"
+          alt={brandLabel}
+          style={{ height: 30, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
+        />
       </div>
     </nav>
   );

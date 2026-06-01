@@ -11,21 +11,12 @@ import { ForgotPasswordCard } from '@aegis/ui';
 
 function AegisLogo() {
   return (
-    <div style={{
-      width: 52,
-      height: 52,
-      borderRadius: '0.875rem',
-      background: 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))',
-      border: '1px solid rgba(255,255,255,0.2)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      boxShadow: '0 0 20px rgba(168,85,247,0.25)',
-    }}>
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-      </svg>
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/logo-verticale.png"
+      alt="Aegis Beauty"
+      style={{ width: 96, height: 'auto', display: 'block' }}
+    />
   );
 }
 
@@ -48,8 +39,8 @@ export default function ForgotPasswordPage() {
       onBackToLogin={() => router.push('/login')}
       accentColor="#a855f7"
       logo={<AegisLogo />}
-      brandName="Aegis"
-      brandSubtitle="Beauty"
+      brandName=""
+      brandSubtitle=""
     />
   );
 }
