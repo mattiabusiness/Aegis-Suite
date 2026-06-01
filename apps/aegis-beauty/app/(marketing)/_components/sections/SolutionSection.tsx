@@ -7,6 +7,7 @@
 // ============================================================================
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import {
   Calendar,
   Users,
@@ -16,6 +17,17 @@ import {
   Bell,
 } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
+
+// Intrinsic dimensions (from PNG IHDR) — required by next/image for aspect ratio
+const DIMS: Record<string, { w: number; h: number }> = {
+  '/product-calendario.png': { w: 1749, h: 803 },
+  '/product-clienti.png': { w: 1878, h: 911 },
+  '/product-statistiche.png': { w: 1878, h: 905 },
+  '/product-staff.png': { w: 1494, h: 388 },
+  '/product-prenota.png': { w: 1895, h: 900 },
+  '/product-brand.png': { w: 817, h: 720 },
+  '/product-overview.png': { w: 1877, h: 906 },
+};
 
 type Feature = {
   icon: typeof Calendar;
@@ -73,6 +85,7 @@ const features: Feature[] = [
 
 const IMG_BASE: React.CSSProperties = {
   width: '100%',
+  height: 'auto',
   display: 'block',
   borderRadius: 16,
   border: '1px solid rgba(168,85,247,0.28)',
@@ -121,16 +134,26 @@ function TiltCard({ children }: { children: React.ReactNode }) {
 }
 
 function FeatureMedia({ feat }: { feat: Feature }) {
+  const d = DIMS[feat.image];
   if (feat.imageSecondary) {
+    const ds = DIMS[feat.imageSecondary];
     return (
       <div style={{ position: 'relative', width: '100%', paddingBottom: 52 }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={feat.image} alt={feat.title} style={IMG_BASE} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
+          src={feat.image}
+          alt={feat.title}
+          width={d.w}
+          height={d.h}
+          sizes="(max-width: 900px) 100vw, 50vw"
+          style={IMG_BASE}
+        />
+        <Image
           src={feat.imageSecondary}
           alt=""
           aria-hidden="true"
+          width={ds.w}
+          height={ds.h}
+          sizes="(max-width: 900px) 40vw, 20vw"
           className="sol-float"
           style={{
             ...IMG_BASE,
@@ -146,8 +169,14 @@ function FeatureMedia({ feat }: { feat: Feature }) {
     );
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={feat.image} alt={feat.title} style={IMG_BASE} />
+    <Image
+      src={feat.image}
+      alt={feat.title}
+      width={d.w}
+      height={d.h}
+      sizes="(max-width: 900px) 100vw, 50vw"
+      style={IMG_BASE}
+    />
   );
 }
 
