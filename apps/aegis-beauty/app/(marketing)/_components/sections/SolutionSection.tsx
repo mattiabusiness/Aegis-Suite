@@ -21,12 +21,12 @@ import { ScrollReveal } from '../ui/ScrollReveal';
 // Intrinsic dimensions (from PNG IHDR) — required by next/image for aspect ratio
 const DIMS: Record<string, { w: number; h: number }> = {
   '/product-calendario.png': { w: 1749, h: 803 },
-  '/product-clienti.png': { w: 1878, h: 911 },
-  '/product-statistiche.png': { w: 1878, h: 905 },
+  '/product-clienti.png': { w: 1886, h: 914 },
+  '/product-statistiche.png': { w: 1883, h: 910 },
   '/product-staff.png': { w: 1494, h: 388 },
   '/product-prenota.png': { w: 1895, h: 900 },
   '/product-brand.png': { w: 817, h: 720 },
-  '/product-overview.png': { w: 1877, h: 906 },
+  '/product-overview.png': { w: 1884, h: 913 },
 };
 
 type Feature = {
