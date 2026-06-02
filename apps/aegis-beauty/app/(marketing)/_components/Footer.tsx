@@ -6,9 +6,6 @@
 // ============================================================================
 
 import Link from 'next/link';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ subsets: ['latin'], weight: ['600', '700'] });
 
 export function Footer() {
   return (
@@ -32,12 +29,9 @@ export function Footer() {
       >
         {/* Brand column */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <FooterLogoIcon />
-            <span style={{ fontSize: 17, display: 'flex' }}>
-              <span className={inter.className} style={{ color: '#F8FAFC', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>Aegis</span>
-              <span className={inter.className} style={{ color: '#a855f7', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>&nbsp;Beauty</span>
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-marketing.png" alt="Aegis Beauty" style={{ height: 34, width: 'auto', display: 'block' }} />
           </div>
           <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, maxWidth: 280, margin: '0 0 20px' }}>
             Il gestionale che mette il tuo brand al centro.
@@ -128,27 +122,5 @@ export function Footer() {
         }
       `}</style>
     </footer>
-  );
-}
-
-function FooterLogoIcon() {
-  return (
-    <div
-      style={{
-        width: 28,
-        height: 28,
-        borderRadius: 8,
-        background: 'linear-gradient(135deg, rgba(168,85,247,0.25), rgba(126,34,206,0.35))',
-        border: '1px solid rgba(168,85,247,0.2)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}
-    >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-      </svg>
-    </div>
   );
 }

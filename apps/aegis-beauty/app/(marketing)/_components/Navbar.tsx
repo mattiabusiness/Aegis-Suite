@@ -9,9 +9,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ subsets: ['latin'], weight: ['600', '700'] });
 
 export function Navbar() {
   const [visible, setVisible] = useState(true);
@@ -63,12 +60,9 @@ export function Navbar() {
           }}
         >
           {/* Logo */}
-          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <LogoIcon />
-            <span style={{ fontSize: 18, display: 'flex' }}>
-              <span className={inter.className} style={{ color: '#F8FAFC', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>Aegis</span>
-              <span className={inter.className} style={{ color: '#a855f7', fontWeight: 600, letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>&nbsp;Beauty</span>
-            </span>
+          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-marketing.png" alt="Aegis Beauty" style={{ height: 40, width: 'auto', display: 'block' }} />
           </Link>
 
           {/* Desktop nav */}
@@ -197,28 +191,5 @@ export function Navbar() {
         }
       `}</style>
     </>
-  );
-}
-
-function LogoIcon() {
-  return (
-    <div
-      style={{
-        width: 32,
-        height: 32,
-        borderRadius: 10,
-        background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(126,34,206,0.4))',
-        border: '1px solid rgba(168,85,247,0.25)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        animation: 'breathe 3s ease-in-out infinite',
-        flexShrink: 0,
-      }}
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-      </svg>
-    </div>
   );
 }
