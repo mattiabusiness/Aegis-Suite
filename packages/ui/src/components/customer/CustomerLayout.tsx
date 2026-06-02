@@ -105,7 +105,7 @@ export function CustomerLayout({
             <img
               src="/logo-orizzontale.png"
               alt={brandLabel}
-              style={{ height: 36, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
+              style={{ height: 44, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
             />
           </div>
         </header>

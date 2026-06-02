@@ -420,8 +420,8 @@ export function Sidebar({
           <div
             className="flex items-center overflow-hidden"
             style={{
-              height: 48,
-              width: collapsed ? 46 : 156,
+              height: 56,
+              width: collapsed ? 40 : 190,
               flexShrink: 0,
               transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
@@ -430,11 +430,12 @@ export function Sidebar({
               src={logo}
               alt={brandName}
               style={{
-                height: 46,
+                height: collapsed ? 40 : 54,
                 width: 'auto',
                 maxWidth: 'none',
                 objectFit: 'contain',
                 objectPosition: 'left center',
+                transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             />
           </div>
@@ -478,7 +479,7 @@ export function Sidebar({
           onClick={handleCollapse}
           onMouseEnter={() => setCollapseHovered(true)}
           onMouseLeave={() => setCollapseHovered(false)}
-          className={`sb-collapse-btn flex-shrink-0 rounded-lg flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${collapsed ? '' : 'ml-auto'}`}
+          className="sb-collapse-btn flex-shrink-0 rounded-lg flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/30 ml-auto"
         ref={collapseBtnRef}
           style={{
             width: 28,
