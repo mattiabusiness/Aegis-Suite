@@ -5,6 +5,10 @@
 // POST /api/bookings/create
 // Requires: authenticated customer session
 // Creates appointment for the logged-in customer.
+//
+// Validation: validateAppointment() re-checks hours/closures/staff/capacity
+// (same rules the slot list uses), then create_appointment_safe() inserts
+// atomically so two simultaneous requests can never double-book.
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -13,18 +17,10 @@ import {
   createServerSupabaseClient,
   getCurrentUser,
   createAdminSupabaseClient,
+  validateAppointment,
 } from '@aegis/core';
 import { notify } from '@/lib/notify';
 import type { PushPayload } from '@aegis/core';
-
-/** Parse date+time as Europe/Rome local time, return correct UTC Date. */
-function parseAsRomeTime(dateStr: string, timeStr: string): Date {
-  const naive = new Date(`${dateStr}T${timeStr}:00.000Z`);
-  const romeStr = naive.toLocaleString('en-US', { timeZone: 'Europe/Rome' });
-  const romeAsUtcMs = new Date(romeStr).getTime();
-  const offsetMs = naive.getTime() - romeAsUtcMs;
-  return new Date(naive.getTime() + offsetMs);
-}
 
 interface CreateBookingBody {
   businessId:      string;
@@ -34,6 +30,8 @@ interface CreateBookingBody {
   time:            string;
   customerNotes?:  string;
   includeShampoo?: boolean;
+  /** When rescheduling: id of the appointment being moved (will be cancelled). */
+  rescheduleId?:   string | null;
 }
 
 export async function POST(request: NextRequest) {
@@ -48,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateBookingBody = await request.json();
-    const { businessId, serviceId, staffId, date, time, customerNotes: rawNotes, includeShampoo } = body;
+    const { businessId, serviceId, staffId, date, time, customerNotes: rawNotes, includeShampoo, rescheduleId } = body;
     const customerNotes = rawNotes ? String(rawNotes).slice(0, 1000) : undefined;
 
     if (!businessId || !serviceId || !date || !time) {
@@ -60,34 +58,25 @@ export async function POST(request: NextRequest) {
     const admin = createAdminSupabaseClient() as any;
 
     // ========================================================================
-    // STEP 0: Verify business exists and is active (prevents booking on inactive tenants)
+    // STEP 1: Validate availability (business/service/staff/hours/capacity).
+    // This mirrors exactly what the slot list offered, so a valid slot passes.
     // ========================================================================
 
-    const { data: businessCheck } = await admin
-      .from('businesses')
-      .select('id')
-      .eq('id', businessId)
-      .eq('is_active', true)
-      .single();
+    const validation = await validateAppointment(admin, {
+      businessId,
+      serviceId,
+      staffId: staffId || null,
+      date,
+      time,
+      onlineOnly: true,
+      excludeAppointmentId: rescheduleId || null,
+    });
 
-    if (!businessCheck) {
-      return NextResponse.json({ error: 'Attività non disponibile' }, { status: 404 });
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.reason }, { status: validation.status });
     }
 
-    // ========================================================================
-    // STEP 1: Service details
-    // ========================================================================
-
-    const { data: service, error: serviceError } = await admin
-      .from('services')
-      .select('id, name, duration_minutes, price')
-      .eq('id', serviceId)
-      .eq('business_id', businessId)
-      .single();
-
-    if (serviceError || !service) {
-      return NextResponse.json({ error: 'Servizio non trovato' }, { status: 404 });
-    }
+    const { resolvedStaffId, service, startTime, endTime } = validation;
 
     // ========================================================================
     // STEP 2: Find or create customer record
@@ -145,120 +134,63 @@ export async function POST(request: NextRequest) {
     }
 
     // ========================================================================
-    // STEP 3: Calculate times
+    // STEP 3: Reschedule — verify the appointment being moved belongs to this
+    //         customer before allowing the RPC to cancel it.
     // ========================================================================
 
-    // Interpret date+time as Europe/Rome local time (UTC+1/+2 depending on DST).
-    // Without this, the UTC server parses "10:00" as 10:00 UTC → stored 2h ahead in Italy.
-    const startTime = parseAsRomeTime(date, time);
-    const endTime   = new Date(startTime.getTime() + (service as { duration_minutes: number }).duration_minutes * 60000);
-
-    if (isNaN(startTime.getTime())) {
-      return NextResponse.json({ error: 'Data o orario non valido' }, { status: 400 });
-    }
-
-    // ========================================================================
-    // STEP 4: Resolve staff — use provided staffId, or auto-assign
-    // ========================================================================
-
-    let finalStaffId: string | null = staffId || null;
-
-    if (!finalStaffId) {
-      const [{ data: activeStaff }, { data: serviceLinks }] = await Promise.all([
-        admin
-          .from('staff')
-          .select('id')
-          .eq('business_id', businessId)
-          .eq('is_active', true) as Promise<{ data: Array<{ id: string }> | null }>,
-        admin
-          .from('staff_services')
-          .select('staff_id')
-          .eq('service_id', serviceId) as Promise<{ data: Array<{ staff_id: string }> | null }>,
-      ]);
-
-      const eligibleStaff = activeStaff ?? [];
-
-      if (eligibleStaff.length === 0) {
-        return NextResponse.json({ error: 'Nessuno staff disponibile' }, { status: 409 });
-      }
-
-      const canDoService = new Set((serviceLinks ?? []).map(r => r.staff_id));
-      // Mirror availability engine: empty map = all staff can do this service
-      const candidates = canDoService.size === 0
-        ? eligibleStaff
-        : eligibleStaff.filter((s: { id: string }) => canDoService.has(s.id));
-
-      if (candidates.length === 0) {
-        return NextResponse.json({ error: 'Nessuno staff può eseguire questo servizio' }, { status: 409 });
-      }
-
-      const { data: conflicts } = await admin
+    if (rescheduleId) {
+      const { data: oldAppt } = await admin
         .from('appointments')
-        .select('staff_id')
+        .select('id')
+        .eq('id', rescheduleId)
         .eq('business_id', businessId)
-        .in('staff_id', candidates.map((s: { id: string }) => s.id))
+        .eq('customer_id', customerId)
         .neq('status', 'cancelled')
-        .lt('start_time', endTime.toISOString())
-        .gt('end_time', startTime.toISOString()) as { data: Array<{ staff_id: string }> | null };
+        .maybeSingle();
 
-      const busyIds = new Set((conflicts ?? []).map(c => c.staff_id));
-      const picked  = candidates.find((s: { id: string }) => !busyIds.has(s.id));
-
-      // Fallback: if all busy (rare race condition), pick first candidate anyway
-      finalStaffId = ((picked ?? candidates[0]) as { id: string }).id;
+      if (!oldAppt) {
+        return NextResponse.json({ error: 'Appuntamento da spostare non trovato' }, { status: 404 });
+      }
     }
 
     // ========================================================================
-    // STEP 5: Create appointment
+    // STEP 4: Create the appointment atomically (overlap + capacity guaranteed).
     // ========================================================================
 
-    const { data: newAppt, error: insertError } = await admin
-      .from('appointments')
-      .insert({
-        business_id:     businessId,
-        staff_id:        finalStaffId,
-        customer_id:     customerId,
-        start_time:      startTime.toISOString(),
-        end_time:        endTime.toISOString(),
-        status:          'confirmed',
-        notes:           customerNotes || null,
-        source:          'online',
-        booked_online:   true,
-        include_shampoo: includeShampoo === true,
-      })
-      .select('id')
-      .single();
-
-    if (insertError || !newAppt) {
-      console.error('[bookings/create] appointment insert error:', insertError);
-      return NextResponse.json(
-        { error: `Errore creazione appuntamento: ${insertError?.message ?? 'sconosciuto'} (code: ${insertError?.code ?? '?'})` },
-        { status: 500 }
-      );
-    }
-
-    const appointmentId = (newAppt as { id: string }).id;
-
-    // ========================================================================
-    // STEP 6: Link service to appointment
-    // ========================================================================
-
-    const { error: serviceInsertError } = await admin.from('appointment_services').insert({
-      appointment_id:   appointmentId,
-      service_id:       serviceId,
-      service_name:     (service as { name: string }).name,
-      duration_minutes: (service as { duration_minutes: number }).duration_minutes,
-      price:            (service as { price: number }).price,
-      display_order:    0,
+    const { data: newApptId, error: rpcError } = await admin.rpc('create_appointment_safe', {
+      p_business_id:     businessId,
+      p_staff_id:        resolvedStaffId,
+      p_customer_id:     customerId,
+      p_start:           startTime.toISOString(),
+      p_end:             endTime.toISOString(),
+      p_service_id:      service.id,
+      p_service_name:    service.name,
+      p_duration:        service.duration_minutes,
+      p_price:           service.price,
+      p_status:          'confirmed',
+      p_source:          'online',
+      p_booked_online:   true,
+      p_notes:           customerNotes || null,
+      p_include_shampoo: includeShampoo === true,
+      p_exclude_id:      rescheduleId || null,
     });
 
-    if (serviceInsertError) {
-      // Non-critical: appointment is already created, just log the error
-      console.error('[bookings/create] appointment_services insert error:', serviceInsertError);
+    if (rpcError) {
+      const msg = rpcError.message || '';
+      if (msg.includes('STAFF_BUSY')) {
+        return NextResponse.json({ error: 'Questo orario è appena stato preso. Scegli un altro slot.' }, { status: 409 });
+      }
+      if (msg.includes('NO_WORKSTATION')) {
+        return NextResponse.json({ error: 'Tutte le postazioni sono occupate in questo orario.' }, { status: 409 });
+      }
+      console.error('[bookings/create] rpc error:', rpcError);
+      return NextResponse.json({ error: 'Errore nella creazione dell\'appuntamento' }, { status: 500 });
     }
 
+    const appointmentId = newApptId as string;
+
     // ========================================================================
-    // STEP 7: Notify gestore of new booking (fire-and-forget)
+    // STEP 5: Notify gestore of new booking (fire-and-forget)
     // ========================================================================
 
     try {
@@ -282,7 +214,7 @@ export async function POST(request: NextRequest) {
 
         const payload: PushPayload = {
           title: 'Nuova prenotazione',
-          body: `${(service as { name: string }).name} — ${dateLabel} alle ${startLabel}`,
+          body: `${service.name} — ${dateLabel} alle ${startLabel}`,
           url: '/dashboard/calendario',
           actions: [{ action: 'view', title: 'Vedi calendario' }],
           tag: `new-booking-${appointmentId}`,

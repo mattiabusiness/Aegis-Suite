@@ -192,6 +192,7 @@ export function SettingsContent({
     const { error } = await supabase.from('businesses').update({
       booking_advance_min: settings.bookingAdvanceMin,
       booking_advance_max: settings.bookingAdvanceMax,
+      booking_buffer_minutes: settings.bufferMinutes,
       cancellation_policy_hours: settings.cancellationPolicyHours,
       is_public: settings.isPublic,
     } as never).eq('id', businessId);

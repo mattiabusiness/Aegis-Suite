@@ -99,7 +99,13 @@ export interface SlotCheckResult {
 // CONSTANTS
 // ============================================================================
 
-const ACTIVE_STATUSES = ['confirmed', 'pending', 'in_progress'];
+/**
+ * Statuses that occupy a staff member / workstation.
+ * Single source of truth shared by the availability engine, the server-side
+ * validator (booking-validation.ts) and the booking RPC. Keep them in sync.
+ */
+export const BUSY_STATUSES = ['confirmed', 'pending', 'in_progress'] as const;
+const ACTIVE_STATUSES: readonly string[] = BUSY_STATUSES;
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 // ============================================================================
@@ -212,8 +218,13 @@ export function getOccupiedWorkstations(
   slotStart: number,
   slotEnd: number,
   activeAppointments: Array<{ startMin: number; endMin: number }>,
+  bufferMinutes = 0,
 ): number {
-  return activeAppointments.filter(a => rangesOverlap(slotStart, slotEnd, a.startMin, a.endMin)).length;
+  // Consecutive appointments on the same chair need a `bufferMinutes` gap
+  // (cleanup/turnaround). Treat each occupied range as extended by the buffer.
+  return activeAppointments.filter(
+    a => slotStart < a.endMin + bufferMinutes && a.startMin < slotEnd + bufferMinutes
+  ).length;
 }
 
 function isStaffFree(
@@ -221,9 +232,11 @@ function isStaffFree(
   slotStart: number,
   slotEnd: number,
   activeAppointments: Array<{ staffId: string; startMin: number; endMin: number }>,
+  bufferMinutes = 0,
 ): boolean {
   return !activeAppointments.some(
-    a => a.staffId === staffId && rangesOverlap(slotStart, slotEnd, a.startMin, a.endMin)
+    a => a.staffId === staffId &&
+      slotStart < a.endMin + bufferMinutes && a.startMin < slotEnd + bufferMinutes
   );
 }
 
@@ -269,6 +282,7 @@ function getAvailableStaffForSlot(
   activeAppointments: Array<{ staffId: string; startMin: number; endMin: number }>,
   businessHoursForDay: [number, number][], // business working ranges for this day
   staffConfig?: AvailabilityConfig['staffConfig'],
+  bufferMinutes = 0,
 ): string[] {
   // No staff config at all → no constraint
   if (!staffConfig) return ['__any__'];
@@ -329,8 +343,8 @@ function getAvailableStaffForSlot(
     // Check time off
     if (isStaffOnTimeOff(staffId, date, slotStart, slotEnd, staffTimeOff)) return false;
 
-    // Check not already booked
-    if (!isStaffFree(staffId, slotStart, slotEnd, activeAppointments)) return false;
+    // Check not already booked (buffer enforces spacing between appointments)
+    if (!isStaffFree(staffId, slotStart, slotEnd, activeAppointments, bufferMinutes)) return false;
 
     return true;
   });
@@ -368,7 +382,6 @@ export function getAvailableSlots(config: AvailabilityConfig): AvailableSlot[] {
   const businessRanges = getWorkingRanges(dayHours);
   if (businessRanges.length === 0) return [];
 
-  const totalDuration = serviceDurationMinutes + bufferMinutes;
   const activeAppts = getActiveAppointments(existingAppointments);
 
   // Break range for UI
@@ -385,25 +398,24 @@ export function getAvailableSlots(config: AvailabilityConfig): AvailableSlot[] {
   const globalEnd = businessRanges[businessRanges.length - 1][1];
 
   for (let slotStart = globalStart; slotStart < globalEnd; slotStart += slotInterval) {
-    const slotEnd = slotStart + totalDuration;
-
-    // Fits within a working range?
-    if (!isTimeInRanges(slotStart, slotEnd, businessRanges)) continue;
-
     const serviceEnd = slotStart + serviceDurationMinutes;
 
-    // Workstations check
-    const occupied = getOccupiedWorkstations(slotStart, serviceEnd, activeAppts);
+    // The appointment itself must fit within a working range
+    // (the cleanup buffer may extend past closing time — that's fine).
+    if (!isTimeInRanges(slotStart, serviceEnd, businessRanges)) continue;
+
+    // Workstations check (buffer enforces spacing between consecutive appointments)
+    const occupied = getOccupiedWorkstations(slotStart, serviceEnd, activeAppts, bufferMinutes);
     const freeWorkstations = workstations - occupied;
     if (freeWorkstations <= 0) continue;
 
     // Staff check (with fallbacks)
     const availableStaff = getAvailableStaffForSlot(
-      date, slotStart, serviceEnd, activeAppts, businessRanges, staffConfig
+      date, slotStart, serviceEnd, activeAppts, businessRanges, staffConfig, bufferMinutes
     );
     if (availableStaff.length === 0) continue;
 
-    const isDuringBreak = breakStart >= 0 && rangesOverlap(slotStart, slotEnd, breakStart, breakEnd);
+    const isDuringBreak = breakStart >= 0 && rangesOverlap(slotStart, serviceEnd, breakStart, breakEnd);
 
     slots.push({
       time: minutesToTime(slotStart),
@@ -440,22 +452,22 @@ export function checkSlotAvailability(
 
   const businessRanges = getWorkingRanges(dayHours);
   const slotStart = timeToMinutes(time);
-  const slotEnd = slotStart + serviceDurationMinutes + bufferMinutes;
   const serviceEnd = slotStart + serviceDurationMinutes;
 
-  if (!isTimeInRanges(slotStart, slotEnd, businessRanges)) {
+  // The appointment itself must fit within working hours (buffer may run past close).
+  if (!isTimeInRanges(slotStart, serviceEnd, businessRanges)) {
     return { available: false, reason: 'Fuori orario di apertura', availableStaffIds: [], freeWorkstations: 0 };
   }
 
   const activeAppts = getActiveAppointments(existingAppointments);
-  const occupied = getOccupiedWorkstations(slotStart, serviceEnd, activeAppts);
+  const occupied = getOccupiedWorkstations(slotStart, serviceEnd, activeAppts, bufferMinutes);
   const freeWorkstations = workstations - occupied;
   if (freeWorkstations <= 0) {
     return { available: false, reason: 'Tutte le postazioni occupate', availableStaffIds: [], freeWorkstations: 0 };
   }
 
   const availableStaff = getAvailableStaffForSlot(
-    date, slotStart, serviceEnd, activeAppts, businessRanges, staffConfig
+    date, slotStart, serviceEnd, activeAppts, businessRanges, staffConfig, bufferMinutes
   );
   if (availableStaff.length === 0) {
     const reason = staffConfig?.specificStaffId

@@ -73,7 +73,23 @@ export {
   computeEventColumns,
   timeToMinutes,
   minutesToTime,
+  BUSY_STATUSES,
 } from './lib/availability';
+
+// Booking validation (server-side, shared by slot endpoints + create endpoints)
+export {
+  loadAvailabilityConfig,
+  getBookableSlots,
+  validateAppointment,
+  parseAsRomeTime,
+} from './lib/booking-validation';
+export type {
+  LoadConfigParams,
+  LoadedConfig,
+  LoadConfigResult,
+  ValidateAppointmentParams,
+  ValidateAppointmentResult,
+} from './lib/booking-validation';
 
 // Availability Types
 export type {

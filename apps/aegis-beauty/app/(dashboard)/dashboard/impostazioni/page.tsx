@@ -59,7 +59,7 @@ export default async function ImpostazioniPage() {
   const [profile, businessResult, hoursResult] = await Promise.all([
     getCurrentProfile(supabase),
     supabase.from('businesses')
-      .select('id, name, slug, email, phone, website, address_street, address_city, address_province, address_postal_code, description, logo_url, workstations, booking_advance_min, booking_advance_max, cancellation_policy_hours, auto_confirm_bookings, business_type, is_public')
+      .select('id, name, slug, email, phone, website, address_street, address_city, address_province, address_postal_code, description, logo_url, workstations, booking_advance_min, booking_advance_max, booking_buffer_minutes, cancellation_policy_hours, auto_confirm_bookings, business_type, is_public')
       .eq('id', businessId)
       .single(),
     supabase.from('business_hours')
@@ -74,7 +74,8 @@ export default async function ImpostazioniPage() {
     address_province: string | null; address_postal_code: string | null;
     description: string | null; logo_url: string | null;
     workstations: number; booking_advance_min: number;
-    booking_advance_max: number; cancellation_policy_hours: number;
+    booking_advance_max: number; booking_buffer_minutes: number | null;
+    cancellation_policy_hours: number;
     auto_confirm_bookings: boolean; business_type: string | null; is_public: boolean;
   } | null;
 
@@ -154,7 +155,7 @@ export default async function ImpostazioniPage() {
         bookingAdvanceMin: business.booking_advance_min,
         bookingAdvanceMax: business.booking_advance_max,
         cancellationPolicyHours: business.cancellation_policy_hours,
-        bufferMinutes: 0,
+        bufferMinutes: business.booking_buffer_minutes ?? 0,
         isPublic: business.is_public ?? true,
         allowNoStaffPreference: true,
         allowMultipleServices: false,

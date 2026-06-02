@@ -342,6 +342,9 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     // If no preference selected, use the pre-assigned staff id (if any) to ensure consistency
     const resolvedStaffId = state.selectedStaff?.id ?? state.autoAssignedStaff?.id ?? null;
 
+    // Reschedule: the original appointment id (will be cancelled atomically by the API)
+    const rescheduleId = searchParams.get('reschedule') || undefined;
+
     const res = await fetch('/api/bookings/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -353,6 +356,7 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
         time:           state.selectedTime,
         customerNotes:  state.customerNotes || undefined,
         includeShampoo: state.includeShampoo,
+        rescheduleId,
       }),
     });
 
@@ -372,8 +376,8 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
       durationMinutes: state.selectedService.duration_minutes,
     });
 
-    toast.success('Prenotazione confermata!');
-  }, [business]);
+    toast.success(isReschedule ? 'Appuntamento spostato!' : 'Prenotazione confermata!');
+  }, [business, searchParams, isReschedule]);
 
   // Fixed height = viewport minus bottom nav on mobile.
   // overflow: auto when booked lets SuccessScreen scroll inside the dark container (no light bg strip).

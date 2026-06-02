@@ -70,6 +70,8 @@ export interface Business {
   currency: string;
   booking_advance_min: number;
   booking_advance_max: number;
+  /** Turnaround/cleanup gap enforced between consecutive appointments (minutes). */
+  booking_buffer_minutes: number;
   cancellation_policy_hours: number;
   auto_confirm_bookings: boolean;
   description: string | null;

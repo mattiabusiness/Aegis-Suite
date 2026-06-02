@@ -1,24 +1,27 @@
 // ============================================================================
-// AEGIS BEAUTY - API CREATE APPOINTMENT
+// AEGIS BEAUTY - API CREATE APPOINTMENT (Dashboard — gestore/staff)
 // File: apps/aegis-beauty/app/api/appointments/create/route.ts
 // Handles: Create appointment + Create new customer + Send invite email
+//
+// Validation: validateAppointment() enforces the SAME rules as the customer
+// flow (hours/closures/staff/capacity) — the gestore is hard-blocked on
+// conflicts (no override). create_appointment_safe() inserts atomically.
+// onlineOnly = false → the gestore may book any active staff, including ones
+// that don't accept online bookings.
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerSupabaseClient, getCurrentUser, createAdminSupabaseClient } from '@aegis/core';
+import {
+  createServerSupabaseClient,
+  getCurrentUser,
+  createAdminSupabaseClient,
+  validateAppointment,
+} from '@aegis/core';
+
 // ============================================================================
 // TYPES
 // ============================================================================
-
-/** Parse date+time as Europe/Rome local time, return correct UTC Date. */
-function parseAsRomeTime(dateStr: string, timeStr: string): Date {
-  const naive = new Date(`${dateStr}T${timeStr}:00.000Z`);
-  const romeStr = naive.toLocaleString('en-US', { timeZone: 'Europe/Rome' });
-  const romeAsUtcMs = new Date(romeStr).getTime();
-  const offsetMs = naive.getTime() - romeAsUtcMs;
-  return new Date(naive.getTime() + offsetMs);
-}
 
 interface CreateAppointmentRequest {
   customerId: string | null;
@@ -44,26 +47,27 @@ interface CreateAppointmentRequest {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = createServerSupabaseClient(cookieStore) as any;
-    
+
     // Verify user is authenticated
     const user = await getCurrentUser(supabase);
     if (!user) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
-    
+
     // Parse request body
     const body: CreateAppointmentRequest = await request.json();
     const {
       customerId, customerFirstName, customerLastName, customerPhone, customerEmail,
       isNewCustomer, sendInvite, serviceId, staffId, date, time, notes, businessId, includeShampoo,
     } = body;
-    
+
     // Validate required fields (staffId is optional — null means "first available")
     if (!serviceId || !date || !time || !businessId) {
       return NextResponse.json({ error: 'Campi obbligatori mancanti' }, { status: 400 });
     }
-    
+
     // Verify user has access to this business
     const { data: memberCheck } = await supabase
       .from('business_members')
@@ -72,37 +76,41 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .eq('is_active', true)
       .single();
-    
+
     if (!memberCheck) {
       return NextResponse.json({ error: 'Non hai accesso a questo business' }, { status: 403 });
     }
 
     // After membership is confirmed, use admin client for all DB ops.
-    // Staff RLS policies may restrict reads/writes on services, customers, appointments.
     // Security is guaranteed: user.id and businessId are both server-validated above.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const admin = createAdminSupabaseClient() as any;
 
     // ========================================================================
-    // STEP 1: Get service details (for duration)
+    // STEP 1: Validate availability (hours/closures/staff/capacity).
+    //         Gestore is blocked on conflicts exactly like the customer.
     // ========================================================================
 
-    const { data: service, error: serviceError } = await admin
-      .from('services')
-      .select('id, name, duration_minutes, price')
-      .eq('id', serviceId)
-      .eq('business_id', businessId)
-      .single();
-    
-    if (serviceError || !service) {
-      return NextResponse.json({ error: 'Servizio non trovato' }, { status: 404 });
+    const validation = await validateAppointment(admin, {
+      businessId,
+      serviceId,
+      staffId: staffId || null,
+      date,
+      time,
+      onlineOnly: false,
+    });
+
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.reason }, { status: validation.status });
     }
-    
+
+    const { resolvedStaffId, service, startTime, endTime } = validation;
+
     // ========================================================================
     // STEP 2: Handle customer (existing or new)
     // ========================================================================
-    
+
     // Verify provided customerId belongs to this business (prevents cross-tenant access).
-    // Uses admin client — memberCheck above already confirmed caller belongs to this business.
     if (!isNewCustomer && customerId) {
       const { data: customerOwnership } = await admin
         .from('customers')
@@ -130,7 +138,7 @@ export async function POST(request: NextRequest) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
         return NextResponse.json({ error: 'Email non valida' }, { status: 400 });
       }
-      
+
       // Check if customer with same email already exists
       const { data: existingCustomer } = await admin
         .from('customers')
@@ -156,14 +164,14 @@ export async function POST(request: NextRequest) {
           })
           .select('id')
           .single();
-        
+
         if (customerError || !newCustomer) {
           console.error('Error creating customer:', customerError);
           return NextResponse.json({ error: 'Errore nella creazione del cliente' }, { status: 500 });
         }
-        
+
         finalCustomerId = newCustomer.id;
-        
+
         // Send invite email if requested
         if (sendInvite) {
           try {
@@ -190,10 +198,7 @@ export async function POST(request: NextRequest) {
 
             if (inviteError) {
               console.error('Error sending invite:', inviteError);
-              // Riporta l'errore al chiamante senza bloccare la creazione dell'appuntamento
-              // L'appuntamento è già stato creato a questo punto (viene dopo)
             } else {
-              // Invite inviato con successo → aggiorna invited_at sul record cliente
               await admin
                 .from('customers')
                 .update({ invited_at: new Date().toISOString() })
@@ -205,129 +210,49 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    
-    // Verify provided staffId belongs to this business (prevents cross-tenant assignment).
-    // Uses admin client — memberCheck above already confirmed caller belongs to this business.
-    if (staffId) {
-      const { data: staffOwnership } = await admin
-        .from('staff')
-        .select('id')
-        .eq('id', staffId)
-        .eq('business_id', businessId)
-        .eq('is_active', true)
-        .single();
-      if (!staffOwnership) {
-        return NextResponse.json({ error: 'Staff non trovato' }, { status: 404 });
-      }
+
+    if (!finalCustomerId) {
+      return NextResponse.json({ error: 'Cliente mancante' }, { status: 400 });
     }
 
     // ========================================================================
-    // STEP 3: Calculate appointment times
+    // STEP 3: Create the appointment atomically (overlap + capacity guaranteed).
     // ========================================================================
 
-    // Interpret as Europe/Rome local time — UTC server would shift by +1/+2h otherwise.
-    const startTime = parseAsRomeTime(date, time);
-    const endTime = new Date(startTime.getTime() + service.duration_minutes * 60000);
-    
-    // ========================================================================
-    // STEP 4: Auto-assign staff if not specified ("Nessuna preferenza")
-    // ========================================================================
+    const { data: newApptId, error: rpcError } = await admin.rpc('create_appointment_safe', {
+      p_business_id:     businessId,
+      p_staff_id:        resolvedStaffId,
+      p_customer_id:     finalCustomerId,
+      p_start:           startTime.toISOString(),
+      p_end:             endTime.toISOString(),
+      p_service_id:      service.id,
+      p_service_name:    service.name,
+      p_duration:        service.duration_minutes,
+      p_price:           service.price,
+      p_status:          'confirmed',
+      p_source:          'dashboard',
+      p_booked_online:   false,
+      p_notes:           notes ? String(notes).slice(0, 1000) : null,
+      p_include_shampoo: includeShampoo === true,
+      p_exclude_id:      null,
+    });
 
-    let finalStaffId: string | null = staffId || null;
-
-    if (!finalStaffId) {
-      // Auto-assign: find first staff who (1) can do the service AND (2) is free at this slot.
-      // If no one qualifies → return error (do NOT fall through to RPC auto-assign).
-
-      const { data: eligibleStaff } = await admin
-        .from('staff')
-        .select('id')
-        .eq('business_id', businessId)
-        .eq('is_active', true) as { data: Array<{ id: string }> | null };
-
-      if (!eligibleStaff || eligibleStaff.length === 0) {
-        return NextResponse.json({ error: 'Nessuno staff disponibile' }, { status: 409 });
+    if (rpcError) {
+      const msg = rpcError.message || '';
+      if (msg.includes('STAFF_BUSY')) {
+        return NextResponse.json({ error: 'L\'operatore è già occupato in questo orario.' }, { status: 409 });
       }
-
-      const allStaffIds = eligibleStaff.map(s => s.id);
-
-      const { data: serviceLinks } = await admin
-        .from('staff_services')
-        .select('staff_id')
-        .in('staff_id', allStaffIds)
-        .eq('service_id', serviceId) as { data: Array<{ staff_id: string }> | null };
-
-      const staffWhoCanDoService = new Set((serviceLinks || []).map(r => r.staff_id));
-
-      const candidates = eligibleStaff.filter(s => staffWhoCanDoService.has(s.id));
-
-      if (candidates.length === 0) {
-        return NextResponse.json({ error: 'Nessuno staff può eseguire questo servizio' }, { status: 409 });
+      if (msg.includes('NO_WORKSTATION')) {
+        return NextResponse.json({ error: 'Tutte le postazioni sono occupate in questo orario.' }, { status: 409 });
       }
-
-      const { data: conflicts } = await admin
-        .from('appointments')
-        .select('staff_id')
-        .eq('business_id', businessId)
-        .in('staff_id', candidates.map(s => s.id))
-        .neq('status', 'cancelled')
-        .lt('start_time', endTime.toISOString())
-        .gt('end_time', startTime.toISOString()) as { data: Array<{ staff_id: string }> | null };
-
-      const busyIds = new Set((conflicts || []).map(c => c.staff_id));
-      const picked = candidates.find(s => !busyIds.has(s.id));
-
-      if (!picked) {
-        return NextResponse.json({ error: 'Nessuno staff disponibile in questo orario per il servizio selezionato' }, { status: 409 });
-      }
-
-      finalStaffId = picked.id;
-    }
-
-    // ========================================================================
-    // STEP 5: Create appointment
-    // ========================================================================
-
-    const { data: newAppt, error: insertError } = await admin
-      .from('appointments')
-      .insert({
-        business_id:     businessId,
-        staff_id:        finalStaffId,
-        customer_id:     finalCustomerId,
-        start_time:      startTime.toISOString(),
-        end_time:        endTime.toISOString(),
-        status:          'confirmed',
-        notes:           notes ? String(notes).slice(0, 1000) : null,
-        source:          'dashboard',
-        include_shampoo: includeShampoo === true,
-      })
-      .select('id')
-      .single();
-
-    if (insertError || !newAppt) {
-      console.error('[appointments/create] insert error:', insertError);
+      console.error('[appointments/create] rpc error:', rpcError);
       return NextResponse.json({ error: 'Errore nella creazione dell\'appuntamento' }, { status: 500 });
     }
 
-    const appointmentId = (newAppt as { id: string }).id;
-    
-    // ========================================================================
-    // STEP 5: Create appointment_services link
-    // ========================================================================
-    
-    await admin
-      .from('appointment_services')
-      .insert({
-        appointment_id: appointmentId,
-        service_id: serviceId,
-        service_name: service.name,
-        duration_minutes: service.duration_minutes,
-        price: service.price,
-        display_order: 0,
-      });
+    const appointmentId = newApptId as string;
 
     // ========================================================================
-    // STEP 6: Return success
+    // STEP 4: Return the created appointment (shape expected by the calendar)
     // ========================================================================
 
     const { data: fullAppointment } = await admin
@@ -339,15 +264,15 @@ export async function POST(request: NextRequest) {
       `)
       .eq('id', appointmentId)
       .single();
-    
+
     return NextResponse.json({
       success: true,
       appointment: {
-        id: fullAppointment?.id,
-        startTime: fullAppointment?.start_time,
-        endTime: fullAppointment?.end_time,
-        status: fullAppointment?.status,
-        notes: fullAppointment?.notes,
+        id: fullAppointment?.id ?? appointmentId,
+        startTime: fullAppointment?.start_time ?? startTime.toISOString(),
+        endTime: fullAppointment?.end_time ?? endTime.toISOString(),
+        status: fullAppointment?.status ?? 'confirmed',
+        notes: fullAppointment?.notes ?? null,
         customerName: fullAppointment?.customer?.full_name,
         staffName: fullAppointment?.staff?.full_name,
         staffColor: fullAppointment?.staff?.color,
@@ -356,7 +281,7 @@ export async function POST(request: NextRequest) {
       customerId: finalCustomerId,
       inviteSent: isNewCustomer && sendInvite,
     });
-    
+
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json({ error: 'Errore interno del server' }, { status: 500 });
