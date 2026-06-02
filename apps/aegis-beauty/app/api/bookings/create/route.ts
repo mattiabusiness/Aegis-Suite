@@ -177,14 +177,17 @@ export async function POST(request: NextRequest) {
 
     if (rpcError) {
       const msg = rpcError.message || '';
-      if (msg.includes('STAFF_BUSY')) {
+      if (msg.includes('STAFF_BUSY') || rpcError.code === '23P01' || msg.includes('appointments_no_staff_overlap')) {
         return NextResponse.json({ error: 'Questo orario è appena stato preso. Scegli un altro slot.' }, { status: 409 });
       }
       if (msg.includes('NO_WORKSTATION')) {
         return NextResponse.json({ error: 'Tutte le postazioni sono occupate in questo orario.' }, { status: 409 });
       }
       console.error('[bookings/create] rpc error:', rpcError);
-      return NextResponse.json({ error: 'Errore nella creazione dell\'appuntamento' }, { status: 500 });
+      // TEMP DIAGNOSTIC: surface the real error so we can pinpoint the cause.
+      return NextResponse.json({
+        error: `Errore RPC: ${rpcError.message ?? 'sconosciuto'} [code: ${rpcError.code ?? '?'}, details: ${rpcError.details ?? '-'}, hint: ${rpcError.hint ?? '-'}]`,
+      }, { status: 500 });
     }
 
     const appointmentId = newApptId as string;
