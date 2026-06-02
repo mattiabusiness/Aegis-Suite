@@ -182,20 +182,20 @@ export function DesktopHeader({ business, currentPath, theme, onNavigate, brandL
           <img
             src={business.logo_url}
             alt={business.name}
-            width={36} height={36}
+            width={44} height={44}
             style={{
-              width: 36, height: 36, borderRadius: 10, objectFit: 'cover', flexShrink: 0,
+              width: 44, height: 44, borderRadius: 11, objectFit: 'cover', flexShrink: 0,
               border: '2px solid rgba(255,255,255,0.3)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
             }}
           />
         ) : (
           <div style={{
-            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            width: 44, height: 44, borderRadius: 11, flexShrink: 0,
             background: 'rgba(255,255,255,0.18)',
             border: '1.5px solid rgba(255,255,255,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 700, fontSize: '0.82rem',
+            color: '#fff', fontWeight: 700, fontSize: '0.95rem',
           }}>
             {business.name.slice(0, 2).toUpperCase()}
           </div>
@@ -276,9 +276,9 @@ export function DesktopHeader({ business, currentPath, theme, onNavigate, brandL
       <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/logo-orizzontale.png"
+          src="/logo-orizzontale-rev.png"
           alt={brandLabel}
-          style={{ height: 50, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
+          style={{ height: 44, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
         />
       </div>
     </nav>

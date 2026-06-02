@@ -85,14 +85,14 @@ export function CustomerLayout({
         >
           <div className="flex items-center gap-2">
             {business.logo_url ? (
-              <img src={business.logo_url} alt={business.name} width={26} height={26}
-                className="rounded-lg object-cover" style={{ width: 26, height: 26, border: '1.5px solid rgba(255,255,255,0.3)' }} />
+              <img src={business.logo_url} alt={business.name} width={38} height={38}
+                className="rounded-lg object-cover" style={{ width: 38, height: 38, border: '1.5px solid rgba(255,255,255,0.3)' }} />
             ) : (
               <div style={{
-                width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                width: 38, height: 38, borderRadius: 9, flexShrink: 0,
                 background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.3)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.7rem', fontWeight: 800, color: '#fff',
+                fontSize: '0.82rem', fontWeight: 800, color: '#fff',
               }}>
                 {business.name.slice(0, 2).toUpperCase()}
               </div>
@@ -103,9 +103,9 @@ export function CustomerLayout({
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo-orizzontale.png"
+              src="/logo-orizzontale-rev.png"
               alt={brandLabel}
-              style={{ height: 44, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
+              style={{ height: 38, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
             />
           </div>
         </header>
