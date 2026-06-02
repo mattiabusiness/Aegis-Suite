@@ -24,7 +24,7 @@ const DIMS: Record<string, { w: number; h: number }> = {
   '/product-clienti.png': { w: 1886, h: 914 },
   '/product-statistiche.png': { w: 1883, h: 910 },
   '/product-staff.png': { w: 1494, h: 388 },
-  '/product-prenota.png': { w: 1895, h: 900 },
+  '/product-prenota.png': { w: 1909, h: 908 },
   '/product-brand.png': { w: 817, h: 720 },
   '/product-overview.png': { w: 1884, h: 913 },
 };
