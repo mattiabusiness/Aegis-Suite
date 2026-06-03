@@ -53,6 +53,23 @@ export function parseAsRomeTime(dateStr: string, timeStr: string): Date {
   return new Date(naive.getTime() + offsetMs);
 }
 
+/**
+ * Format a UTC timestamp as Europe/Rome wall-clock "HH:MM".
+ * The availability engine reasons in local wall-clock minutes (business hours
+ * are stored as Rome local strings), so existing appointments — stored in UTC —
+ * MUST be converted to Rome time before being handed to the engine. Otherwise a
+ * 15:00 Rome appointment (13:00 UTC) would be treated as occupying 13:00, and
+ * the operator would wrongly appear free at 15:00.
+ */
+function toRomeHHMM(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', {
+    timeZone: 'Europe/Rome',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
 // ============================================================================
 // SHARED DATA LOADER
 // ============================================================================
@@ -231,8 +248,9 @@ export async function loadAvailabilityConfig(
   const existingAppointments: ExistingAppointment[] = ((appointmentsResult.data ?? []) as Record<string, unknown>[]).map(a => ({
     id: a.id as string,
     staffId: a.staff_id as string,
-    startTime: a.start_time as string,
-    endTime: a.end_time as string,
+    // Convert UTC -> Rome wall-clock so it lines up with the slot grid.
+    startTime: toRomeHHMM(a.start_time as string),
+    endTime: toRomeHHMM(a.end_time as string),
     status: a.status as string,
   }));
 
