@@ -70,6 +70,21 @@ function toRomeHHMM(iso: string): string {
   });
 }
 
+/**
+ * Customer booking window [earliest, latest] in epoch ms, derived from the
+ * business advance settings. `0` means "no limit". The gestore flow is NOT
+ * subject to this window (can book anytime, incl. retroactive walk-ins).
+ */
+export function customerBookingWindow(
+  advanceMinHours: number,
+  advanceMaxDays: number,
+  nowMs: number = Date.now(),
+): { earliest: number; latest: number } {
+  const earliest = nowMs + Math.max(advanceMinHours, 0) * 3_600_000;
+  const latest = advanceMaxDays > 0 ? nowMs + advanceMaxDays * 86_400_000 : Number.POSITIVE_INFINITY;
+  return { earliest, latest };
+}
+
 // ============================================================================
 // SHARED DATA LOADER
 // ============================================================================
@@ -91,7 +106,14 @@ export interface LoadConfigParams {
 export interface LoadedConfig {
   config: AvailabilityConfig;
   service: { id: string; name: string; duration_minutes: number; price: number };
-  business: { workstations: number; bufferMinutes: number };
+  business: {
+    workstations: number;
+    bufferMinutes: number;
+    /** Minimum advance the customer must book (hours). 0 = no limit. */
+    advanceMinHours: number;
+    /** Maximum advance the customer can book (days). 0 = no limit. */
+    advanceMaxDays: number;
+  };
 }
 
 export type LoadConfigResult =
@@ -130,7 +152,7 @@ export async function loadAvailabilityConfig(
   ] = await Promise.all([
     client
       .from('businesses')
-      .select('workstations, booking_buffer_minutes, is_active')
+      .select('workstations, booking_buffer_minutes, booking_advance_min, booking_advance_max, is_active')
       .eq('id', businessId)
       .single(),
 
@@ -195,6 +217,8 @@ export async function loadAvailabilityConfig(
   const business = businessResult.data as {
     workstations: number;
     booking_buffer_minutes: number | null;
+    booking_advance_min: number | null;
+    booking_advance_max: number | null;
     is_active: boolean;
   };
   const service = serviceResult.data as {
@@ -289,7 +313,12 @@ export async function loadAvailabilityConfig(
     data: {
       config,
       service,
-      business: { workstations: business.workstations || 1, bufferMinutes },
+      business: {
+        workstations: business.workstations || 1,
+        bufferMinutes,
+        advanceMinHours: Math.max(business.booking_advance_min ?? 0, 0),
+        advanceMaxDays: Math.max(business.booking_advance_max ?? 0, 0),
+      },
     },
   };
 }
@@ -301,7 +330,24 @@ export async function getBookableSlots(
 ): Promise<{ ok: true; slots: AvailableSlot[]; loaded: LoadedConfig } | { ok: false; status: number; error: string }> {
   const res = await loadAvailabilityConfig(client, params);
   if (!res.ok) return res;
-  return { ok: true, slots: getAvailableSlots(res.data.config), loaded: res.data };
+
+  let slots = getAvailableSlots(res.data.config);
+
+  // Customer flow: hide slots in the past and outside the min/max advance window.
+  if (params.onlineOnly) {
+    const now = Date.now();
+    const { earliest, latest } = customerBookingWindow(
+      res.data.business.advanceMinHours,
+      res.data.business.advanceMaxDays,
+      now,
+    );
+    slots = slots.filter(s => {
+      const t = parseAsRomeTime(params.date, s.time).getTime();
+      return t > now && t >= earliest && t <= latest;
+    });
+  }
+
+  return { ok: true, slots, loaded: res.data };
 }
 
 // ============================================================================
@@ -387,9 +433,26 @@ export async function validateAppointment(
     return { ok: false, status: 400, code: 'BAD_TIME', reason: 'Data o orario non valido' };
   }
 
-  // Customers cannot book a slot in the past (the gestore may backfill walk-ins).
-  if (onlineOnly && startTime.getTime() < Date.now()) {
-    return { ok: false, status: 409, code: 'PAST_SLOT', reason: 'Questo orario è già passato' };
+  // Customer booking window: not in the past, and within the business's min/max
+  // advance settings. The gestore is exempt (can book anytime / backfill walk-ins).
+  if (onlineOnly) {
+    const nowMs = Date.now();
+    const t = startTime.getTime();
+    if (t < nowMs) {
+      return { ok: false, status: 409, code: 'PAST_SLOT', reason: 'Questo orario è già passato' };
+    }
+    const { earliest, latest } = customerBookingWindow(
+      business.advanceMinHours,
+      business.advanceMaxDays,
+      nowMs,
+    );
+    if (t < earliest) {
+      const h = business.advanceMinHours;
+      return { ok: false, status: 409, code: 'TOO_SOON', reason: `Devi prenotare con almeno ${h} ${h === 1 ? 'ora' : 'ore'} di anticipo` };
+    }
+    if (t > latest) {
+      return { ok: false, status: 409, code: 'TOO_FAR', reason: `Puoi prenotare al massimo ${business.advanceMaxDays} giorni in anticipo` };
+    }
   }
 
   const endTime = new Date(startTime.getTime() + service.duration_minutes * 60000);

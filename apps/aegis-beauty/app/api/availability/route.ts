@@ -1,13 +1,13 @@
 // ============================================================================
-// AEGIS BEAUTY - AVAILABILITY API (Dashboard)
+// AEGIS BEAUTY - AVAILABILITY API (Dashboard / gestore)
 // File: apps/aegis-beauty/app/api/availability/route.ts
 //
 // GET  /api/availability?date=YYYY-MM-DD&serviceId=xxx&staffId=xxx&businessId=xxx
 //      → available slots (gestore view: any active staff, onlineOnly = false).
 // POST /api/availability  → validate a specific slot before booking.
 //
-// Both delegate to the shared engine in @aegis/core so the dashboard and the
-// customer flow stay perfectly in sync.
+// Gestore-only: the caller MUST be an active member of the business. After that
+// check, reads use the admin client so availability is complete and correct.
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -15,9 +15,27 @@ import { cookies } from 'next/headers';
 import {
   createServerSupabaseClient,
   getCurrentUser,
+  createAdminSupabaseClient,
   getBookableSlots,
   validateAppointment,
 } from '@aegis/core';
+
+/** Returns true if `userId` is an active member of `businessId`. */
+async function isActiveMember(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  userId: string,
+  businessId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('business_members')
+    .select('id')
+    .eq('business_id', businessId)
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .single();
+  return !!data;
+}
 
 // ============================================================================
 // GET - Fetch available slots
@@ -37,23 +55,24 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return NextResponse.json(
-        { error: 'Formato data non valido. Usa YYYY-MM-DD' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Formato data non valido. Usa YYYY-MM-DD' }, { status: 400 });
     }
 
     const cookieStore = await cookies();
     const supabase = createServerSupabaseClient(cookieStore);
     const user = await getCurrentUser(supabase);
-
     if (!user) {
       return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
     }
+    if (!(await isActiveMember(supabase, user.id, businessId))) {
+      return NextResponse.json({ error: 'Non hai accesso a questo business' }, { status: 403 });
+    }
 
-    const result = await getBookableSlots(supabase, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = createAdminSupabaseClient() as any;
+
+    const result = await getBookableSlots(admin, {
       businessId,
       serviceId,
       staffId: staffId || null,
@@ -102,12 +121,17 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const supabase = createServerSupabaseClient(cookieStore);
     const user = await getCurrentUser(supabase);
-
     if (!user) {
       return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
     }
+    if (!(await isActiveMember(supabase, user.id, businessId))) {
+      return NextResponse.json({ error: 'Non hai accesso a questo business' }, { status: 403 });
+    }
 
-    const validation = await validateAppointment(supabase, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = createAdminSupabaseClient() as any;
+
+    const validation = await validateAppointment(admin, {
       businessId,
       serviceId,
       staffId: staffId || null,

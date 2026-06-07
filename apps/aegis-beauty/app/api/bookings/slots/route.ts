@@ -4,14 +4,23 @@
 //
 // GET /api/bookings/slots?date=YYYY-MM-DD&serviceId=xxx&staffId=xxx&businessId=xxx
 //
-// Requires: authenticated customer session
+// Requires: authenticated customer session.
 // Returns: AvailableSlot[] via the shared loader getBookableSlots() — the SAME
 // engine + data the booking validator uses, so "slots shown" === "slots bookable".
+//
+// Uses the admin client for the read so availability reflects ALL appointments
+// (not only the ones the customer can see under RLS). Output is non-sensitive
+// (slot times + free counts only — no customer data is returned).
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerSupabaseClient, getCurrentUser, getBookableSlots, parseAsRomeTime } from '@aegis/core';
+import {
+  createServerSupabaseClient,
+  getCurrentUser,
+  createAdminSupabaseClient,
+  getBookableSlots,
+} from '@aegis/core';
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,15 +40,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Formato data non valido. Usa YYYY-MM-DD' }, { status: 400 });
     }
 
+    // Require an authenticated session, then compute availability with admin reads.
     const cookieStore = await cookies();
     const supabase    = createServerSupabaseClient(cookieStore);
     const user        = await getCurrentUser(supabase);
-
     if (!user) {
       return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
     }
 
-    const result = await getBookableSlots(supabase, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = createAdminSupabaseClient() as any;
+
+    const result = await getBookableSlots(admin, {
       businessId,
       serviceId,
       staffId: staffId || null,
@@ -51,11 +63,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    // Hide slots already in the past (relevant only when date === today, Rome time).
-    const now = Date.now();
-    const slots = result.slots.filter(s => parseAsRomeTime(date, s.time).getTime() > now);
-
-    return NextResponse.json({ slots }, { headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ slots: result.slots }, { headers: { 'Cache-Control': 'no-store' } });
 
   } catch (error) {
     console.error('[bookings/slots] error:', error);
