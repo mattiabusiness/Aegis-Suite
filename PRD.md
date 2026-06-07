@@ -252,10 +252,17 @@ Se il problema persiste dopo tutti e 3, considerare di usare `createAdminSupabas
 
 ---
 
-# 🐛 BUG APERTO — Orari staff vuoti nel modal "Gestisci orari"
+# ✅ RISOLTO — Orari staff vuoti nel modal "Gestisci orari"
 
-## Sintomo
-Nel modal `StaffHoursModal`, quando si disattiva il toggle "Usa orari del negozio", i campi orario appaiono visivamente vuoti nonostante gli orari del business esistano. L'utente dovrebbe vedere gli orari del business pre-impostati come punto di partenza.
+## Causa reale (giugno 2026)
+L'ipotesi camelCase/snake_case era **sbagliata** (`businessHoursForModal` era già in camelCase corretto). Due cause vere:
+1. **Secondi**: il DB salva i `time` come `"09:00:00"`, ma le opzioni del menu sono `"HH:MM"` → il valore non combaciava con nessuna opzione e il campo appariva vuoto.
+2. **Phantom value**: `value={day.openTime1 || '09:00'}` mostrava "09:00" su uno stato `undefined` → si salvavano valori farlocchi (es. `00:00–01:00`, caso Alessio).
+
+Fix in `resolveHours` (`StaffModal.tsx`): `normalizeWeek()` → tutti e 7 i giorni in ordine, secondi rimossi, giorni aperti con orari concreti (WYSIWYG); `toggleDay()` imposta default reali all'attivazione di un giorno.
+
+## Sintomo (storico)
+Nel modal `StaffHoursModal`, quando si disattiva il toggle "Usa orari del negozio", i campi orario appaiono visivamente vuoti nonostante gli orari del business esistano.
 
 ## Cosa è stato fatto
 - Aggiunta logica `resolveHours(custom, business, DEFAULT_WEEK)` a tre livelli di fallback
