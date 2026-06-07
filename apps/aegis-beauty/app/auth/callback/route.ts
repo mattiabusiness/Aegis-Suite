@@ -148,7 +148,9 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (!profile) {
-        await supabase.rpc('create_profile', {
+        // Use the admin client so create_profile can be locked down to service_role
+        // (a SECURITY DEFINER function must not be callable directly by authenticated users).
+        await supabaseAdmin.rpc('create_profile', {
           user_id: user.id,
           user_email: user.email,
           user_full_name: metadata.full_name || '',
