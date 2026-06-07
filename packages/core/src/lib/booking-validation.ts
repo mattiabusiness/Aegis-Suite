@@ -386,6 +386,12 @@ export async function validateAppointment(
   if (isNaN(startTime.getTime())) {
     return { ok: false, status: 400, code: 'BAD_TIME', reason: 'Data o orario non valido' };
   }
+
+  // Customers cannot book a slot in the past (the gestore may backfill walk-ins).
+  if (onlineOnly && startTime.getTime() < Date.now()) {
+    return { ok: false, status: 409, code: 'PAST_SLOT', reason: 'Questo orario è già passato' };
+  }
+
   const endTime = new Date(startTime.getTime() + service.duration_minutes * 60000);
 
   return {

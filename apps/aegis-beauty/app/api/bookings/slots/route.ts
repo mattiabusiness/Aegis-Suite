@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerSupabaseClient, getCurrentUser, getBookableSlots } from '@aegis/core';
+import { createServerSupabaseClient, getCurrentUser, getBookableSlots, parseAsRomeTime } from '@aegis/core';
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,7 +51,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    return NextResponse.json({ slots: result.slots }, { headers: { 'Cache-Control': 'no-store' } });
+    // Hide slots already in the past (relevant only when date === today, Rome time).
+    const now = Date.now();
+    const slots = result.slots.filter(s => parseAsRomeTime(date, s.time).getTime() > now);
+
+    return NextResponse.json({ slots }, { headers: { 'Cache-Control': 'no-store' } });
 
   } catch (error) {
     console.error('[bookings/slots] error:', error);

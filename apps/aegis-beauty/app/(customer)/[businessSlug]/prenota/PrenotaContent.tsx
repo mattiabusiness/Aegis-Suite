@@ -339,8 +339,9 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
     const d = state.selectedDate;
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-    // If no preference selected, use the pre-assigned staff id (if any) to ensure consistency
-    const resolvedStaffId = state.selectedStaff?.id ?? state.autoAssignedStaff?.id ?? null;
+    // Explicit operator → send it. "Qualsiasi" → send null so the SERVER picks a
+    // free operator at confirm time (robust if the pre-shown one got booked meanwhile).
+    const resolvedStaffId = state.selectedStaff?.id ?? null;
 
     // Reschedule: the original appointment id (will be cancelled atomically by the API)
     const rescheduleId = searchParams.get('reschedule') || undefined;

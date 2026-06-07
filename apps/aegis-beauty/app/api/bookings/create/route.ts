@@ -184,10 +184,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Tutte le postazioni sono occupate in questo orario.' }, { status: 409 });
       }
       console.error('[bookings/create] rpc error:', rpcError);
-      // TEMP DIAGNOSTIC: surface the real error so we can pinpoint the cause.
-      return NextResponse.json({
-        error: `Errore RPC: ${rpcError.message ?? 'sconosciuto'} [code: ${rpcError.code ?? '?'}, details: ${rpcError.details ?? '-'}, hint: ${rpcError.hint ?? '-'}]`,
-      }, { status: 500 });
+      return NextResponse.json({ error: 'Errore nella creazione dell\'appuntamento' }, { status: 500 });
     }
 
     const appointmentId = newApptId as string;
