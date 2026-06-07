@@ -21,6 +21,7 @@ import type {
   ServiceModalCategory,
 } from '@aegis/ui';
 import { createClient } from '@aegis/core';
+import { toast } from 'sonner';
 import { useStaffPermissions } from '@/lib/staff-permissions-context';
 import {
   Calendar,
@@ -263,7 +264,7 @@ export function OverviewContent({
       router.refresh();
     } catch (error) {
       console.error('Error creating appointment:', error);
-      alert(error instanceof Error ? error.message : 'Errore nella creazione dell\'appuntamento');
+      toast.error(error instanceof Error ? error.message : 'Errore nella creazione dell\'appuntamento');
     } finally {
       setIsSubmittingAppt(false);
     }

@@ -608,7 +608,7 @@ export function ClientiContent({
       fetchCustomers(currentPage, activeFilter, searchQuery);
     } catch (error) {
       console.error('Error creating appointment:', error);
-      alert(error instanceof Error ? error.message : 'Errore nella creazione dell\'appuntamento');
+      toast.error(error instanceof Error ? error.message : 'Errore nella creazione dell\'appuntamento');
     } finally {
       setIsSubmittingAppointment(false);
     }

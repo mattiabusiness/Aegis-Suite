@@ -13,6 +13,7 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
 import {
   Calendar,
   AppointmentModal,
@@ -462,7 +463,7 @@ export function CalendarioContent({
       setSelectedEvent(null);
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Errore nell\'aggiornamento dello stato');
+      toast.error('Errore nell\'aggiornamento dello stato');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -520,7 +521,7 @@ export function CalendarioContent({
       lastFetchedRange.current = '';
     } catch (error) {
       console.error('Error creating appointment:', error);
-      alert(error instanceof Error ? error.message : 'Errore nella creazione dell\'appuntamento');
+      toast.error(error instanceof Error ? error.message : 'Errore nella creazione dell\'appuntamento');
     } finally {
       setIsSubmitting(false);
     }
