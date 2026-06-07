@@ -78,10 +78,55 @@ const DEFAULT_WEEK: DayHours[] = [
   { dayOfWeek: 'sunday',    dayLabel: 'Dom', isOpen: false },
 ];
 
+// Canonical week order — the editor always shows all 7 days in this order.
+const DAY_ORDER: Array<{ dayOfWeek: string; dayLabel: string }> = [
+  { dayOfWeek: 'monday',    dayLabel: 'Lun' },
+  { dayOfWeek: 'tuesday',   dayLabel: 'Mar' },
+  { dayOfWeek: 'wednesday', dayLabel: 'Mer' },
+  { dayOfWeek: 'thursday',  dayLabel: 'Gio' },
+  { dayOfWeek: 'friday',    dayLabel: 'Ven' },
+  { dayOfWeek: 'saturday',  dayLabel: 'Sab' },
+  { dayOfWeek: 'sunday',    dayLabel: 'Dom' },
+];
+
+/** "09:00:00" → "09:00". The DB stores `time` with seconds, but the time
+ *  dropdown options are "HH:MM" — without this the value matches no option and
+ *  the field renders empty. */
+function toHHMM(t?: string | null): string | undefined {
+  if (!t) return undefined;
+  return t.slice(0, 5);
+}
+
+/**
+ * Produce a complete, editor-ready week:
+ *   - all 7 days present, in canonical order
+ *   - times normalised to "HH:MM" (seconds stripped)
+ *   - open days always carry concrete fascia-1 times, so what the user SEES in
+ *     the dropdowns is exactly what gets saved (no phantom "09:00" over an
+ *     undefined value that would persist as null/00:00).
+ */
+function normalizeWeek(days: DayHours[] | undefined): DayHours[] {
+  const byDay = new Map((days ?? []).map(d => [d.dayOfWeek, d]));
+  return DAY_ORDER.map(({ dayOfWeek, dayLabel }) => {
+    const d = byDay.get(dayOfWeek);
+    const isOpen = d?.isOpen ?? false;
+    const open1 = toHHMM(d?.openTime1);
+    const close1 = toHHMM(d?.closeTime1);
+    return {
+      dayOfWeek,
+      dayLabel,
+      isOpen,
+      openTime1: isOpen ? (open1 ?? '09:00') : open1,
+      closeTime1: isOpen ? (close1 ?? '18:00') : close1,
+      openTime2: toHHMM(d?.openTime2),
+      closeTime2: toHHMM(d?.closeTime2),
+    };
+  });
+}
+
 function resolveHours(custom: DayHours[] | undefined, business: DayHours[]): DayHours[] {
-  if (custom?.length) return custom;
-  if (business?.length) return business;
-  return DEFAULT_WEEK;
+  const source = custom?.length ? custom : (business?.length ? business : DEFAULT_WEEK);
+  return normalizeWeek(source);
 }
 
 export interface StaffHoursModalProps {
@@ -742,6 +787,19 @@ export function StaffHoursModal({
     setHours(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
   };
 
+  // Toggling a day open must give it concrete times, otherwise the dropdowns show
+  // a placeholder ("09:00") over an undefined value that would save as empty.
+  const toggleDay = (index: number) => {
+    setHours(prev => prev.map((h, i) => {
+      if (i !== index) return h;
+      const nextOpen = !h.isOpen;
+      if (nextOpen && !h.openTime1) {
+        return { ...h, isOpen: true, openTime1: '09:00', closeTime1: h.closeTime1 ?? '18:00' };
+      }
+      return { ...h, isOpen: nextOpen };
+    }));
+  };
+
   const addSecondRange = (index: number) => {
     setHours(prev => prev.map((h, i) => i === index ? { ...h, openTime2: '14:00', closeTime2: '19:00' } : h));
   };
@@ -831,7 +889,7 @@ export function StaffHoursModal({
                     <div
                       className="w-9 h-5 rounded-full flex items-center px-0.5 flex-shrink-0 cursor-pointer"
                       style={{ background: day.isOpen ? '#10b981' : '#d1d5db', transition: 'background 0.2s ease' }}
-                      onClick={() => updateDay(i, 'isOpen', !day.isOpen)}
+                      onClick={() => toggleDay(i)}
                     >
                       <div className="w-4 h-4 rounded-full bg-white" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.15)', transform: day.isOpen ? 'translateX(16px)' : 'translateX(0)', transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }} />
                     </div>
