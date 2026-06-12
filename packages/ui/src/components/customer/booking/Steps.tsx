@@ -533,7 +533,11 @@ export function Step2Front({ business, hours, staff, closures, bookingState, fet
       return;
     }
     setSlotsLoading(true);
-    const dateStr = bookingState.selectedDate.toISOString().split('T')[0];
+    // Use LOCAL date parts — toISOString() would shift to the previous day in
+    // timezones ahead of UTC (e.g. Italy UTC+1/+2), making e.g. Tuesday fetch
+    // Monday's slots (and show "no slots" if Monday is a closed day).
+    const sd = bookingState.selectedDate;
+    const dateStr = `${sd.getFullYear()}-${String(sd.getMonth() + 1).padStart(2, '0')}-${String(sd.getDate()).padStart(2, '0')}`;
 
     fetchSlots({
       businessId: business.id,
