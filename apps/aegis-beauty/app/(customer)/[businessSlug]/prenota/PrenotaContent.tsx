@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { FloatingParticles, BookingCarousel, InstallPrompt } from '@aegis/ui';
-import type { BookingState, FetchSlotsFn } from '@aegis/ui';
+import type { BookingState, BookingClosure, FetchSlotsFn } from '@aegis/ui';
 import type { Business, Service, Staff, BusinessHours, Customer, ServiceCategory } from '@aegis/types';
 
 // Re-export so page.tsx / other files can still import from here if needed
@@ -27,6 +27,7 @@ interface PrenotaContentProps {
   services:   Service[];
   staff:      Staff[];
   hours:      BusinessHours[];
+  closures:   BookingClosure[];
   customer:   Customer | null;
   categories: ServiceCategory[];
 }
@@ -297,7 +298,7 @@ function SuccessScreenContent({ summary, slug, router }: { summary: BookedSummar
 // MAIN COMPONENT
 // ============================================================================
 
-export function PrenotaContent({ business, services, staff, hours, customer: _customer, categories }: PrenotaContentProps) {
+export function PrenotaContent({ business, services, staff, hours, closures, customer: _customer, categories }: PrenotaContentProps) {
   const [booked, setBooked]  = useState<BookedSummary | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const searchParams         = useSearchParams();
@@ -434,6 +435,7 @@ export function PrenotaContent({ business, services, staff, hours, customer: _cu
                 services={services}
                 staff={staff}
                 hours={hours}
+                closures={closures}
                 categories={categories}
                 fetchSlots={fetchSlots}
                 onConfirm={handleConfirm}

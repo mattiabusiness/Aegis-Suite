@@ -10,7 +10,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type {
   BookingBusiness, BookingService, BookingStaff, BookingHours,
-  BookingState, BookingCategory, FetchSlotsFn,
+  BookingState, BookingCategory, BookingClosure, FetchSlotsFn,
 } from './types';
 import { CarouselCard } from './CarouselCard';
 import {
@@ -28,6 +28,7 @@ interface BookingCarouselProps {
   services:        BookingService[];
   staff:           BookingStaff[];
   hours:           BookingHours[];
+  closures:        BookingClosure[];
   categories:      BookingCategory[];
   fetchSlots:      FetchSlotsFn;
   onConfirm:       (state: BookingState) => Promise<void>;
@@ -274,7 +275,7 @@ function ProgressDots({ activeStep }: { activeStep: number }) {
 // COMPONENT
 // ============================================================================
 
-export function BookingCarousel({ business, services, staff, hours, categories, fetchSlots, onConfirm, onError, initialStep = 0, initialService = null, isReschedule = false }: BookingCarouselProps) {
+export function BookingCarousel({ business, services, staff, hours, closures, categories, fetchSlots, onConfirm, onError, initialStep = 0, initialService = null, isReschedule = false }: BookingCarouselProps) {
   const [activeStep,   setActiveStep]   = useState(initialStep);
   const [flipped,      setFlipped]      = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -456,7 +457,7 @@ export function BookingCarousel({ business, services, staff, hours, categories, 
                       />
                     ) : cardIdx === 1 ? (
                       <Step2Front
-                        business={business} hours={hours} staff={staff}
+                        business={business} hours={hours} staff={staff} closures={closures}
                         bookingState={state} onUpdate={updateState}
                         fetchSlots={fetchSlots}
                         onNext={nextStep} onBack={prevStep}

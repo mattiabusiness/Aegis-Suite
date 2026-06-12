@@ -44,6 +44,12 @@ export interface BookingHours {
   is_open:     boolean;
 }
 
+export interface BookingClosure {
+  startDate:         string;  // YYYY-MM-DD
+  endDate:           string;  // YYYY-MM-DD
+  isRecurringYearly: boolean;
+}
+
 export interface BookingSlot {
   time:               string;
   availableStaffIds?: string[];

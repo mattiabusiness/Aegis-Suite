@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import type {
   BookingBusiness, BookingCategory, BookingService, BookingStaff, BookingHours,
-  BookingSlot, BookingState, FetchSlotsFn,
+  BookingClosure, BookingSlot, BookingState, FetchSlotsFn,
 } from './types';
 
 // ============================================================================
@@ -68,6 +68,19 @@ const bodyTextStyle: React.CSSProperties = {
 const DAY_ORDER_FULL: string[] = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 
 function formatTime(t: string): string { return t.slice(0, 5); }
+
+/** True if the date falls inside a business closure (one-off or recurring yearly). */
+function isDateInClosures(d: Date, closures: BookingClosure[]): boolean {
+  if (!closures || closures.length === 0) return false;
+  const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return closures.some(c => {
+    if (c.isRecurringYearly) {
+      const md = dateStr.substring(5);
+      return md >= c.startDate.substring(5) && md <= c.endDate.substring(5);
+    }
+    return dateStr >= c.startDate && dateStr <= c.endDate;
+  });
+}
 
 // ============================================================================
 // SHIMMER PRIMARY BUTTON
@@ -490,6 +503,7 @@ interface Step2FrontProps {
   business:     BookingBusiness;
   hours:        BookingHours[];
   staff:        BookingStaff[];
+  closures:     BookingClosure[];
   bookingState: BookingState;
   fetchSlots:   FetchSlotsFn;
   onUpdate:     (patch: Partial<BookingState>) => void;
@@ -498,7 +512,7 @@ interface Step2FrontProps {
   onFlip:       () => void;
 }
 
-export function Step2Front({ business, hours, staff, bookingState, fetchSlots, onUpdate, onNext, onBack, onFlip }: Step2FrontProps) {
+export function Step2Front({ business, hours, staff, closures, bookingState, fetchSlots, onUpdate, onNext, onBack, onFlip }: Step2FrontProps) {
   const today  = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -549,6 +563,7 @@ export function Step2Front({ business, hours, staff, bookingState, fetchSlots, o
     if (d < today) return true;
     const dayIdx = (d.getDay() + 6) % 7; // 0=Mon
     if (!openDayIndices.has(dayIdx)) return true;
+    if (isDateInClosures(d, closures)) return true; // ferie / chiusure straordinarie
     return false;
   }
 

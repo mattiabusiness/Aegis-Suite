@@ -32,7 +32,7 @@ export default async function PrenotaPage({
   if (!business) notFound();
 
   // Fetch all data needed for the booking flow in parallel
-  const [servicesResult, staffResult, hoursResult, customerResult, categoriesResult, shampooPriceResult] = await Promise.all([
+  const [servicesResult, staffResult, hoursResult, customerResult, categoriesResult, shampooPriceResult, closuresResult] = await Promise.all([
     supabase
       .from('services')
       .select('id, name, duration_minutes, price, price_from, category_id, display_order')
@@ -66,6 +66,11 @@ export default async function PrenotaPage({
       .select('shampoo_price')
       .eq('id', business.id)
       .single(),
+
+    supabase
+      .from('business_closures')
+      .select('start_date, end_date, is_recurring_yearly')
+      .eq('business_id', business.id),
   ]);
 
   const services   = servicesResult.data   ?? [];
@@ -75,6 +80,12 @@ export default async function PrenotaPage({
   const categories = categoriesResult.data ?? [];
   const shampooPrice = (shampooPriceResult.data as { shampoo_price: number } | null)?.shampoo_price ?? 3;
 
+  const closures = ((closuresResult.data ?? []) as Array<{ start_date: string; end_date: string; is_recurring_yearly: boolean }>).map(c => ({
+    startDate: c.start_date,
+    endDate: c.end_date,
+    isRecurringYearly: c.is_recurring_yearly,
+  }));
+
   const businessWithShampoo = { ...business, shampoo_price: shampooPrice };
 
   return (
@@ -83,6 +94,7 @@ export default async function PrenotaPage({
       services={services}
       staff={staff}
       hours={hours}
+      closures={closures}
       customer={customer}
       categories={categories}
     />

@@ -323,6 +323,7 @@ export type {
   BookingService,
   BookingStaff,
   BookingHours,
+  BookingClosure,
   BookingSlot,
   FetchSlotsFn,
 } from './components/customer/booking/types';
