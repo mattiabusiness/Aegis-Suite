@@ -206,7 +206,7 @@ export function CalendarioContent({
       const query = supabase
         .from('appointments')
         .select(`
-          id, start_time, end_time, status, staff_notes, include_shampoo,
+          id, start_time, end_time, status, notes, staff_notes, include_shampoo,
           customer:customers(full_name),
           staff:staff(full_name, color),
           appointment_services(service_name, price)
@@ -240,7 +240,7 @@ export function CalendarioContent({
           staffColor: staff?.color || undefined,
           staffId: (a.staff_id as string) || undefined,
           status: a.status as CalendarEventData['status'],
-          notes: a.staff_notes as string | undefined,
+          notes: (a.notes as string) || (a.staff_notes as string) || undefined,
           includeShampoo: (a.include_shampoo as boolean) || false,
           servicePrice: services?.[0]?.price,
           shampooPrice,
