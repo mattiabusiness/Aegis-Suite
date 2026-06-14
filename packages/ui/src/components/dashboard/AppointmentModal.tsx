@@ -312,7 +312,7 @@ function MiniCalendar({
   };
 
   const maxDate = new Date();
-  maxDate.setMonth(maxDate.getMonth() + 3);
+  maxDate.setMonth(maxDate.getMonth() + 12);
 
   const calRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
