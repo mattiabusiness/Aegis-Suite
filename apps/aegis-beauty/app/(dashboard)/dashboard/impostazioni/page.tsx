@@ -157,8 +157,6 @@ export default async function ImpostazioniPage() {
         cancellationPolicyHours: business.cancellation_policy_hours,
         bufferMinutes: business.booking_buffer_minutes ?? 0,
         isPublic: business.is_public ?? true,
-        allowNoStaffPreference: true,
-        allowMultipleServices: false,
       }}
       accountData={{
         fullName: profile?.full_name || '',

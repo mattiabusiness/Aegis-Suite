@@ -892,6 +892,29 @@ export function BusinessContent({ business, services, staff, hours, categories }
                     </ScrollReveal>
                   )}
 
+                  {/* Website */}
+                  {business.website && (
+                    <ScrollReveal delay={0.07}>
+                      <a
+                        href={/^https?:\/\//i.test(business.website) ? business.website : `https://${business.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          fontSize: '0.95rem',
+                          fontWeight: 600,
+                          color: '#7c3aed',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        Visita il nostro sito web
+                        <span aria-hidden="true">→</span>
+                      </a>
+                    </ScrollReveal>
+                  )}
+
                   {/* Info grid */}
                   {(getAddress(business) || business.phone) && (
                     <div style={{
