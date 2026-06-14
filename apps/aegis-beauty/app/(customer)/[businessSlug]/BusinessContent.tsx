@@ -900,17 +900,16 @@ export function BusinessContent({ business, services, staff, hours, categories }
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 8,
                           fontSize: '0.95rem',
                           fontWeight: 600,
                           color: '#7c3aed',
                           textDecoration: 'none',
                         }}
                       >
-                        Visita il nostro sito web
-                        <span aria-hidden="true">→</span>
+                        Visita il nostro sito web:{' '}
+                        <span style={{ textDecoration: 'underline' }}>
+                          {business.website.replace(/^https?:\/\//i, '').replace(/\/+$/, '')}
+                        </span>
                       </a>
                     </ScrollReveal>
                   )}
