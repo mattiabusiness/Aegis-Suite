@@ -158,8 +158,8 @@ function CustomerRow({
                 style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.2)' }}>
                 <Mail className="w-2.5 h-2.5" />Invitato
               </span>
-            ) : customer.source === 'import' ? (
-              // Importato ma non ancora invitato → bottone per invitare
+            ) : (
+              // Non registrato (qualunque source: import, manuale, da appuntamento) → bottone per invitare
               inviteError ? (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
                   style={{ background: 'rgba(239,68,68,0.08)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)', animation: 'cl-card-in 0.15s ease-out both' }}>
@@ -188,7 +188,7 @@ function CustomerRow({
                   Non registrato
                 </button>
               )
-            ) : null
+            )
           )}
         </div>
         <div className="flex items-center gap-3 mt-0.5 text-sm text-gray-500">

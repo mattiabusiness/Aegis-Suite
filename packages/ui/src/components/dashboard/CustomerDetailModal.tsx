@@ -417,8 +417,8 @@ export function CustomerDetailModal({
                 >
                   {customer.isActive ? 'Attivo' : 'Inattivo'}
                 </span>
-                {/* Import status badge */}
-                {customer.source === 'import' && !customer.userId && (
+                {/* Invite / registration status badge */}
+                {!customer.userId && (
                   customer.invitedAt ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium flex-shrink-0"
                       style={{ background: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.2)' }}>
