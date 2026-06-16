@@ -65,3 +65,79 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+// ============================================================================
+// PATCH — il cliente aggiorna la PROPRIA scheda (preferenze + sync nome/telefono).
+// La scrittura su `customers` è RLS admin-only, quindi passa da qui (admin client)
+// dopo aver verificato che la scheda appartenga all'utente loggato. Colonne limitate.
+// ============================================================================
+
+export async function PATCH(request: NextRequest) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll(); },
+        setAll() {},
+      },
+    }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  }
+
+  const body = await request.json() as {
+    customerId?: string;
+    preferences?: string;
+    fullName?: string;
+    phone?: string;
+  };
+  const { customerId, preferences, fullName, phone } = body;
+  if (!customerId || typeof customerId !== 'string') {
+    return NextResponse.json({ error: 'customerId mancante' }, { status: 400 });
+  }
+
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+
+  // Ownership: la scheda deve appartenere all'utente loggato (no IDOR).
+  const { data: own } = await supabaseAdmin
+    .from('customers')
+    .select('id')
+    .eq('id', customerId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (!own) {
+    return NextResponse.json({ error: 'Non autorizzato' }, { status: 403 });
+  }
+
+  // Solo colonne sicure — MAI total_spent/notes/tags/is_active ecc.
+  const patch: Record<string, unknown> = {};
+  if (typeof preferences === 'string') patch.preferences = preferences;
+  if (typeof fullName === 'string' && fullName.trim()) patch.full_name = fullName.trim();
+  if (typeof phone === 'string') patch.phone = phone.trim() || null;
+
+  if (Object.keys(patch).length === 0) {
+    return NextResponse.json({ success: true });
+  }
+  patch.updated_at = new Date().toISOString();
+
+  const { error } = await supabaseAdmin
+    .from('customers')
+    .update(patch)
+    .eq('id', customerId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('[customer/link PATCH] error:', error);
+    return NextResponse.json({ error: 'Errore durante il salvataggio' }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}

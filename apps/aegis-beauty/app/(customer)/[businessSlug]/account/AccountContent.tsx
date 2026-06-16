@@ -501,13 +501,18 @@ export function AccountContent({
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
-      const updates: Promise<unknown>[] = [
-        sb.from('profiles').upsert({ id: userId, full_name: fullName, phone: phone || null, email }),
-      ];
-      if (customer && prefs !== (customer as { preferences?: string }).preferences) {
-        updates.push(sb.from('customers').update({ preferences: prefs }).eq('id', customer.id).eq('user_id', userId));
+      // Profilo auth (nome/telefono/email)
+      await sb.from('profiles').upsert({ id: userId, full_name: fullName, phone: phone || null, email });
+      // Scheda cliente: preferenze + sync nome/telefono per il CRM del salone.
+      // Passa dall'API (admin client) perché `customers` è RLS scrittura-admin-only.
+      if (customer) {
+        const res = await fetch('/api/customer/link', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerId: customer.id, preferences: prefs, fullName, phone }),
+        });
+        if (!res.ok) throw new Error('customer update failed');
       }
-      await Promise.all(updates);
       toast.success('Profilo aggiornato.');
     } catch { toast.error('Errore durante il salvataggio. Riprova.'); }
     finally { setSaving(false); }
