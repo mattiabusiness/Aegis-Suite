@@ -924,7 +924,7 @@ function AccountTab({ form, setForm, baseData, onSave, onChangePassword }: {
   };
   const handleChangePw = async () => {
     setPwErr(''); setPwOk(false);
-    if (newPw.length < 6) { setPwErr('La password deve avere almeno 6 caratteri'); setShake(true); setTimeout(() => setShake(false), 500); return; }
+    if (newPw.length < 8) { setPwErr('La password deve avere almeno 8 caratteri'); setShake(true); setTimeout(() => setShake(false), 500); return; }
     if (newPw !== confPw) { setPwErr('Le password non corrispondono'); setShake(true); setTimeout(() => setShake(false), 500); return; }
     setChangingPw(true);
     try { await onChangePassword(curPw, newPw); setPwOk(true); setCurPw(''); setNewPw(''); setConfPw(''); setTimeout(() => setPwOk(false), 3000); }
@@ -961,7 +961,7 @@ function AccountTab({ form, setForm, baseData, onSave, onChangePassword }: {
             </div>
           </div>
           <GlassInput label="Conferma nuova password" type="password" value={confPw} onChange={(e) => { setConfPw(e.target.value); setPwErr(''); }} />
-          {pwErr && <p className="text-sm text-red-600 flex items-center gap-1.5" style={{ animation: 'stFadeUp 0.3s ease-out' }}>⚠ {pwErr}</p>}
+          {pwErr && <p className="text-sm text-red-600" style={{ animation: 'stFadeUp 0.3s ease-out' }}>{pwErr}</p>}
           {pwOk && <p className="text-sm text-emerald-600 flex items-center gap-1.5" style={{ animation: 'stFadeUp 0.3s ease-out' }}>✓ Password modificata con successo!</p>}
           {/* Gradient button like SaveBtn */}
           <button onClick={handleChangePw} disabled={changingPw || !curPw || !newPw || !confPw}
