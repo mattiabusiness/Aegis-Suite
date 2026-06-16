@@ -387,6 +387,7 @@ export function ImporterModal({
   const [isInviting, setIsInviting] = React.useState(false);
   const [inviteDone, setInviteDone] = React.useState(false);
   const [inviteProgress, setInviteProgress] = React.useState({ current: 0, total: 0 });
+  const [inviteResult, setInviteResult] = React.useState<{ sent: number; failed: number } | null>(null);
   const stepKeyRef = React.useRef(0);
   const [stepDir, setStepDir] = React.useState<'fwd' | 'bwd'>('fwd');
 
@@ -406,6 +407,7 @@ export function ImporterModal({
     setParsedRows([]); setUpdateDuplicates(false); setIsCheckingDups(false);
     setIsImporting(false); setImportProgress({ current: 0, total: 0 });
     setImportResult(null); setIsInviting(false); setInviteDone(false); setInviteProgress({ current: 0, total: 0 });
+    setInviteResult(null);
     setStepDir('fwd'); stepKeyRef.current = 0;
   }
 
@@ -520,21 +522,35 @@ export function ImporterModal({
     const CHUNK = 50;
     setIsInviting(true);
     setInviteProgress({ current: 0, total: ids.length });
-    try {
-      for (let i = 0; i < ids.length; i += CHUNK) {
-        const chunk = ids.slice(i, i + CHUNK);
-        await fetch('/api/clients/invite-batch', {
+    let totalSent = 0;
+    let totalFailed = 0;
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const chunk = ids.slice(i, i + CHUNK);
+      try {
+        const res = await fetch('/api/clients/invite-batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ customerIds: chunk }),
         });
-        setInviteProgress({ current: Math.min(i + CHUNK, ids.length), total: ids.length });
+        if (res.ok) {
+          const data = await res.json() as { sent?: number; failed?: number };
+          totalSent += data.sent ?? 0;
+          totalFailed += data.failed ?? 0;
+        } else {
+          totalFailed += chunk.length;
+        }
+      } catch {
+        totalFailed += chunk.length;
       }
-    } catch { /* non-critical — show done anyway */ }
-    finally {
-      setIsInviting(false);
-      setInviteDone(true);
-      setTimeout(() => { onImportComplete(); handleClose(); }, 900);
+      setInviteProgress({ current: Math.min(i + CHUNK, ids.length), total: ids.length });
+    }
+    setInviteResult({ sent: totalSent, failed: totalFailed });
+    setIsInviting(false);
+    setInviteDone(true);
+    // Auto-chiusura solo se è andato tutto. Se qualcosa è fallito, lascio il modal
+    // aperto così il gestore legge il risultato e sa di dover reinviare dal CRM.
+    if (totalFailed === 0) {
+      setTimeout(() => { onImportComplete(); handleClose(); }, 1200);
     }
   }
 
@@ -596,6 +612,7 @@ export function ImporterModal({
           isImporting={isImporting} importProgress={importProgress}
           importResult={importResult} invitableCount={invitableCount}
           isInviting={isInviting} inviteDone={inviteDone} inviteProgress={inviteProgress}
+          inviteResult={inviteResult}
           onSendInvites={handleSendInvites} onSkipInvites={handleSkipInvites}
         />
       )}
@@ -997,11 +1014,12 @@ interface Step3Props {
   isInviting: boolean;
   inviteDone: boolean;
   inviteProgress: { current: number; total: number };
+  inviteResult: { sent: number; failed: number } | null;
   onSendInvites: () => void;
   onSkipInvites: () => void;
 }
 
-function Step3({ isImporting, importProgress, importResult, invitableCount, isInviting, inviteDone, inviteProgress, onSendInvites, onSkipInvites }: Step3Props) {
+function Step3({ isImporting, importProgress, importResult, invitableCount, isInviting, inviteDone, inviteProgress, inviteResult, onSendInvites, onSkipInvites }: Step3Props) {
   const progressPct = importProgress.total > 0
     ? Math.min(Math.round((importProgress.current / importProgress.total) * 100), 100)
     : 0;
@@ -1221,14 +1239,43 @@ function Step3({ isImporting, importProgress, importResult, invitableCount, isIn
       )}
 
       {/* ── Invite done ───────────────────────────────────────── */}
-      {inviteDone && (
-        <div className="flex items-center gap-2.5 p-3.5 rounded-xl"
-          style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)', animation: 'imp-fade-up 0.3s ease both' }}>
-          <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(168,85,247,0.15)' }}>
-            <Check className="w-3 h-3" style={{ color: '#9333ea' }} />
+      {inviteDone && inviteResult && (
+        <div className="space-y-3" style={{ animation: 'imp-fade-up 0.3s ease both' }}>
+          <div className="flex items-start gap-2.5 p-3.5 rounded-xl"
+            style={{
+              background: inviteResult.failed > 0 ? 'rgba(245,158,11,0.06)' : 'rgba(168,85,247,0.05)',
+              border: `1px solid ${inviteResult.failed > 0 ? 'rgba(245,158,11,0.2)' : 'rgba(168,85,247,0.15)'}`,
+            }}>
+            <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{ background: inviteResult.failed > 0 ? 'rgba(245,158,11,0.15)' : 'rgba(168,85,247,0.15)' }}>
+              {inviteResult.failed > 0
+                ? <AlertTriangle className="w-3 h-3" style={{ color: '#d97706' }} />
+                : <Check className="w-3 h-3" style={{ color: '#9333ea' }} />}
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: inviteResult.failed > 0 ? '#d97706' : '#7c3aed' }}>
+                {inviteResult.failed > 0
+                  ? `${inviteResult.sent} ${inviteResult.sent === 1 ? 'invito inviato' : 'inviti inviati'} · ${inviteResult.failed} non ${inviteResult.failed === 1 ? 'riuscito' : 'riusciti'}`
+                  : `${inviteResult.sent} ${inviteResult.sent === 1 ? 'invito inviato' : 'inviti inviati'} con successo`}
+              </p>
+              {inviteResult.failed > 0 && (
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  Puoi reinviare quelli non riusciti dalla lista clienti: cerca il badge{' '}
+                  <span style={{ fontWeight: 600, color: '#64748b' }}>&ldquo;Non registrato&rdquo;</span> e clicca per invitare.
+                </p>
+              )}
+            </div>
           </div>
-          <p className="text-sm font-semibold" style={{ color: '#7c3aed' }}>Inviti inviati con successo</p>
+          {inviteResult.failed > 0 && (
+            <button onClick={onSkipInvites}
+              className="w-full py-2.5 rounded-xl text-sm font-medium text-gray-600"
+              style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)', transition: 'all 0.15s ease' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.06)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.03)'; }}
+            >
+              Chiudi
+            </button>
+          )}
         </div>
       )}
 
