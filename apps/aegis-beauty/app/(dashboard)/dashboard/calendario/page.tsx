@@ -5,7 +5,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient, getCurrentUser } from '@aegis/core';
+import { createServerSupabaseClient, getCurrentUser, getCurrentStaffPermissions } from '@aegis/core';
 import { CalendarioContent } from './CalendarioContent';
 import type { CalendarEventData, BusinessHoursData, ClosureData } from '@aegis/ui';
 
@@ -27,6 +27,13 @@ export default async function CalendarioPage() {
 
   const businessId = businessMember.business_id;
 
+  // Permessi staff — per filtrare gli appuntamenti GIÀ lato server: uno staff
+  // senza "agenda completa" deve ricevere SOLO i propri appuntamenti, altrimenti
+  // la risposta contiene quelli di tutto il salone (leak) e al primo render li vede.
+  const permissions = await getCurrentStaffPermissions(supabase, user.id, businessId);
+  const restrictToOwnStaff =
+    !!permissions && permissions.isStaff && !permissions.canSeeBusinessCalendar && !!permissions.currentStaffId;
+
   // ========================================================================
   // FETCH ALL DATA IN PARALLEL
   // ========================================================================
@@ -41,6 +48,24 @@ export default async function CalendarioPage() {
   endOfWeek.setDate(endOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
 
+  // Query appuntamenti della settimana — filtrata per staff_id se l'utente non può
+  // vedere l'agenda completa (stesso filtro applicato lato client).
+  let appointmentsQuery = supabase
+    .from('appointments')
+    .select(`
+      id, start_time, end_time, status, staff_notes, staff_id, include_shampoo,
+      customer:customers(full_name),
+      staff:staff(full_name, color),
+      appointment_services(service_name, price)
+    `)
+    .eq('business_id', businessId)
+    .gte('start_time', startOfWeek.toISOString())
+    .lte('start_time', endOfWeek.toISOString());
+
+  if (restrictToOwnStaff) {
+    appointmentsQuery = appointmentsQuery.eq('staff_id', permissions!.currentStaffId as string);
+  }
+
   const [
     appointmentsResult,
     staffResult,
@@ -49,19 +74,7 @@ export default async function CalendarioPage() {
     servicesResult,
     businessResult,
   ] = await Promise.all([
-    // Appointments for this week
-    supabase
-      .from('appointments')
-      .select(`
-        id, start_time, end_time, status, staff_notes, staff_id, include_shampoo,
-        customer:customers(full_name),
-        staff:staff(full_name, color),
-        appointment_services(service_name, price)
-      `)
-      .eq('business_id', businessId)
-      .gte('start_time', startOfWeek.toISOString())
-      .lte('start_time', endOfWeek.toISOString())
-      .order('start_time', { ascending: true }),
+    appointmentsQuery.order('start_time', { ascending: true }),
 
     // Staff con i servizi associati (join unica, elimina query separata)
     supabase
