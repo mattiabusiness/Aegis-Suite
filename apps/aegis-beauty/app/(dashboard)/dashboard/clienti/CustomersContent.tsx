@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import ExcelJS from 'exceljs';
 import { useRouter } from 'next/navigation';
@@ -158,6 +158,10 @@ export function ClientiContent({
     loading: false,
   });
 
+  // Debounce ricerca + guardia anti-risposte-fuori-ordine
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fetchSeqRef = useRef(0);
+
   const PAGE_SIZE = 50;
 
   // ============================================================================
@@ -168,8 +172,10 @@ export function ClientiContent({
     page: number,
     filter: CustomerFilter,
     search: string,
+    silent = false,
   ) => {
-    setLoading(true);
+    const seq = ++fetchSeqRef.current;
+    if (!silent) setLoading(true);
     try {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
@@ -204,12 +210,13 @@ export function ClientiContent({
         .order('full_name', { ascending: true })
         .range(from, to) as { data: CustomerData[] | null; count: number | null };
 
+      if (seq !== fetchSeqRef.current) return; // risposta sorpassata da una fetch più recente → ignora
       setCustomers(data || []);
       setTotalCount(count || 0);
     } catch (err) {
       console.error('Error fetching customers:', err);
     } finally {
-      setLoading(false);
+      if (seq === fetchSeqRef.current && !silent) setLoading(false);
     }
   }, [supabase, businessId]);
 
@@ -225,13 +232,17 @@ export function ClientiContent({
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    // Debounce search
-    const timer = setTimeout(() => {
+    // Debounce reale: cancella il timer precedente e lancia UNA sola fetch quando ci si ferma.
+    // silent=true → la lista resta visibile e si aggiorna sul posto (niente spinner / flicker).
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
       setCurrentPage(1);
-      fetchCustomers(1, activeFilter, query);
+      fetchCustomers(1, activeFilter, query, true);
     }, 300);
-    return () => clearTimeout(timer);
   };
+
+  // Pulisci il timer di ricerca allo smontaggio
+  useEffect(() => () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
