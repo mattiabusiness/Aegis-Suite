@@ -209,8 +209,8 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (ownerRow?.user_id && businessRow) {
-        const startLabel = startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-        const dateLabel  = startTime.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+        const startLabel = startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
+        const dateLabel  = startTime.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Rome' });
 
         const payload: PushPayload = {
           title: 'Nuova prenotazione',

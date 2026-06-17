@@ -93,9 +93,9 @@ export async function GET(req: Request): Promise<NextResponse> {
       const serviceName = services[0]?.service_name ?? 'Appuntamento';
       const startDate = new Date(appt.start_time);
       const dateLabel = startDate.toLocaleDateString('it-IT', {
-        weekday: 'long', day: 'numeric', month: 'long',
+        weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome',
       });
-      const timeLabel = startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const timeLabel = startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
 
       const payload: PushPayload = type === '24h'
         ? {
