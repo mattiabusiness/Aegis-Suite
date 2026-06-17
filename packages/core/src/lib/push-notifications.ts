@@ -20,6 +20,7 @@ export interface PushPayload {
   icon?: string;
   badge?: string;
   url?: string;
+  calendarUrl?: string;
   actions?: Array<{
     action: string;
     title: string;

@@ -21,6 +21,7 @@ sw.addEventListener('push', (event: PushEvent) => {
     icon?: string;
     badge?: string;
     url?: string;
+    calendarUrl?: string;
     actions?: Array<{ action: string; title: string }>;
     tag?: string;
   };
@@ -30,7 +31,7 @@ sw.addEventListener('push', (event: PushEvent) => {
       body: data.body,
       icon: data.icon ?? '/icons/icon-192x192.png',
       badge: data.badge ?? '/icons/icon-96x96.png',
-      data: { url: data.url ?? '/' },
+      data: { url: data.url ?? '/', calendarUrl: data.calendarUrl },
       actions: data.actions,
       tag: data.tag,
     } as unknown as NotificationOptions)
@@ -44,7 +45,15 @@ sw.addEventListener('push', (event: PushEvent) => {
 sw.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
-  const url = (event.notification.data as { url?: string })?.url ?? '/';
+  const d = event.notification.data as { url?: string; calendarUrl?: string } | undefined;
+
+  // Azione "Aggiungi al calendario" → apri Google Calendar in una nuova finestra
+  if (event.action === 'calendar' && d?.calendarUrl) {
+    event.waitUntil(sw.clients.openWindow(d.calendarUrl));
+    return;
+  }
+
+  const url = d?.url ?? '/';
 
   event.waitUntil(
     sw.clients

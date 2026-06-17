@@ -97,11 +97,18 @@ export async function GET(req: Request): Promise<NextResponse> {
       });
       const timeLabel = startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
 
+      // Link "Aggiungi al calendario" (Google Calendar) per l'azione della notifica 24h.
+      // Date in UTC compatto YYYYMMDDTHHMMSSZ — Google le converte nel fuso dell'utente.
+      const toGcal = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const calText = encodeURIComponent(`${serviceName} — ${business.name}`);
+      const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calText}&dates=${toGcal(appt.start_time)}/${toGcal(appt.end_time)}`;
+
       const payload: PushPayload = type === '24h'
         ? {
             title: 'Il tuo appuntamento è domani',
             body: `${serviceName} alle ${timeLabel} da ${business.name}`,
             url: `/${business.slug}/account`,
+            calendarUrl,
             actions: [
               { action: 'view', title: 'Vedi' },
               { action: 'calendar', title: 'Aggiungi al calendario' },
