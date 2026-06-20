@@ -39,7 +39,11 @@ export async function sendPushNotification(
           auth: subscription.auth_key,
         },
       },
-      JSON.stringify(fullPayload)
+      JSON.stringify(fullPayload),
+      // Consegna prioritaria: i promemoria sono time-sensitive → arrivano subito
+      // anche con telefono in Doze/risparmio energetico (altrimenti Android li
+      // accoda). TTL 1h: niente promemoria stantii consegnati dopo l'orario.
+      { urgency: 'high', TTL: 3600 }
     );
     return true;
   } catch (err) {
