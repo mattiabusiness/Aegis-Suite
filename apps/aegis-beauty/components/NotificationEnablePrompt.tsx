@@ -88,7 +88,7 @@ export function NotificationEnablePrompt() {
               </button>
             </div>
             <p className="text-white/75 text-sm leading-relaxed mb-4">
-              Ricevi un promemoria prima dell&apos;appuntamento e non perderti il tuo servizio.
+              Ricevi un promemoria prima dell&apos;appuntamento per non perderti il tuo servizio.
             </p>
             <div className="flex items-center gap-3">
               <button onClick={dismiss} className="text-white/50 text-sm hover:text-white/70 transition-colors flex-1 text-left">
