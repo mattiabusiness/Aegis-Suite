@@ -16,9 +16,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, X } from 'lucide-react';
 import { subscribeToPush, isPushSupported } from '@aegis/core';
 
-const DISMISSED_KEY = 'aegis_notif_cta_dismissed_at';
-const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 giorni
-
 function isIOS(): boolean {
   if (typeof navigator === 'undefined') return false;
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -31,15 +28,14 @@ export function NotificationEnablePrompt() {
   useEffect(() => {
     if (isIOS()) return;                              // iOS → usa l'install prompt
     if (!isPushSupported()) return;
-    if (Notification.permission !== 'default') return; // già concesso o bloccato
-    const dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) ?? '0', 10);
-    if (dismissedAt && Date.now() - dismissedAt < COOLDOWN_MS) return;
+    if (Notification.permission !== 'default') return; // una volta abilitato non riappare
+    // Nessun cooldown: ricompare a OGNI prenotazione finché il cliente non abilita.
     const t = setTimeout(() => setVisible(true), 1200);
     return () => clearTimeout(t);
   }, []);
 
   const dismiss = useCallback(() => {
-    localStorage.setItem(DISMISSED_KEY, String(Date.now()));
+    // "Non ora": niente cooldown → ricompare alla prossima prenotazione
     setVisible(false);
   }, []);
 
