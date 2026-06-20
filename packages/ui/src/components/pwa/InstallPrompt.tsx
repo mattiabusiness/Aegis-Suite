@@ -17,6 +17,7 @@ import { X, Share, Download } from 'lucide-react';
 export interface InstallPromptProps {
   businessName?: string;
   showAfterBooking?: boolean;
+  iosOnly?: boolean;
   onInstalled?: () => void;
 }
 
@@ -103,7 +104,7 @@ function shouldShow(forceShow: boolean): boolean {
 // COMPONENT
 // ============================================================================
 
-export function InstallPrompt({ businessName, showAfterBooking = false, onInstalled }: InstallPromptProps) {
+export function InstallPrompt({ businessName, showAfterBooking = false, iosOnly = false, onInstalled }: InstallPromptProps) {
   const [visible, setVisible] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [ios, setIos] = useState(false);
@@ -147,6 +148,9 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
     if (typeof window === 'undefined') return;
     if (localStorage.getItem(KEYS.isInstalled) === 'true') return;
     if (isInStandaloneMode()) return;
+    // iosOnly: su iOS il push richiede la PWA installata, quindi qui mostriamo
+    // solo l'install; su Android/desktop l'attivazione notifiche è gestita altrove.
+    if (iosOnly && !isIOS()) return;
 
     const now = Date.now();
     const dismissedAt = parseInt(localStorage.getItem(KEYS.installDismissedAt) ?? '0', 10);
@@ -154,7 +158,7 @@ export function InstallPrompt({ businessName, showAfterBooking = false, onInstal
 
     const t = setTimeout(() => setVisible(true), showAfterBooking ? 1500 : 800);
     return () => clearTimeout(t);
-  }, [showAfterBooking]);
+  }, [showAfterBooking, iosOnly]);
 
   const dismiss = useCallback(() => {
     const count = parseInt(localStorage.getItem(KEYS.dismissCount) ?? '0', 10) + 1;

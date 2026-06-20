@@ -13,6 +13,7 @@ import { CheckCircle, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { FloatingParticles, BookingCarousel, InstallPrompt } from '@aegis/ui';
 import type { BookingState, BookingClosure, FetchSlotsFn } from '@aegis/ui';
+import { NotificationEnablePrompt } from '@/components/NotificationEnablePrompt';
 import type { Business, Service, Staff, BusinessHours, Customer, ServiceCategory } from '@aegis/types';
 
 // Re-export so page.tsx / other files can still import from here if needed
@@ -89,7 +90,9 @@ function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string
   // Show PWA install prompt after successful booking
   return (
     <>
-      <InstallPrompt showAfterBooking businessName={summary.businessName} />
+      {/* iOS: install (il push richiede la PWA installata). Android/desktop: attiva notifiche. */}
+      <InstallPrompt showAfterBooking iosOnly businessName={summary.businessName} />
+      <NotificationEnablePrompt />
       <SuccessScreenContent summary={summary} slug={slug} router={router} />
     </>
   );
