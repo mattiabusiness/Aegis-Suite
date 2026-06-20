@@ -123,11 +123,13 @@ export async function GET(req: Request): Promise<NextResponse> {
             tag: `reminder-1h-${appt.id}`,
           };
 
-      const emailFallback: EmailFallbackData | undefined = customer.email
+      // Email fallback SOLO per il promemoria 24h (se il cliente non ha il push attivo).
+      // Per l'1h niente email: il push basta, così risparmiamo invii ZeptoMail.
+      const emailFallback: EmailFallbackData | undefined = (type === '24h' && customer.email)
         ? {
             to: customer.email,
             toName: customer.full_name ?? 'Cliente',
-            type: type === '24h' ? 'reminder_24h' : 'reminder_1h',
+            type: 'reminder_24h',
             data: {
               customerName: customer.full_name ?? 'Cliente',
               businessName: business.name,
