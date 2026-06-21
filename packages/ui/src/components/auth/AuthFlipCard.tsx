@@ -367,7 +367,7 @@ export function AuthFlipCard({
               <div className="afc-welcome-body">
                 {logo && <div className="afc-logo">{logo}</div>}
                 {brandName && <h1 className="afc-brand-name">{brandName} <span className="afc-brand-sub">{brandSubtitle}</span></h1>}
-                {brandName && <div className="afc-welcome-divider" />}
+                <div className="afc-welcome-divider" />
                 <h2 className="afc-welcome-title">{loginWelcomeTitle}</h2>
                 <p className="afc-welcome-sub">{loginWelcomeSubtitle}</p>
                 <div className="afc-deco"><span className="afc-deco-line" /><span className="afc-deco-dot" /><span className="afc-deco-line" /></div>
@@ -381,7 +381,7 @@ export function AuthFlipCard({
               <div className="afc-welcome-body">
                 {logo && <div className="afc-logo">{logo}</div>}
                 {brandName && <h1 className="afc-brand-name">{brandName} <span className="afc-brand-sub">{brandSubtitle}</span></h1>}
-                {brandName && <div className="afc-welcome-divider" />}
+                <div className="afc-welcome-divider" />
                 <h2 className="afc-welcome-title">{registerWelcomeTitle}</h2>
                 <p className="afc-welcome-sub">{registerWelcomeSubtitle}</p>
                 <div className="afc-deco"><span className="afc-deco-line" /><span className="afc-deco-dot" /><span className="afc-deco-line" /></div>
