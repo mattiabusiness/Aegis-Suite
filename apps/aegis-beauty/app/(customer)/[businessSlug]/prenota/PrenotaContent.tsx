@@ -62,27 +62,17 @@ function buildGoogleCalUrl(summary: BookedSummary): string {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}`;
 }
 
-function buildIcsBlob(summary: BookedSummary): string {
-  const start = formatIcsDate(summary.date, summary.time);
-  const end   = formatIcsDate(summary.date, summary.time, summary.durationMinutes);
-  const title = `${summary.serviceName} — ${summary.businessName}`;
-  const desc  = summary.staffName ? `con ${summary.staffName}` : '';
-  return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AegisBeauty//IT',
-    'BEGIN:VEVENT',
-    `DTSTART:${start}`, `DTEND:${end}`,
-    `SUMMARY:${title}`, `DESCRIPTION:${desc}`,
-    `UID:${summary.appointmentId}@aegisbeauty.app`,
-    'END:VEVENT', 'END:VCALENDAR',
-  ].join('\r\n');
-}
-
-function downloadIcs(summary: BookedSummary) {
-  const blob = new Blob([buildIcsBlob(summary)], { type: 'text/calendar;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = 'appuntamento.ics'; a.click();
-  URL.revokeObjectURL(url);
+// Link all'endpoint /api/ics: serve il file con i promemoria incorporati e apre
+// il calendario nativo preimpostato su iPhone, Android e desktop (responsive ovunque).
+function buildIcsUrl(summary: BookedSummary): string {
+  const params = new URLSearchParams({
+    title:   `${summary.serviceName} — ${summary.businessName}`,
+    start:   formatIcsDate(summary.date, summary.time),
+    end:     formatIcsDate(summary.date, summary.time, summary.durationMinutes),
+    details: summary.staffName ? `con ${summary.staffName}` : '',
+    uid:     `${summary.appointmentId}@aegisbeauty.app`,
+  });
+  return `/api/ics?${params.toString()}`;
 }
 
 function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string }) {
@@ -229,55 +219,55 @@ function SuccessScreenContent({ summary, slug, router }: { summary: BookedSummar
         transition={{ delay: 0.5, duration: 0.4 }}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}
       >
+        {/* AZIONE PRINCIPALE: aggiungi al calendario — il promemoria arriva da lì */}
+        <a
+          href={buildIcsUrl(summary)}
+          style={{
+            padding: '15px 20px', borderRadius: 14, textDecoration: 'none',
+            background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+            color: '#fff', fontWeight: 700, fontSize: '0.95rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            boxShadow: '0 4px 22px rgba(124,58,237,0.45)',
+          }}
+        >
+          <Calendar style={{ width: 17, height: 17, flexShrink: 0 }} />
+          Aggiungi al calendario
+        </a>
+        <p style={{ margin: '2px 4px 4px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', lineHeight: 1.45 }}>
+          Ricevi il promemoria e non te lo dimentichi. Funziona su iPhone, Android e PC.
+        </p>
+
+        {/* Alternativa Google Calendar (per chi lo preferisce) */}
+        <a
+          href={buildGoogleCalUrl(summary)}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            padding: '10px 20px', borderRadius: 14, textDecoration: 'none',
+            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+            color: 'rgba(255,255,255,0.7)', fontSize: '0.83rem', fontWeight: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          <Calendar style={{ width: 14, height: 14, flexShrink: 0 }} />
+          Usi Google Calendar? Aggiungi qui
+        </a>
+
+        {/* Secondaria: vai agli appuntamenti */}
         <motion.button
-          whileHover={{ scale: 1.02, boxShadow: '0 0 28px rgba(168,85,247,0.45)' }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => router.push(`/${slug}/account`)}
           style={{
-            padding: '12px 20px', borderRadius: 14, border: 'none', cursor: 'pointer',
-            background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
-            color: '#fff', fontWeight: 700, fontSize: '0.9rem',
+            padding: '11px 20px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+            background: 'transparent',
+            color: 'rgba(255,255,255,0.6)', fontWeight: 600, fontSize: '0.85rem',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
           }}
         >
           Vedi i miei appuntamenti
-          <ArrowRight style={{ width: 16, height: 16 }} />
+          <ArrowRight style={{ width: 15, height: 15 }} />
         </motion.button>
-
-        {/* Aggiungi al calendario */}
-        <div style={{ display: 'flex', gap: 10 }}>
-          <a
-            href={buildGoogleCalUrl(summary)}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '10px 10px', borderRadius: 14, textDecoration: 'none',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              color: 'rgba(255,255,255,0.65)', fontSize: '0.82rem', fontWeight: 600,
-              transition: 'background 0.2s',
-            }}
-          >
-            <Calendar style={{ width: 13, height: 13, flexShrink: 0 }} />
-            Google Cal
-          </a>
-          <button
-            onClick={() => downloadIcs(summary)}
-            style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '10px 10px', borderRadius: 14, cursor: 'pointer',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              color: 'rgba(255,255,255,0.65)', fontSize: '0.82rem', fontWeight: 600,
-              transition: 'background 0.2s',
-            }}
-          >
-            <Calendar style={{ width: 13, height: 13, flexShrink: 0 }} />
-            Apple / Outlook
-          </button>
-        </div>
 
         <motion.button
           whileHover={{ scale: 1.01 }}

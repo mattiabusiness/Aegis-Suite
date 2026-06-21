@@ -6,7 +6,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '@aegis/core';
 import { notify } from '@/lib/notify';
-import type { EmailFallbackData } from '@/lib/email';
 import type { PushPayload } from '@aegis/core';
 import type { Appointment } from '@aegis/types';
 
@@ -92,9 +91,6 @@ export async function GET(req: Request): Promise<NextResponse> {
 
       const serviceName = services[0]?.service_name ?? 'Appuntamento';
       const startDate = new Date(appt.start_time);
-      const dateLabel = startDate.toLocaleDateString('it-IT', {
-        weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome',
-      });
       const timeLabel = startDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
 
       // Link "Aggiungi al calendario" (Google Calendar) per l'azione della notifica 24h.
@@ -123,34 +119,11 @@ export async function GET(req: Request): Promise<NextResponse> {
             tag: `reminder-1h-${appt.id}`,
           };
 
-      // Email fallback SOLO per il promemoria 24h (se il cliente non ha il push attivo).
-      // Per l'1h niente email: il push basta, così risparmiamo invii ZeptoMail.
-      // Se la riga `customers` non ha email, la recuperiamo dall'account registrato
-      // (auth) via user_id → così il fallback parte SEMPRE per un cliente loggato.
-      let recipientEmail = customer.email;
-      if (type === '24h' && !recipientEmail) {
-        const { data: authUser } = await supabase.auth.admin.getUserById(customer.user_id);
-        recipientEmail = authUser?.user?.email ?? null;
-      }
-
-      const emailFallback: EmailFallbackData | undefined = (type === '24h' && recipientEmail)
-        ? {
-            to: recipientEmail,
-            toName: customer.full_name ?? 'Cliente',
-            type: 'reminder_24h',
-            data: {
-              customerName: customer.full_name ?? 'Cliente',
-              businessName: business.name,
-              serviceName,
-              date: dateLabel,
-              time: timeLabel,
-              businessSlug: business.slug,
-            },
-          }
-        : undefined;
-
+      // Reminder solo via PUSH (gratis, per chi ha la PWA con notifiche attive).
+      // Niente più email: il promemoria "ufficiale" ora è il calendario dell'utente,
+      // proposto in modo prominente a fine prenotazione (con allarme incorporato).
       try {
-        await notify(customer.user_id, payload, supabase, emailFallback);
+        await notify(customer.user_id, payload, supabase);
 
         // Mark reminder as sent
         // @ts-expect-error — Supabase generic inference can't resolve Appointment['Update'] here
