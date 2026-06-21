@@ -17,14 +17,14 @@ export default function StartPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Risolvi la destinazione + tieni la splash visibile almeno ~1.8s
-      // (così si gode l'animazione e copre lo splash statico dell'OS).
+      // Risolvi la destinazione + tieni la splash visibile almeno ~1.2s
+      // (si gode l'animazione ma scatta via veloce).
       const [url] = await Promise.all([
         fetch('/api/start', { cache: 'no-store' })
           .then((r) => r.json())
           .then((d) => (typeof d?.url === 'string' ? d.url : '/login'))
           .catch(() => '/login'),
-        new Promise((res) => setTimeout(res, 1800)),
+        new Promise((res) => setTimeout(res, 1200)),
       ]);
       if (!cancelled) router.replace(url as string);
     })();
