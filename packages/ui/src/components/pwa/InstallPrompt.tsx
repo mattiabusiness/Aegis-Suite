@@ -156,9 +156,20 @@ export function InstallPrompt({ businessName, showAfterBooking = false, iosOnly 
     const dismissedAt = parseInt(localStorage.getItem(KEYS.installDismissedAt) ?? '0', 10);
     if (dismissedAt && now - dismissedAt < DISMISS_COOLDOWN_MS) return;
 
-    const t = setTimeout(() => setVisible(true), showAfterBooking ? 1500 : 800);
-    return () => clearTimeout(t);
-  }, [showAfterBooking, iosOnly]);
+    // iOS: niente beforeinstallprompt → mostra le istruzioni "Aggiungi a Home" a tempo.
+    if (isIOS()) {
+      const t = setTimeout(() => setVisible(true), showAfterBooking ? 1500 : 1200);
+      return () => clearTimeout(t);
+    }
+
+    // Android/desktop: mostra il banner col tasto "Installa" appena il browser
+    // rende l'app installabile (evento beforeinstallprompt catturato → deferredPrompt).
+    // Così l'utente non deve passare dai tre puntini → installazione in un tap.
+    if (deferredPrompt) {
+      const t = setTimeout(() => setVisible(true), showAfterBooking ? 1200 : 500);
+      return () => clearTimeout(t);
+    }
+  }, [showAfterBooking, iosOnly, deferredPrompt]);
 
   const dismiss = useCallback(() => {
     const count = parseInt(localStorage.getItem(KEYS.dismissCount) ?? '0', 10) + 1;
