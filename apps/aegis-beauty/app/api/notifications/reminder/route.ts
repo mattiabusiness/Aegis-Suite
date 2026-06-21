@@ -125,9 +125,17 @@ export async function GET(req: Request): Promise<NextResponse> {
 
       // Email fallback SOLO per il promemoria 24h (se il cliente non ha il push attivo).
       // Per l'1h niente email: il push basta, così risparmiamo invii ZeptoMail.
-      const emailFallback: EmailFallbackData | undefined = (type === '24h' && customer.email)
+      // Se la riga `customers` non ha email, la recuperiamo dall'account registrato
+      // (auth) via user_id → così il fallback parte SEMPRE per un cliente loggato.
+      let recipientEmail = customer.email;
+      if (type === '24h' && !recipientEmail) {
+        const { data: authUser } = await supabase.auth.admin.getUserById(customer.user_id);
+        recipientEmail = authUser?.user?.email ?? null;
+      }
+
+      const emailFallback: EmailFallbackData | undefined = (type === '24h' && recipientEmail)
         ? {
-            to: customer.email,
+            to: recipientEmail,
             toName: customer.full_name ?? 'Cliente',
             type: 'reminder_24h',
             data: {
