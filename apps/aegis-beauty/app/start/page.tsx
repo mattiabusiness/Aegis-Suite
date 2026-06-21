@@ -1,52 +1,35 @@
+'use client';
+
 // ============================================================================
-// AEGIS BEAUTY - /start
-// PWA start_url landing: redirect to the right place based on user role.
-// Gestore → /dashboard | Cliente → /<slug>/account | Guest → /login
+// AEGIS BEAUTY - /start (PWA start_url)
+// Mostra la splash brandizzata e poi reindirizza al posto giusto.
+// Client-side di proposito: un redirect server-side (307) non farebbe mai
+// vedere la splash al lancio della PWA.
 // ============================================================================
 
-import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-import { createServerSupabaseClient } from '@aegis/core';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { AppSplash } from '@/components/AppSplash';
 
-export default async function StartPage() {
-  const supabase = createServerSupabaseClient(await cookies());
+export default function StartPage() {
+  const router = useRouter();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // Risolvi la destinazione + tieni la splash visibile almeno ~650ms
+      // (evita un flash istantaneo e dà respiro al brand).
+      const [url] = await Promise.all([
+        fetch('/api/start', { cache: 'no-store' })
+          .then((r) => r.json())
+          .then((d) => (typeof d?.url === 'string' ? d.url : '/login'))
+          .catch(() => '/login'),
+        new Promise((res) => setTimeout(res, 650)),
+      ]);
+      if (!cancelled) router.replace(url as string);
+    })();
+    return () => { cancelled = true; };
+  }, [router]);
 
-  if (!user) {
-    redirect('/login');
-  }
-
-  // Check if gestore (has an active business_member record)
-  const { data: membership } = await supabase
-    .from('business_members')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .limit(1)
-    .maybeSingle();
-
-  if (membership) {
-    redirect('/dashboard');
-  }
-
-  // Cliente: find last booked business
-  const { data: lastApptRaw } = await supabase
-    .from('appointments')
-    .select('businesses ( slug )')
-    .eq('customer_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const lastAppt = lastApptRaw as { businesses: { slug: string } | { slug: string }[] | null } | null;
-  const business = lastAppt?.businesses;
-  const slug = Array.isArray(business) ? business[0]?.slug : business?.slug;
-
-  if (slug) {
-    redirect(`/${slug}/account`);
-  }
-
-  // Fallback: no appointments yet, go to login
-  redirect('/login');
+  return <AppSplash />;
 }
