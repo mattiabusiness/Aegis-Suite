@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { FloatingParticles, BookingCarousel, InstallPrompt } from '@aegis/ui';
+import { FloatingParticles, BookingCarousel } from '@aegis/ui';
 import type { BookingState, BookingClosure, FetchSlotsFn } from '@aegis/ui';
 import { NotificationEnablePrompt } from '@/components/NotificationEnablePrompt';
 import type { Business, Service, Staff, BusinessHours, Customer, ServiceCategory } from '@aegis/types';
@@ -87,11 +87,11 @@ function downloadIcs(summary: BookedSummary) {
 
 function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string }) {
   const router = useRouter();
-  // Show PWA install prompt after successful booking
+  // Dopo la prenotazione mostriamo SOLO il banner notifiche.
+  // L'install PWA arriva dopo, su home/account (gestito da CustomerLayoutWrapper),
+  // così non si accavalla con l'attivazione notifiche.
   return (
     <>
-      {/* iOS: install (il push richiede la PWA installata). Android/desktop: attiva notifiche. */}
-      <InstallPrompt showAfterBooking iosOnly businessName={summary.businessName} />
       <NotificationEnablePrompt />
       <SuccessScreenContent summary={summary} slug={slug} router={router} />
     </>
@@ -380,6 +380,9 @@ export function PrenotaContent({ business, services, staff, hours, closures, cus
       businessName:    business.name,
       durationMinutes: state.selectedService.duration_minutes,
     });
+
+    // Sblocca il prompt install PWA su home/account (gestito da CustomerLayoutWrapper).
+    try { localStorage.setItem('aegis_has_booked', 'true'); } catch { /* ignore */ }
 
     toast.success(isReschedule ? 'Appuntamento spostato!' : 'Prenotazione confermata!');
   }, [business, searchParams, isReschedule]);
