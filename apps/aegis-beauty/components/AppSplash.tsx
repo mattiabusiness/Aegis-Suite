@@ -3,16 +3,21 @@
 // File: apps/aegis-beauty/components/AppSplash.tsx
 // Schermata di avvio brandizzata. Usata sia come contenuto di /start (client,
 // mentre risolve il redirect) sia come loading.tsx (fallback soft-navigation).
+// Lo scudo è inline (data-URI) → paint istantaneo, handoff fluido dallo splash
+// nativo del sistema operativo (stesso sfondo, scudo nella stessa posizione).
 // Presentazionale: niente hook → ok sia in client che in server component.
 // ============================================================================
+
+import { SHIELD_DATA_URI } from './shield-data';
 
 export function AppSplash() {
   return (
     <div className="aegis-splash">
       <style>{`
-        @keyframes aegisFade {
-          0%   { opacity: 0; transform: translateY(14px) scale(0.97); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes aegisShieldIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes aegisRise {
+          0%   { opacity: 0; transform: translateY(12px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes aegisPulse {
           0%, 100% { transform: scale(1);    filter: drop-shadow(0 10px 36px rgba(168,85,247,0.40)); }
@@ -32,13 +37,16 @@ export function AppSplash() {
             #0b0f1a;
           padding: 24px;
         }
-        .aegis-splash__inner {
-          display: flex; flex-direction: column; align-items: center;
-          animation: aegisFade 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
+        .aegis-splash__inner { display: flex; flex-direction: column; align-items: center; }
+        /* lo scudo resta fermo (come nello splash OS) → solo fade + pulse, niente "salto" */
+        .aegis-splash__shieldwrap { animation: aegisShieldIn 0.45s ease-out both; }
         .aegis-splash__shield {
           width: 124px; height: auto; display: block;
           animation: aegisPulse 2.4s ease-in-out infinite;
+        }
+        .aegis-splash__text {
+          display: flex; flex-direction: column; align-items: center;
+          animation: aegisRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
         }
         .aegis-splash__brand {
           margin-top: 26px; font-size: 30px; line-height: 1;
@@ -64,12 +72,16 @@ export function AppSplash() {
       `}</style>
 
       <div className="aegis-splash__inner">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-shield.png?v=1" alt="Aegis Beauty" className="aegis-splash__shield" />
-        <div className="aegis-splash__brand">AEGIS</div>
-        <div className="aegis-splash__sub">Beauty</div>
-        <div className="aegis-splash__slogan">Il tuo salone, sempre con te</div>
-        <div className="aegis-splash__dots"><span /><span /><span /></div>
+        <div className="aegis-splash__shieldwrap">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={SHIELD_DATA_URI} alt="Aegis Beauty" className="aegis-splash__shield" />
+        </div>
+        <div className="aegis-splash__text">
+          <div className="aegis-splash__brand">AEGIS</div>
+          <div className="aegis-splash__sub">Beauty</div>
+          <div className="aegis-splash__slogan">Il tuo salone, sempre con te</div>
+          <div className="aegis-splash__dots"><span /><span /><span /></div>
+        </div>
       </div>
     </div>
   );
