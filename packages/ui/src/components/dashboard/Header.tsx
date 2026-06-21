@@ -125,7 +125,7 @@ function NotificationDropdown({
             <p className="text-xs text-gray-400 mt-1">Nessuna notifica al momento</p>
           </div>
         ) : (
-          notifications.slice(0, 5).map((n, i) => {
+          notifications.map((n, i) => {
             const typeConf = NOTIF_TYPE_CONFIG[n.type || 'info'];
             const TypeIcon = typeConf.icon;
             return (
@@ -178,9 +178,9 @@ function NotificationDropdown({
             style={{ color: '#9333ea', transition: 'color 0.15s' }}
             onMouseEnter={(e) => { e.currentTarget.style.color = '#7e22ce'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = '#9333ea'; }}
-            onClick={() => { onViewAll?.(); onClose(); }}
+            onClick={() => { onViewAll?.(); }}
           >
-            Vedi tutte le notifiche
+            Segna tutte come lette
           </span>
         </div>
       )}

@@ -151,7 +151,7 @@ export function DashboardMobileHeader({
             <p style={{ fontSize: '0.85rem', color: '#9ca3af' }}>Nessuna notifica al momento</p>
           </div>
         ) : (
-          notifications.slice(0, 6).map(n => (
+          notifications.map(n => (
             <div
               key={n.id}
               onClick={() => { onNotificationItemClick?.(n); closeAll(); }}
@@ -175,10 +175,10 @@ export function DashboardMobileHeader({
       {notifications.length > 0 && (
         <div style={{ padding: '10px 16px', borderTop: '1px solid rgba(0,0,0,0.05)', textAlign: 'center', flexShrink: 0 }}>
           <button
-            onClick={() => { onViewAllNotifications?.(); closeAll(); }}
+            onClick={() => { onViewAllNotifications?.(); }}
             style={{ fontSize: '0.85rem', fontWeight: 700, color: '#9333ea', background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            Vedi tutte le notifiche
+            Segna tutte come lette
           </button>
         </div>
       )}

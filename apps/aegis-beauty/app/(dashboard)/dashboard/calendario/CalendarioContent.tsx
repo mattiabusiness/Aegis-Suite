@@ -12,6 +12,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import {
@@ -287,6 +288,34 @@ export function CalendarioContent({
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [selectedDate, view, fetchAppointments]);
+
+  // Apri l'evento richiesto da una notifica: /dashboard/calendario?apptId=&apptDate=
+  // Reattivo ai parametri (gestisce anche il caso "gestore già sul calendario").
+  // Attivo SOLO se i parametri sono presenti → nessun effetto sul flusso normale.
+  const notifSearchParams = useSearchParams();
+  const notifOpenedRef = useRef<string | null>(null);
+
+  // 1) naviga al giorno dell'appuntamento target
+  useEffect(() => {
+    const id = notifSearchParams.get('apptId');
+    if (!id) return;
+    const date = notifSearchParams.get('apptDate');
+    if (date) {
+      const d = new Date(`${date}T12:00:00`);
+      if (!isNaN(d.getTime())) setSelectedDate(d);
+    }
+  }, [notifSearchParams]);
+
+  // 2) appena gli eventi del giorno sono caricati, apri il modal (una volta per id)
+  useEffect(() => {
+    const id = notifSearchParams.get('apptId');
+    if (!id || notifOpenedRef.current === id) return;
+    const ev = events.find((e) => e.id === id);
+    if (ev) {
+      notifOpenedRef.current = id;
+      setSelectedEvent(ev);
+    }
+  }, [events, notifSearchParams]);
 
   // ========================================================================
   // AVAILABILITY SLOT FETCHING

@@ -211,11 +211,14 @@ export async function POST(request: NextRequest) {
       if (ownerRow?.user_id && businessRow) {
         const startLabel = startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
         const dateLabel  = startTime.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Rome' });
+        // Link che apre il calendario sul giorno giusto e mostra subito l'appuntamento
+        const apptDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(startTime);
+        const calUrl = `/dashboard/calendario?apptId=${appointmentId}&apptDate=${apptDate}`;
 
         const payload: PushPayload = {
           title: 'Nuova prenotazione',
           body: `${service.name} — ${dateLabel} alle ${startLabel}`,
-          url: '/dashboard/calendario',
+          url: calUrl,
           actions: [{ action: 'view', title: 'Vedi calendario' }],
           tag: `new-booking-${appointmentId}`,
         };
@@ -229,7 +232,7 @@ export async function POST(request: NextRequest) {
           type: 'info',
           title: payload.title,
           message: payload.body,
-          data: { url: '/dashboard/calendario' },
+          data: { url: calUrl },
         });
       }
     } catch (notifyErr) {

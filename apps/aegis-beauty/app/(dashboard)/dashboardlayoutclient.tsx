@@ -60,7 +60,7 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
   const router = useRouter();
 
   usePushSubscription();
-  const { notifications, unreadCount, markRead } = useNotifications();
+  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
 
   // Desktop browser (non-standalone): gestisce permesso notifiche push
   useEffect(() => {
@@ -224,6 +224,7 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
           notifications={notifications}
           unreadCount={unreadCount}
           onNotificationClick={handleNotificationClick}
+          onViewAllNotifications={markAllRead}
           onMenuItemClick={handleMenuItemClick}
           onLogout={handleLogout}
           onProfileClick={() => router.push('/dashboard/impostazioni?tab=account')}
