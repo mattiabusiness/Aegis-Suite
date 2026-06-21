@@ -129,7 +129,7 @@ export default function RootLayout({
   return (
     <html lang="it" className={inter.variable}>
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-180x180.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
         <meta name="theme-color" content="#7c3aed" />
       </head>
       <body>
