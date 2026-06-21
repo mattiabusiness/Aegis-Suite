@@ -381,7 +381,7 @@ export function DashboardMobileHeader({
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo-orizzontale.png?v=2"
+              src="/logo-orizzontale.png?v=3"
               alt={brandLabel}
               style={{ height: 44, width: 'auto', objectFit: 'contain', opacity: 0.95 }}
             />

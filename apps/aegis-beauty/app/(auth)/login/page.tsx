@@ -19,7 +19,7 @@ function AegisLogo() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/logo-verticale.png?v=3"
+      src="/logo-verticale.png?v=4"
       alt="Aegis Beauty"
       style={{ width: 200, height: 'auto', display: 'block' }}
     />

@@ -62,7 +62,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-marketing.png?v=2" alt="Aegis Beauty" style={{ height: 52, width: 'auto', display: 'block' }} />
+            <img src="/logo-marketing.png?v=3" alt="Aegis Beauty" style={{ height: 52, width: 'auto', display: 'block' }} />
           </Link>
 
           {/* Desktop nav */}

@@ -276,7 +276,7 @@ export function DesktopHeader({ business, currentPath, theme, onNavigate, brandL
       <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/logo-orizzontale-rev.png?v=2"
+          src="/logo-orizzontale-rev.png?v=3"
           alt={brandLabel}
           style={{ height: 44, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
         />
