@@ -62,19 +62,6 @@ function buildGoogleCalUrl(summary: BookedSummary): string {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}`;
 }
 
-// Link all'endpoint /api/ics: serve il file con i promemoria incorporati e apre
-// il calendario nativo preimpostato su iPhone, Android e desktop (responsive ovunque).
-function buildIcsUrl(summary: BookedSummary): string {
-  const params = new URLSearchParams({
-    title:   `${summary.serviceName} — ${summary.businessName}`,
-    start:   formatIcsDate(summary.date, summary.time),
-    end:     formatIcsDate(summary.date, summary.time, summary.durationMinutes),
-    details: summary.staffName ? `con ${summary.staffName}` : '',
-    uid:     `${summary.appointmentId}@aegisbeauty.app`,
-  });
-  return `/api/ics?${params.toString()}`;
-}
-
 function SuccessScreen({ summary, slug }: { summary: BookedSummary; slug: string }) {
   const router = useRouter();
   // Dopo la prenotazione mostriamo SOLO il banner notifiche.
@@ -219,9 +206,11 @@ function SuccessScreenContent({ summary, slug, router }: { summary: BookedSummar
         transition={{ delay: 0.5, duration: 0.4 }}
         style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}
       >
-        {/* AZIONE PRINCIPALE: aggiungi al calendario — il promemoria arriva da lì */}
+        {/* AZIONE PRINCIPALE: aggiungi a Google Calendar (nativo, evento preimpostato) */}
         <a
-          href={buildIcsUrl(summary)}
+          href={buildGoogleCalUrl(summary)}
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
             padding: '15px 20px', borderRadius: 14, textDecoration: 'none',
             background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
@@ -234,24 +223,8 @@ function SuccessScreenContent({ summary, slug, router }: { summary: BookedSummar
           Aggiungi al calendario
         </a>
         <p style={{ margin: '2px 4px 4px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', lineHeight: 1.45 }}>
-          Ricevi il promemoria e non te lo dimentichi. Funziona su iPhone, Android e PC.
+          Ricevi il promemoria e non te lo dimentichi.
         </p>
-
-        {/* Alternativa Google Calendar (per chi lo preferisce) */}
-        <a
-          href={buildGoogleCalUrl(summary)}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            padding: '10px 20px', borderRadius: 14, textDecoration: 'none',
-            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
-            color: 'rgba(255,255,255,0.7)', fontSize: '0.83rem', fontWeight: 600,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
-          <Calendar style={{ width: 14, height: 14, flexShrink: 0 }} />
-          Usi Google Calendar? Aggiungi qui
-        </a>
 
         {/* Secondaria: vai agli appuntamenti */}
         <motion.button

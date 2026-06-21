@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, User, X, RefreshCw } from 'lucide-react';
+import { Clock, User, X, RefreshCw, Calendar } from 'lucide-react';
 import type { DashboardTheme } from '../dashboard/Themes';
 
 // ============================================================================
@@ -30,6 +30,7 @@ export interface AppointmentCardData {
 export interface AppointmentCardProps {
   appointment:   AppointmentCardData;
   theme:         DashboardTheme;
+  businessName?: string;
   onCancel?:     (appointmentId: string) => void;
   onRebook?:     (appointment: AppointmentCardData) => void;
   onReschedule?: (appointment: AppointmentCardData) => void;
@@ -67,7 +68,7 @@ function formatDate(isoString: string) {
 // COMPONENT
 // ============================================================================
 
-export function AppointmentCard({ appointment, theme, onCancel, onRebook, onReschedule, index = 0 }: AppointmentCardProps) {
+export function AppointmentCard({ appointment, theme, businessName, onCancel, onRebook, onReschedule, index = 0 }: AppointmentCardProps) {
   const [showConfirm, setShowConfirm] = React.useState(false);
 
   const date      = formatDate(appointment.start_time);
@@ -76,6 +77,14 @@ export function AppointmentCard({ appointment, theme, onCancel, onRebook, onResc
   const staffName = appointment.staff?.nickname ?? appointment.staff?.full_name ?? '';
   const price     = appointment.total_price ?? appointment.appointment_services?.[0]?.price ?? null;
   const isPast    = !date.isFuture;
+
+  // Link a Google Calendar (nativo, evento preimpostato) — niente file .ics.
+  const gcalUrl = (() => {
+    const stamp = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const text = encodeURIComponent(businessName ? `${service} — ${businessName}` : service);
+    const details = encodeURIComponent(staffName ? `con ${staffName}` : '');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${stamp(appointment.start_time)}/${stamp(appointment.end_time)}&details=${details}`;
+  })();
 
   return (
     <motion.div
@@ -163,9 +172,23 @@ export function AppointmentCard({ appointment, theme, onCancel, onRebook, onResc
 
           {/* Actions */}
           {onCancel && date.isFuture && appointment.status !== 'cancelled' && (
-            <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
               {!showConfirm ? (
                 <>
+                  <a
+                    href={gcalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px',
+                      borderRadius: 8, fontSize: '0.73rem', fontWeight: 700, textDecoration: 'none',
+                      background: 'linear-gradient(135deg, #9333ea, #7c3aed)', color: '#fff',
+                      border: '1px solid rgba(124,58,237,0.4)', cursor: 'pointer',
+                    }}
+                  >
+                    <Calendar style={{ width: 11, height: 11 }} />
+                    Aggiungi al calendario
+                  </a>
                   {onReschedule && (
                     <button
                       onClick={() => onReschedule(appointment)}

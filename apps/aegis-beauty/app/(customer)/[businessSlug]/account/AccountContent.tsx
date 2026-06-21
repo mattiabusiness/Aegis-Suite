@@ -581,7 +581,7 @@ export function AccountContent({
                   boxShadow: '0 4px 20px rgba(124,58,237,0.1), 0 1px 4px rgba(0,0,0,0.06)',
                   overflow: 'hidden',
                 }}>
-                  <AppointmentCard appointment={apt} theme={beautyTheme} onCancel={handleCancel} onReschedule={handleReschedule} index={0} />
+                  <AppointmentCard appointment={apt} theme={beautyTheme} businessName={business.name} onCancel={handleCancel} onReschedule={handleReschedule} index={0} />
                 </motion.div>
               ))}
             </motion.div>
