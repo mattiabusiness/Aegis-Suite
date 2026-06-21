@@ -31,9 +31,28 @@ export interface EmailFallbackData {
 // ============================================================================
 
 function getClient(): SendMailClient {
-  const apiKey = process.env.ZEPTOMAIL_API_KEY;
-  if (!apiKey) throw new Error('[email] ZEPTOMAIL_API_KEY not set');
-  return new SendMailClient({ url: 'api.zeptomail.eu/', token: apiKey });
+  const raw = process.env.ZEPTOMAIL_API_KEY?.trim();
+  if (!raw) throw new Error('[email] ZEPTOMAIL_API_KEY not set');
+  // Il SDK ZeptoMail vuole il token completo "Zoho-enczapikey <key>".
+  // Aggiungiamo il prefisso se l'utente ha messo solo la key (causa comune di 401 silenziosi).
+  const token = raw.startsWith('Zoho-enczapikey') ? raw : `Zoho-enczapikey ${raw}`;
+  // Data center configurabile: default EU. Se l'account ZeptoMail è su un'altra region
+  // (es. .com) imposta ZEPTOMAIL_API_URL = "api.zeptomail.com/".
+  const url = process.env.ZEPTOMAIL_API_URL?.trim() || 'api.zeptomail.eu/';
+  return new SendMailClient({ url, token });
+}
+
+// Invio di prova: NON ingoia l'errore (lo rilancia) → usato dall'endpoint di test
+// per mostrare il motivo reale di un fallimento ZeptoMail.
+export async function sendTestEmail(to: string): Promise<unknown> {
+  const client = getClient();
+  const from = process.env.ZEPTOMAIL_FROM_EMAIL?.trim() || 'noreply@aegisbeauty.app';
+  return client.sendMail({
+    from: { address: from, name: 'Aegis Beauty' },
+    to: [{ email_address: { address: to, name: 'Test' } }],
+    subject: 'Test Aegis Beauty — fallback email',
+    htmlbody: '<p>Se leggi questa email, il fallback ZeptoMail funziona ✅</p>',
+  });
 }
 
 // ============================================================================
