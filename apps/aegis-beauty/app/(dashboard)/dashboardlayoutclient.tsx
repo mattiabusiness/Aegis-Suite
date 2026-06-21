@@ -214,7 +214,7 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
         <NotificationPrompt />
         <DashboardLayout
           theme={beautyTheme}
-          platformLogo="/logo-orizzontale.png?v=3"
+          platformLogo="/logo-orizzontale.png?v=4"
           menuSections={menuSections}
           activeItemId={activeItemId}
           businessName={data.business.name}
