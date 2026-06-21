@@ -19,9 +19,9 @@ function AegisLogo() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/logo-verticale.png"
+      src="/logo-verticale.png?v=2"
       alt="Aegis Beauty"
-      style={{ width: 280, height: 'auto', display: 'block' }}
+      style={{ width: 230, height: 'auto', display: 'block' }}
     />
   );
 }
