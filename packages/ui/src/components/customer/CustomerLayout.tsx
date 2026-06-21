@@ -103,7 +103,7 @@ export function CustomerLayout({
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo-orizzontale-rev.png"
+              src="/logo-orizzontale-rev.png?v=2"
               alt={brandLabel}
               style={{ height: 38, width: 'auto', objectFit: 'contain', opacity: 0.92 }}
             />

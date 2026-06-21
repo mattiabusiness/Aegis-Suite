@@ -31,7 +31,7 @@ export function Footer() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-marketing.png" alt="Aegis Beauty" style={{ height: 48, width: 'auto', display: 'block' }} />
+            <img src="/logo-marketing.png?v=2" alt="Aegis Beauty" style={{ height: 48, width: 'auto', display: 'block' }} />
           </div>
           <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, maxWidth: 280, margin: '0 0 20px' }}>
             Il gestionale che mette il tuo brand al centro.
