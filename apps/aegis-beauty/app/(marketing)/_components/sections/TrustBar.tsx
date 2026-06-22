@@ -6,20 +6,20 @@
 // Slim security / credibility band — tema light premium.
 // ============================================================================
 
-import { ShieldCheck, Lock, BadgeCheck, Scale } from 'lucide-react';
+import { ShieldCheck, Lock, CloudUpload, Scale } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
 import { mk } from '../theme';
 
 const badges = [
-  { icon: ShieldCheck, label: 'Server in Svizzera', sub: 'Data center a Zurigo' },
-  { icon: Lock, label: 'Cifratura end-to-end', sub: 'Standard bancario' },
-  { icon: BadgeCheck, label: 'SOC 2 Type II', sub: 'Sicurezza certificata' },
-  { icon: Scale, label: 'GDPR Compliant', sub: 'Suite legale completa' },
+  { icon: ShieldCheck, label: 'Server in Svizzera', sub: 'Tra i più sicuri al mondo' },
+  { icon: Lock, label: 'I dati restano tuoi', sub: 'Nessun altro può vederli' },
+  { icon: CloudUpload, label: 'Backup automatici', sub: 'Non perdi mai niente' },
+  { icon: Scale, label: 'GDPR Compliant', sub: 'A norma di privacy' },
 ];
 
 export function TrustBar() {
   return (
-    <section style={{ backgroundColor: mk.bg, padding: '56px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ background: mk.gradBg, padding: '56px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"

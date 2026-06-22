@@ -16,6 +16,9 @@ export const mk = {
   bgAlt: '#E8DFC9',     // crema più profondo e caldo (sezioni alternate)
   bgTint: '#F4EEF6',    // crema con velo viola (zone "speciali")
   glass: 'rgba(239,230,210,0.82)', // navbar glass (= bg con alpha)
+  // Gradienti di sfondo alternati sezione per sezione (onda continua, estremi condivisi = no scalini)
+  gradBg: 'linear-gradient(180deg, #F4ECDA 0%, #E6DBC2 100%)',     // chiaro → profondo
+  gradBgAlt: 'linear-gradient(180deg, #E6DBC2 0%, #F4ECDA 100%)',  // profondo → chiaro (specchiato)
 
   // ── Testo ───────────────────────────────────────────────────────────────────
   heading: '#5A2A7A',   // ametista scuro — titoli

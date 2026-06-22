@@ -69,7 +69,7 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
 
 export function StatsSection() {
   return (
-    <section style={{ backgroundColor: mk.bgAlt, padding: '88px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ background: mk.gradBg, padding: '88px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"

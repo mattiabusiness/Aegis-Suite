@@ -178,7 +178,7 @@ export function ROICalculatorSection() {
   return (
     <section
       style={{
-        backgroundColor: mk.bgAlt,
+        background: mk.gradBgAlt,
         padding: '64px 24px',
         position: 'relative',
         overflow: 'hidden',

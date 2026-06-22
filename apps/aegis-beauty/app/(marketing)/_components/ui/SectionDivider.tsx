@@ -8,7 +8,7 @@ import { mk } from '../theme';
 
 export function SectionDivider() {
   return (
-    <div aria-hidden="true" style={{ position: 'relative', height: 1, backgroundColor: mk.bg }}>
+    <div aria-hidden="true" style={{ position: 'relative', height: 1, backgroundColor: 'transparent' }}>
       <div
         style={{
           position: 'absolute',

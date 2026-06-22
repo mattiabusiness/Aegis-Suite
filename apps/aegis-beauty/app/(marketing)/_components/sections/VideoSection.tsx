@@ -12,7 +12,7 @@ const videoId = process.env.NEXT_PUBLIC_VIDEO_ID;
 
 export function VideoSection() {
   return (
-    <section style={{ backgroundColor: mk.bg, padding: '88px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ background: mk.gradBgAlt, padding: '88px 24px', position: 'relative', overflow: 'hidden' }}>
 
       {/* Ambient glow */}
       <div

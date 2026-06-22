@@ -26,7 +26,7 @@ const benefits = [
 
 export function PioneersSection() {
   return (
-    <section id="pioneers" style={{ backgroundColor: mk.bg, padding: '128px 24px', position: 'relative', overflow: 'hidden', scrollMarginTop: 80 }}>
+    <section id="pioneers" style={{ background: mk.gradBgAlt, padding: '128px 24px', position: 'relative', overflow: 'hidden', scrollMarginTop: 80 }}>
       {/* Subtle background pattern */}
       <div
         aria-hidden="true"

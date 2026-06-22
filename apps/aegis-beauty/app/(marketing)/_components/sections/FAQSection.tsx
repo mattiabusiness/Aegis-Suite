@@ -123,7 +123,7 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section style={{ background: `linear-gradient(180deg, ${mk.bg} 0%, ${mk.bgAlt} 100%)`, padding: '128px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ background: mk.gradBgAlt, padding: '128px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"

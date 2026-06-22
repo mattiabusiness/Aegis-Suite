@@ -201,7 +201,7 @@ export function SolutionSection() {
   }, []);
 
   return (
-    <section id="solution" style={{ backgroundColor: mk.bgAlt, padding: '128px 24px', scrollMarginTop: 80, overflow: 'hidden' }}>
+    <section id="solution" style={{ background: mk.gradBgAlt, padding: '128px 24px', scrollMarginTop: 80, overflow: 'hidden' }}>
       <div style={{ maxWidth: 1140, margin: '0 auto' }}>
         {/* Header */}
         <ScrollReveal>

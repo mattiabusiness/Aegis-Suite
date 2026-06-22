@@ -10,7 +10,7 @@ import { mk } from '../theme';
 
 export function WhySection() {
   return (
-    <section style={{ backgroundColor: mk.bgAlt, padding: '128px 24px', overflow: 'hidden', position: 'relative' }}>
+    <section style={{ background: mk.gradBg, padding: '128px 24px', overflow: 'hidden', position: 'relative' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"

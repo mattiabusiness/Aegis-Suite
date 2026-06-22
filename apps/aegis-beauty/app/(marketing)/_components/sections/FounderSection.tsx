@@ -10,7 +10,7 @@ import { mk } from '../theme';
 
 export function FounderSection() {
   return (
-    <section id="founder" style={{ backgroundColor: mk.bg, padding: '128px 24px', scrollMarginTop: 80, position: 'relative', overflow: 'hidden' }}>
+    <section id="founder" style={{ background: mk.gradBgAlt, padding: '128px 24px', scrollMarginTop: 80, position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"

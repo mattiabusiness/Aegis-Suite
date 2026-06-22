@@ -74,7 +74,7 @@ export function Hero() {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        backgroundColor: mk.bg,
+        background: mk.gradBg,
         // containing block: confina le particelle "fixed" all'hero
         // (altrimenti orbs/particelle sfondano sulle sezioni sotto = "banda viola")
         transform: 'translateZ(0)',

@@ -73,7 +73,7 @@ function NoCell({ text }: { text: string }) {
 
 export function ComparisonSection() {
   return (
-    <section style={{ backgroundColor: mk.bg, padding: '128px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ background: mk.gradBg, padding: '128px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"
