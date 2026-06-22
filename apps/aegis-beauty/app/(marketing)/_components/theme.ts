@@ -6,19 +6,24 @@
 // Cambiare qui = cambiare tutto il sito. Non tocca il theme system di packages/ui.
 // ============================================================================
 
+// Due tonalità crema che si alternano A/B sezione per sezione (1-1-1-1).
+// UNICO punto da ritoccare per i due crema:
+const CREMA_CALDO = '#EFE6D2';   // sezioni "A" — crema bello caldo
+const CREMA_FREDDO = '#F7F4EC';  // sezioni "B" — crema più freddo e chiaro
+
 export const mk = {
   // ── Font ──────────────────────────────────────────────────────────────────
   serif: 'var(--font-serif), "Playfair Display", Georgia, serif', // titoli
   sans: 'var(--font-inter), system-ui, -apple-system, sans-serif', // corpo
 
   // ── Sfondi (ritmo alternato, sostituisce #0A0A0F / #0D0D16) ─────────────────
-  bg: '#EFE6D2',        // crema caldo / avorio primario (caldo, premium)
-  bgAlt: '#E8DFC9',     // crema più profondo e caldo (sezioni alternate)
+  bg: CREMA_CALDO,      // crema caldo (sezioni "A")
+  bgAlt: CREMA_FREDDO,  // crema freddo/chiaro (sezioni "B")
   bgTint: '#F4EEF6',    // crema con velo viola (zone "speciali")
   glass: 'rgba(239,230,210,0.82)', // navbar glass (= bg con alpha)
-  // Gradienti di sfondo alternati sezione per sezione (onda continua, estremi condivisi = no scalini)
-  gradBg: 'linear-gradient(180deg, #F4ECDA 0%, #E6DBC2 100%)',     // chiaro → profondo
-  gradBgAlt: 'linear-gradient(180deg, #E6DBC2 0%, #F4ECDA 100%)',  // profondo → chiaro (specchiato)
+  // Sfondi sezione PIATTI che si alternano A/B (1-1-1-1) — alias dei due crema sopra
+  gradBg: CREMA_CALDO,     // sezioni "A" (caldo)
+  gradBgAlt: CREMA_FREDDO, // sezioni "B" (freddo/chiaro)
 
   // ── Testo ───────────────────────────────────────────────────────────────────
   heading: '#5A2A7A',   // ametista scuro — titoli
