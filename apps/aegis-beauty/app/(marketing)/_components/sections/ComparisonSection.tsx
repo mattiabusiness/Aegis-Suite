@@ -3,11 +3,12 @@
 // ============================================================================
 // AEGIS BEAUTY - COMPARISON SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/ComparisonSection.tsx
-// "Aegis vs i Marketplace" — premium dark comparison table
+// "Aegis vs i Marketplace" — tema light premium, colonna Aegis evidenziata.
 // ============================================================================
 
 import { Check, X } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
+import { mk } from '../theme';
 
 type Row = { label: string; aegis: string; market: string };
 
@@ -32,17 +33,17 @@ function YesCell({ text }: { text: string }) {
           width: 22,
           height: 22,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+          background: mk.gradBrand,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 0 12px rgba(168,85,247,0.5)',
+          boxShadow: `0 0 12px ${mk.purpleA(0.45)}`,
           flexShrink: 0,
         }}
       >
         <Check size={13} color="#fff" strokeWidth={3} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, color: '#E2E8F0', textAlign: 'center', lineHeight: 1.2 }}>{text}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, color: mk.ink, textAlign: 'center', lineHeight: 1.2 }}>{text}</span>
     </div>
   );
 }
@@ -55,24 +56,24 @@ function NoCell({ text }: { text: string }) {
           width: 22,
           height: 22,
           borderRadius: '50%',
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(148,163,184,0.2)',
+          background: 'rgba(45,45,45,0.05)',
+          border: `1px solid ${mk.inkA(0.15)}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
         }}
       >
-        <X size={13} color="#64748B" strokeWidth={3} />
+        <X size={13} color={mk.inkFaint} strokeWidth={3} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 500, color: '#64748B', textAlign: 'center', lineHeight: 1.2 }}>{text}</span>
+      <span style={{ fontSize: 12, fontWeight: 500, color: mk.inkSoft, textAlign: 'center', lineHeight: 1.2 }}>{text}</span>
     </div>
   );
 }
 
 export function ComparisonSection() {
   return (
-    <section style={{ backgroundColor: '#0A0A0F', padding: '100px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ backgroundColor: mk.bg, padding: '128px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"
@@ -84,7 +85,7 @@ export function ComparisonSection() {
           width: 800,
           height: 600,
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)',
+          background: `radial-gradient(ellipse, ${mk.purpleA(0.06)} 0%, transparent 70%)`,
           pointerEvents: 'none',
         }}
       />
@@ -98,9 +99,9 @@ export function ComparisonSection() {
                 display: 'inline-block',
                 padding: '4px 14px',
                 borderRadius: 100,
-                background: 'rgba(124,58,237,0.1)',
-                border: '1px solid rgba(124,58,237,0.2)',
-                color: '#a855f7',
+                background: mk.purpleA(0.08),
+                border: `1px solid ${mk.purpleA(0.18)}`,
+                color: mk.purpleDeep,
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: '0.08em',
@@ -112,20 +113,18 @@ export function ComparisonSection() {
             </span>
             <h2
               style={{
-                fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
+                fontFamily: mk.serif,
+                fontSize: 'clamp(1.9rem, 4vw, 2.8rem)',
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
                 margin: '0 0 16px',
                 lineHeight: 1.2,
-                background: 'linear-gradient(120deg, #F8FAFC 25%, #c084fc 75%, #a855f7 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                ...mk.gradHeadingText,
               }}
             >
               Non è un marketplace. È il tuo.
             </h2>
-            <p style={{ color: '#64748B', fontSize: 16, maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
+            <p style={{ color: mk.inkSoft, fontSize: 16, maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
               La differenza tra possedere i tuoi clienti e affittarli da qualcun altro.
             </p>
           </div>
@@ -147,8 +146,8 @@ export function ComparisonSection() {
                     alignItems: 'center',
                     fontSize: 14,
                     fontWeight: 500,
-                    color: '#CBD5E1',
-                    borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                    color: mk.ink,
+                    borderBottom: i < rows.length - 1 ? `1px solid ${mk.hairline}` : 'none',
                     paddingRight: 12,
                   }}
                   className="cmp-label"
@@ -164,9 +163,11 @@ export function ComparisonSection() {
                 flex: '1 1 0',
                 minWidth: 0,
                 borderRadius: 20,
-                background: 'linear-gradient(180deg, rgba(124,58,237,0.16) 0%, rgba(124,58,237,0.05) 100%)',
-                border: '1px solid rgba(168,85,247,0.4)',
-                boxShadow: '0 0 0 1px rgba(168,85,247,0.1), 0 0 50px rgba(124,58,237,0.18), 0 24px 50px rgba(0,0,0,0.5)',
+                background: `linear-gradient(180deg, ${mk.purpleA(0.1)} 0%, rgba(255,255,255,0.65) 100%)`,
+                backdropFilter: mk.blur,
+                WebkitBackdropFilter: mk.blur,
+                border: `1px solid ${mk.purpleA(0.35)}`,
+                boxShadow: `0 0 0 1px ${mk.purpleA(0.1)}, 0 0 50px ${mk.purpleA(0.14)}, ${mk.shadowLg}`,
                 transform: 'translateY(-14px)',
                 position: 'relative',
               }}
@@ -180,14 +181,14 @@ export function ComparisonSection() {
                   transform: 'translateX(-50%)',
                   padding: '3px 12px',
                   borderRadius: 100,
-                  background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-                  color: '#fff',
+                  background: mk.gradBrand,
+                  color: mk.onPurple,
                   fontSize: 10,
                   fontWeight: 700,
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
                   whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 14px rgba(124,58,237,0.5)',
+                  boxShadow: `0 4px 14px ${mk.purpleA(0.4)}`,
                 }}
               >
                 Aegis Beauty
@@ -195,14 +196,14 @@ export function ComparisonSection() {
 
               {/* Header */}
               <div style={{ height: HEAD_H, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 6 }}>
-                <span style={{ fontSize: 15, fontWeight: 800, color: '#F8FAFC', textAlign: 'center', lineHeight: 1.2 }}>
+                <span style={{ fontSize: 15, fontWeight: 800, color: mk.heading, textAlign: 'center', lineHeight: 1.2 }}>
                   Il tuo brand
                 </span>
-                <span style={{ fontSize: 11, color: '#a855f7', fontWeight: 600 }}>White-label</span>
+                <span style={{ fontSize: 11, color: mk.purpleDeep, fontWeight: 600 }}>White-label</span>
               </div>
 
               {rows.map((r, i) => (
-                <div key={i} style={{ borderBottom: i < rows.length - 1 ? '1px solid rgba(168,85,247,0.12)' : 'none' }}>
+                <div key={i} style={{ borderBottom: i < rows.length - 1 ? `1px solid ${mk.purpleA(0.12)}` : 'none' }}>
                   <YesCell text={r.aegis} />
                 </div>
               ))}
@@ -212,16 +213,16 @@ export function ComparisonSection() {
             <div style={{ flex: '1 1 0', minWidth: 0 }}>
               {/* Header */}
               <div style={{ height: HEAD_H, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#94A3B8', textAlign: 'center', lineHeight: 1.2 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: mk.inkSoft, textAlign: 'center', lineHeight: 1.2 }}>
                   I Marketplace
                 </span>
-                <span style={{ fontSize: 11, color: '#475569', fontWeight: 500, textAlign: 'center' }}>Treatwell, Fresha…</span>
+                <span style={{ fontSize: 11, color: mk.inkFaint, fontWeight: 500, textAlign: 'center' }}>Treatwell, Fresha…</span>
               </div>
 
               {rows.map((r, i) => (
                 <div
                   key={i}
-                  style={{ borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
+                  style={{ borderBottom: i < rows.length - 1 ? `1px solid ${mk.hairline}` : 'none' }}
                 >
                   <NoCell text={r.market} />
                 </div>

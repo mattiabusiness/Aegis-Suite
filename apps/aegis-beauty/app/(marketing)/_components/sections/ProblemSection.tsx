@@ -3,10 +3,12 @@
 // ============================================================================
 // AEGIS BEAUTY - PROBLEM SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/ProblemSection.tsx
+// Tema: light premium (panna + ametista), card glass chiare, titoli serif.
 // ============================================================================
 
 import { CalendarX, Users, BarChart3 } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
+import { mk } from '../theme';
 
 const problems = [
   {
@@ -31,7 +33,7 @@ const problems = [
 
 export function ProblemSection() {
   return (
-    <section style={{ backgroundColor: '#0A0A0F', padding: '100px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ backgroundColor: mk.bg, padding: '128px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"
@@ -43,7 +45,7 @@ export function ProblemSection() {
           width: 900,
           height: 500,
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(124,58,237,0.07) 0%, transparent 70%)',
+          background: `radial-gradient(ellipse, ${mk.purpleA(0.06)} 0%, transparent 70%)`,
           pointerEvents: 'none',
         }}
       />
@@ -57,9 +59,9 @@ export function ProblemSection() {
                 display: 'inline-block',
                 padding: '4px 14px',
                 borderRadius: 100,
-                background: 'rgba(124,58,237,0.1)',
-                border: '1px solid rgba(124,58,237,0.2)',
-                color: '#a855f7',
+                background: mk.purpleA(0.08),
+                border: `1px solid ${mk.purpleA(0.18)}`,
+                color: mk.purpleDeep,
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: '0.08em',
@@ -71,10 +73,11 @@ export function ProblemSection() {
             </span>
             <h2
               style={{
-                fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
-                color: '#F8FAFC',
+                fontFamily: mk.serif,
+                fontSize: 'clamp(1.9rem, 4vw, 2.9rem)',
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+                ...mk.gradHeadingText,
                 margin: 0,
                 lineHeight: 1.2,
               }}
@@ -101,25 +104,24 @@ export function ProblemSection() {
                     position: 'relative',
                     padding: 32,
                     borderRadius: 20,
-                    background: 'rgba(124,58,237,0.04)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(124,58,237,0.12)',
-                    boxShadow: '0 0 0 1px rgba(124,58,237,0.08), 0 8px 32px rgba(0,0,0,0.3)',
-                    transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s',
+                    background: mk.card,
+                    backdropFilter: mk.blur,
+                    WebkitBackdropFilter: mk.blur,
+                    border: `1px solid ${mk.border}`,
+                    boxShadow: `${mk.shadowMd}, 0 0 0 1px ${mk.purpleA(0.1)}`,
+                    transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s',
                     cursor: 'default',
                     height: '100%',
                     boxSizing: 'border-box',
                     overflow: 'hidden',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow =
-                      '0 0 0 1px rgba(124,58,237,0.25), 0 20px 48px rgba(124,58,237,0.12), 0 8px 32px rgba(0,0,0,0.4)';
+                    e.currentTarget.style.transform = 'translateY(-6px) scale(1.015)';
+                    e.currentTarget.style.boxShadow = `${mk.shadowLg}, 0 0 0 1px ${mk.purpleA(0.32)}, 0 0 44px ${mk.purpleA(0.18)}`;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow =
-                      '0 0 0 1px rgba(124,58,237,0.08), 0 8px 32px rgba(0,0,0,0.3)';
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.boxShadow = `${mk.shadowMd}, 0 0 0 1px ${mk.purpleA(0.1)}`;
                   }}
                 >
                   {/* Watermark number */}
@@ -134,7 +136,7 @@ export function ProblemSection() {
                       lineHeight: 1,
                       letterSpacing: '-0.04em',
                       color: 'transparent',
-                      WebkitTextStroke: '1px rgba(168,85,247,0.12)',
+                      WebkitTextStroke: `1px ${mk.purpleA(0.14)}`,
                       pointerEvents: 'none',
                       userSelect: 'none',
                     }}
@@ -146,34 +148,32 @@ export function ProblemSection() {
                       position: 'relative',
                       width: 48,
                       height: 48,
-                      borderRadius: 12,
-                      background: 'rgba(124,58,237,0.15)',
-                      border: '1px solid rgba(168,85,247,0.2)',
+                      borderRadius: 14,
+                      background: mk.purpleA(0.1),
+                      border: `1px solid ${mk.purpleA(0.2)}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginBottom: 20,
-                      boxShadow: '0 0 20px rgba(124,58,237,0.15)',
+                      boxShadow: `0 4px 16px ${mk.purpleA(0.12)}`,
                     }}
                   >
-                    <Icon size={22} color="#a855f7" />
+                    <Icon size={22} color={mk.purple} />
                   </div>
                   <h3
                     style={{
                       position: 'relative',
-                      fontSize: 18,
-                      fontWeight: 700,
+                      fontFamily: mk.serif,
+                      fontSize: 20,
+                      fontWeight: 600,
                       margin: '0 0 12px',
                       lineHeight: 1.3,
-                      background: 'linear-gradient(120deg, #F8FAFC 30%, #c084fc 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
+                      ...mk.gradHeadingText,
                     }}
                   >
                     {problem.title}
                   </h3>
-                  <p style={{ position: 'relative', fontSize: 15, color: '#64748B', margin: 0, lineHeight: 1.7 }}>
+                  <p style={{ position: 'relative', fontSize: 15, color: mk.inkSoft, margin: 0, lineHeight: 1.7 }}>
                     {problem.description}
                   </p>
                 </div>

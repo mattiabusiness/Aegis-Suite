@@ -6,6 +6,8 @@
 
 'use client';
 
+import type { CSSProperties } from 'react';
+
 // Pre-computed particle positions (avoids Math.random hydration mismatch)
 const PARTICLES = [
   { size: 5.2, left: 5, delay: 0, duration: 18, variant: 0 },
@@ -40,9 +42,34 @@ const PARTICLES = [
   { size: 7.3, left: 156, delay: 9, duration: 19, variant: 2 },
 ];
 
-export function FloatingParticles() {
+interface FloatingParticlesProps {
+  /** Colore particelle. Default = viola-500 (tema dark). */
+  particleColor?: string;
+  /** Glow particelle. */
+  particleGlow?: string;
+  /** Colore linee griglia. */
+  gridColor?: string;
+  /** Opacità orbs sfumati. */
+  orbOpacity?: number;
+}
+
+export function FloatingParticles({
+  particleColor = 'rgba(168,85,247,0.25)',
+  particleGlow = 'rgba(168,85,247,0.15)',
+  gridColor = 'rgba(168,85,247,0.03)',
+  orbOpacity = 0.12,
+}: FloatingParticlesProps = {}) {
   return (
-    <>
+    // display:contents → nessun box, ma le CSS var sono ereditate dai figli fixed
+    <div
+      style={{
+        display: 'contents',
+        '--fp-particle': particleColor,
+        '--fp-glow': particleGlow,
+        '--fp-grid': gridColor,
+        '--fp-orb-opacity': orbOpacity,
+      } as CSSProperties}
+    >
       {/* Glow orbs */}
       <div className="ob ob1" />
       <div className="ob ob2" />
@@ -75,7 +102,7 @@ export function FloatingParticles() {
           pointer-events: none;
           z-index: 0;
           filter: blur(80px);
-          opacity: 0.12;
+          opacity: var(--fp-orb-opacity, 0.12);
         }
         .ob1 {
           width: 400px; height: 400px;
@@ -111,8 +138,8 @@ export function FloatingParticles() {
         .fp-grid {
           position: fixed; inset: 0;
           background-image:
-            linear-gradient(rgba(168,85,247,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(168,85,247,0.03) 1px, transparent 1px);
+            linear-gradient(var(--fp-grid, rgba(168,85,247,0.03)) 1px, transparent 1px),
+            linear-gradient(90deg, var(--fp-grid, rgba(168,85,247,0.03)) 1px, transparent 1px);
           background-size: 60px 60px;
           -webkit-mask: radial-gradient(ellipse 55% 55% at 50% 50%, black 40%, transparent 100%);
           mask: radial-gradient(ellipse 55% 55% at 50% 50%, black 40%, transparent 100%);
@@ -129,8 +156,8 @@ export function FloatingParticles() {
           position: absolute;
           bottom: -10px;
           border-radius: 50%;
-          background: rgba(168,85,247,0.25);
-          box-shadow: 0 0 6px rgba(168,85,247,0.15);
+          background: var(--fp-particle, rgba(168,85,247,0.25));
+          box-shadow: 0 0 6px var(--fp-glow, rgba(168,85,247,0.15));
           animation-timing-function: linear;
           animation-iteration-count: infinite;
         }
@@ -179,6 +206,6 @@ export function FloatingParticles() {
           .ob3 { width: 150px; height: 150px; }
         }
       `}</style>
-    </>
+    </div>
   );
 }

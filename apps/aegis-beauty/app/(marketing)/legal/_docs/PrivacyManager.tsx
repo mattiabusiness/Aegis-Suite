@@ -10,15 +10,15 @@ import type { ReactNode, CSSProperties } from 'react';
 function DocHeader() {
   return (
     <div style={{ padding: '24px 28px', borderRadius: 16, background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(168,85,247,0.2)', marginBottom: 40 }}>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
         Documento legale
       </p>
-      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', margin: '0 0 16px', lineHeight: 1.2 }}>
+      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2D2D2D', margin: '0 0 16px', lineHeight: 1.2 }}>
         Privacy Policy — Gestore
       </h2>
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', paddingTop: 14, borderTop: '1px solid rgba(124,58,237,0.12)' }}>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Versione: <strong style={{ color: '#a855f7' }}>1.0 (Fase Beta)</strong></span>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Ultimo aggiornamento: <strong style={{ color: '#94A3B8' }}>29 Marzo 2026</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Versione: <strong style={{ color: '#7e22ce' }}>1.0 (Fase Beta)</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Ultimo aggiornamento: <strong style={{ color: '#4F4858' }}>29 Marzo 2026</strong></span>
       </div>
     </div>
   );
@@ -26,7 +26,7 @@ function DocHeader() {
 
 function AT({ children }: { children: ReactNode }) {
   return (
-    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC', borderLeft: '4px solid #7c3aed', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
+    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#2D2D2D', borderLeft: '4px solid #7e22ce', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
       {children}
     </h3>
   );
@@ -34,22 +34,22 @@ function AT({ children }: { children: ReactNode }) {
 
 function Sub({ children }: { children: ReactNode }) {
   return (
-    <p style={{ color: '#a855f7', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '20px 0 6px' }}>
+    <p style={{ color: '#7e22ce', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '20px 0 6px' }}>
       {children}
     </p>
   );
 }
 
 function P({ children }: { children: ReactNode }) {
-  return <p style={{ fontSize: 15, color: '#94A3B8', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
+  return <p style={{ fontSize: 15, color: '#4F4858', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
 }
 
 function Ul({ items }: { items: ReactNode[] }) {
   return (
     <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {items.map((item, i) => (
-        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#94A3B8', lineHeight: 1.7 }}>
-          <span style={{ color: '#7c3aed', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
+        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#4F4858', lineHeight: 1.7 }}>
+          <span style={{ color: '#7e22ce', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
           <span>{item}</span>
         </li>
       ))}
@@ -59,7 +59,7 @@ function Ul({ items }: { items: ReactNode[] }) {
 
 function Callout({ children }: { children: ReactNode }) {
   return (
-    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(76,29,149,0.15)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
+    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(147,51,234,0.07)', border: '1px solid rgba(147,51,234,0.2)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
       {children}
     </div>
   );
@@ -67,17 +67,17 @@ function Callout({ children }: { children: ReactNode }) {
 
 function Note({ children }: { children: ReactNode }) {
   return (
-    <p style={{ fontSize: 13, color: '#475569', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
+    <p style={{ fontSize: 13, color: '#6E6678', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
       {children}
     </p>
   );
 }
 
 function B({ children }: { children: ReactNode }) {
-  return <strong style={{ color: '#F8FAFC', fontWeight: 600 }}>{children}</strong>;
+  return <strong style={{ color: '#2D2D2D', fontWeight: 600 }}>{children}</strong>;
 }
 
-const mail: CSSProperties = { color: '#a855f7', textDecoration: 'none', fontWeight: 600 };
+const mail: CSSProperties = { color: '#7e22ce', textDecoration: 'none', fontWeight: 600 };
 
 // ---- Component --------------------------------------------------------------
 
@@ -91,8 +91,8 @@ export function PrivacyManager() {
       <P>Il documento è redatto in conformità al Regolamento (UE) 2016/679 (<B>"GDPR"</B>), al D.Lgs. 196/2003 (<B>"Codice Privacy"</B>) come modificato dal D.Lgs. 101/2018, e ai provvedimenti del Garante per la Protezione dei Dati Personali italiano.</P>
 
       <Callout>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Ambito di applicazione</p>
-        <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Ambito di applicazione</p>
+        <p style={{ fontSize: 14, color: '#4F4858', lineHeight: 1.7, margin: 0 }}>
           La presente Privacy Policy si applica esclusivamente ai dati personali del <B>Gestore</B>. I dati personali dei clienti finali del salone (anagrafiche, schede colore, schede anamnesi, storico appuntamenti) sono trattati dal Gestore in qualità di Titolare del Trattamento autonomo. Aegis Beauty tratta tali dati unicamente come Responsabile del Trattamento per conto del Gestore, rapporto disciplinato dal Data Processing Agreement (DPA) separato.
         </p>
       </Callout>
@@ -101,12 +101,12 @@ export function PrivacyManager() {
       <AT>1. Titolare del Trattamento</AT>
       <P>Il Titolare del Trattamento dei dati personali del Gestore è:</P>
       <Callout>
-        <p style={{ fontSize: 15, fontWeight: 700, color: '#F8FAFC', margin: '0 0 4px' }}>Mattia Papa</p>
-        <p style={{ fontSize: 14, color: '#64748B', margin: '0 0 4px', lineHeight: 1.7 }}>Sviluppatore indipendente — Torino, Italia</p>
-        <p style={{ fontSize: 14, color: '#64748B', margin: '0 0 4px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: 15, fontWeight: 700, color: '#2D2D2D', margin: '0 0 4px' }}>Mattia Papa</p>
+        <p style={{ fontSize: 14, color: '#6E6678', margin: '0 0 4px', lineHeight: 1.7 }}>Sviluppatore indipendente — Torino, Italia</p>
+        <p style={{ fontSize: 14, color: '#6E6678', margin: '0 0 4px', lineHeight: 1.7 }}>
           Email: <a href="mailto:mattia@aegisbeauty.app" style={mail}>mattia@aegisbeauty.app</a>
         </p>
-        <p style={{ fontSize: 14, color: '#64748B', margin: 0, lineHeight: 1.7 }}>Sito web: aegisbeauty.app</p>
+        <p style={{ fontSize: 14, color: '#6E6678', margin: 0, lineHeight: 1.7 }}>Sito web: aegisbeauty.app</p>
       </Callout>
       <Note>In ragione delle dimensioni dell&apos;attività e della natura della fase sperimentale, non ricorre l&apos;obbligo di nomina di un Responsabile della Protezione dei Dati (DPO) ai sensi dell&apos;Art. 37 GDPR.</Note>
 
@@ -139,8 +139,8 @@ export function PrivacyManager() {
       <P>Risposte ai moduli mensili del Programma Aegis Pioneers, segnalazioni di bug, suggerimenti di miglioramento e comunicazioni dirette con il supporto tecnico.</P>
 
       <Callout>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Dati di pagamento — non applicabile nella fase Beta</p>
-        <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Dati di pagamento — non applicabile nella fase Beta</p>
+        <p style={{ fontSize: 14, color: '#4F4858', lineHeight: 1.7, margin: 0 }}>
           Durante la fase Beta (Aprile – Dicembre 2026), Aegis Beauty non raccoglie, elabora né conserva dati di pagamento o dati finanziari del Gestore. Il servizio è completamente gratuito e non sono presenti integrazioni con sistemi di pagamento di alcun tipo. Qualora, a seguito del lancio commerciale (Gennaio 2027), venisse introdotto un sistema di pagamento, la presente sezione verrà aggiornata con congruo preavviso.
         </p>
       </Callout>
@@ -179,20 +179,20 @@ export function PrivacyManager() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '16px 0' }}>
         <Callout>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 6px' }}>Supabase Inc.</p>
-          <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 6px' }}>Supabase Inc.</p>
+          <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>
             Archiviazione del database (PostgreSQL) e gestione dell&apos;autenticazione. I dati sono archiviati a Zurigo, Svizzera (AWS eu-central-2). La Svizzera beneficia di una decisione di adeguatezza della Commissione Europea ai sensi dell&apos;Art. 45 GDPR. Supabase agisce come sub-responsabile del trattamento con DPA stipulato.
           </p>
         </Callout>
         <Callout>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 6px' }}>ZeptoMail (by Zoho)</p>
-          <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 6px' }}>ZeptoMail (by Zoho)</p>
+          <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>
             Invio di email transazionali e di sistema, operante su server situati in Europa. ZeptoMail agisce come sub-responsabile del trattamento con DPA stipulato.
           </p>
         </Callout>
         <Callout>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 6px' }}>Vercel Inc.</p>
-          <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 6px' }}>Vercel Inc.</p>
+          <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>
             Hosting e distribuzione dell&apos;applicazione web (Next.js). Vercel non viene nominato Responsabile del Trattamento ai sensi dell&apos;Art. 28 GDPR per i dati personali degli utenti, in quanto elabora esclusivamente dati tecnici transitori di routing (log di rete, headers HTTP) necessari al funzionamento dell&apos;infrastruttura.
           </p>
         </Callout>
@@ -270,8 +270,8 @@ export function PrivacyManager() {
           { title: 'Diritto di non essere sottoposto a decisioni automatizzate (Art. 22)', body: "Non essere sottoposto a decisioni basate unicamente sul trattamento automatizzato. Come indicato alla Sezione 9, tale trattamento non viene effettuato da Aegis Beauty." },
         ].map(({ title, body }, i) => (
           <div key={i} style={{ padding: '14px 18px', borderRadius: 10, background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)' }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 4px' }}>{title}</p>
-            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>{body}</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 4px' }}>{title}</p>
+            <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>{body}</p>
           </div>
         ))}
       </div>
@@ -279,8 +279,8 @@ export function PrivacyManager() {
       <P>Per esercitare qualsiasi diritto, il Gestore può inviare una richiesta scritta a <a href="mailto:mattia@aegisbeauty.app" style={mail}>mattia@aegisbeauty.app</a>. Il Titolare fornirà riscontro entro <B>30 giorni</B> dal ricevimento, prorogabili di ulteriori 60 giorni in caso di particolare complessità, con comunicazione motivata entro il primo termine.</P>
 
       <Callout>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Diritto di reclamo al Garante (Art. 77 GDPR)</p>
-        <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Diritto di reclamo al Garante (Art. 77 GDPR)</p>
+        <p style={{ fontSize: 14, color: '#4F4858', lineHeight: 1.7, margin: 0 }}>
           Qualora il Gestore ritenga che il trattamento dei propri dati personali violi il GDPR o la normativa italiana, ha il diritto di proporre reclamo formale al <B>Garante per la Protezione dei Dati Personali</B> (www.garanteprivacy.it), ai sensi dell&apos;Art. 77 GDPR e dell&apos;Art. 141 D.Lgs. 196/2003.
         </p>
       </Callout>
@@ -298,11 +298,11 @@ export function PrivacyManager() {
       <AT>14. Contatti per questioni privacy</AT>
       <P>Per qualsiasi richiesta relativa al trattamento dei propri dati personali, all&apos;esercizio dei diritti di cui alla Sezione 11, o per qualsiasi altra questione inerente alla presente Privacy Policy:</P>
       <Callout>
-        <p style={{ fontSize: 14, color: '#94A3B8', margin: '0 0 8px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, color: '#4F4858', margin: '0 0 8px', lineHeight: 1.7 }}>
           Email: <a href="mailto:mattia@aegisbeauty.app" style={mail}>mattia@aegisbeauty.app</a>
         </p>
-        <p style={{ fontSize: 14, color: '#94A3B8', margin: 0, lineHeight: 1.7 }}>
-          Sito web: <span style={{ color: '#94A3B8' }}>aegisbeauty.app</span>
+        <p style={{ fontSize: 14, color: '#4F4858', margin: 0, lineHeight: 1.7 }}>
+          Sito web: <span style={{ color: '#4F4858' }}>aegisbeauty.app</span>
         </p>
       </Callout>
       <Note>Il Titolare risponde alle richieste in materia di privacy entro 30 giorni dal ricevimento, come previsto dall&apos;Art. 12.3 GDPR.</Note>

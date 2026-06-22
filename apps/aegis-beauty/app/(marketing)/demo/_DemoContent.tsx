@@ -3,12 +3,14 @@
 // ============================================================================
 // AEGIS BEAUTY - DEMO PAGE CONTENT (Client Component)
 // File: apps/aegis-beauty/app/(marketing)/demo/_DemoContent.tsx
+// Tema: light premium (crema + ametista).
 // ============================================================================
 
 import { useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock, Video } from 'lucide-react';
 import { Navbar } from '../_components/Navbar';
 import { Footer } from '../_components/Footer';
+import { mk } from '../_components/theme';
 
 declare global {
   interface Window {
@@ -75,11 +77,11 @@ export function DemoContent() {
       C.Cal('inline', {
         elementOrSelector: '#cal-embed',
         calLink: CAL_LINK,
-        config: { theme: 'dark', layout: 'month_view' },
+        config: { theme: 'light', layout: 'month_view' },
       });
       C.Cal('ui', {
-        theme: 'dark',
-        styles: { branding: { brandColor: '#a855f7' } },
+        theme: 'light',
+        styles: { branding: { brandColor: '#9333ea' } },
         hideEventTypeDetails: false,
       });
     })();
@@ -91,7 +93,7 @@ export function DemoContent() {
       <main
         style={{
           minHeight: '100vh',
-          backgroundColor: '#0A0A0F',
+          backgroundColor: mk.bg,
           paddingTop: 100,
           paddingBottom: 80,
           position: 'relative',
@@ -109,7 +111,7 @@ export function DemoContent() {
             width: 900,
             height: 600,
             borderRadius: '50%',
-            background: 'radial-gradient(ellipse, rgba(124,58,237,0.1) 0%, transparent 65%)',
+            background: `radial-gradient(ellipse, ${mk.purpleA(0.08)} 0%, transparent 65%)`,
             pointerEvents: 'none',
           }}
         />
@@ -122,14 +124,14 @@ export function DemoContent() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              color: '#64748B',
+              color: mk.inkSoft,
               textDecoration: 'none',
               fontSize: 14,
               marginBottom: 48,
               transition: 'color 0.2s',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#94A3B8')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#64748B')}
+            onMouseEnter={(e) => (e.currentTarget.style.color = mk.purple)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = mk.inkSoft)}
           >
             <ArrowLeft size={16} />
             Torna alla home
@@ -142,9 +144,9 @@ export function DemoContent() {
                 display: 'inline-block',
                 padding: '4px 14px',
                 borderRadius: 100,
-                background: 'rgba(124,58,237,0.1)',
-                border: '1px solid rgba(124,58,237,0.2)',
-                color: '#a855f7',
+                background: mk.purpleA(0.08),
+                border: `1px solid ${mk.purpleA(0.18)}`,
+                color: mk.purpleDeep,
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: '0.08em',
@@ -156,27 +158,25 @@ export function DemoContent() {
             </span>
             <h1
               style={{
-                fontSize: 'clamp(2rem, 5vw, 3rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.03em',
+                fontFamily: mk.serif,
+                fontSize: 'clamp(2.1rem, 5vw, 3rem)',
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
                 margin: '0 0 16px',
                 lineHeight: 1.15,
               }}
             >
               <span
                 style={{
-                  background: 'linear-gradient(120deg, #F8FAFC 30%, #c084fc 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
+                  ...mk.gradHeadingText,
                 }}
               >
                 Parliamoci.
               </span>{' '}
               <br />
-              <span style={{ color: '#a855f7' }}>Senza impegno.</span>
+              <span style={{ color: mk.purpleDeep }}>Senza impegno.</span>
             </h1>
-            <p style={{ fontSize: 16, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
+            <p style={{ fontSize: 16, color: mk.inkSoft, lineHeight: 1.7, margin: 0 }}>
               20 minuti in videocall per capire se Aegis Beauty fa per il tuo salone. Nessuna pressione, nessun venditore. Solo io e te.
             </p>
           </div>
@@ -201,42 +201,43 @@ export function DemoContent() {
                 style={{
                   padding: '24px 16px',
                   borderRadius: 16,
-                  background: 'rgba(124,58,237,0.04)',
-                  border: '1px solid rgba(124,58,237,0.12)',
+                  background: mk.card,
+                  backdropFilter: mk.blur,
+                  WebkitBackdropFilter: mk.blur,
+                  border: `1px solid ${mk.border}`,
+                  boxShadow: `${mk.shadowSm}, 0 0 0 1px ${mk.purpleA(0.08)}`,
                   textAlign: 'center',
-                  transition: 'transform 0.25s, background 0.25s, border-color 0.25s',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                  e.currentTarget.style.background = 'rgba(124,58,237,0.07)';
-                  e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = `${mk.shadowMd}, 0 0 0 1px ${mk.purpleA(0.28)}, 0 0 32px ${mk.purpleA(0.14)}`;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.background = 'rgba(124,58,237,0.04)';
-                  e.currentTarget.style.borderColor = 'rgba(124,58,237,0.12)';
+                  e.currentTarget.style.boxShadow = `${mk.shadowSm}, 0 0 0 1px ${mk.purpleA(0.08)}`;
                 }}
               >
                 <div
                   style={{
                     width: 44,
                     height: 44,
-                    borderRadius: 11,
+                    borderRadius: 12,
                     margin: '0 auto 12px',
-                    background: 'linear-gradient(135deg, rgba(124,58,237,0.22), rgba(168,85,247,0.1))',
-                    border: '1px solid rgba(168,85,247,0.25)',
+                    background: `linear-gradient(135deg, ${mk.purpleA(0.16)}, ${mk.purpleA(0.06)})`,
+                    border: `1px solid ${mk.purpleA(0.25)}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 0 20px rgba(124,58,237,0.15)',
+                    boxShadow: `0 4px 16px ${mk.purpleA(0.12)}`,
                   }}
                 >
-                  <Icon size={20} color="#a855f7" />
+                  <Icon size={20} color={mk.purple} />
                 </div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: '#F8FAFC', margin: '0 0 4px' }}>
+                <p style={{ fontSize: 15, fontWeight: 700, color: mk.heading, margin: '0 0 4px' }}>
                   {label}
                 </p>
-                <p style={{ fontSize: 12, color: '#64748B', margin: 0 }}>{sublabel}</p>
+                <p style={{ fontSize: 12, color: mk.inkFaint, margin: 0 }}>{sublabel}</p>
               </div>
             ))}
           </div>

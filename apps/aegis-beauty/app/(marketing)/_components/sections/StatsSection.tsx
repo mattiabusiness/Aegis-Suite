@@ -4,9 +4,11 @@
 // AEGIS BEAUTY - STATS SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/StatsSection.tsx
 // Animated counter on viewport entry — Intersection Observer + RAF
+// Tema: light premium (crema + ametista).
 // ============================================================================
 
 import { useEffect, useRef, useState } from 'react';
+import { mk } from '../theme';
 
 interface Stat {
   value: number;
@@ -67,7 +69,7 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
 
 export function StatsSection() {
   return (
-    <section style={{ backgroundColor: '#0D0D16', padding: '80px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ backgroundColor: mk.bgAlt, padding: '88px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"
@@ -79,7 +81,7 @@ export function StatsSection() {
           width: 800,
           height: 360,
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)',
+          background: `radial-gradient(ellipse, ${mk.purpleA(0.07)} 0%, transparent 70%)`,
           pointerEvents: 'none',
         }}
       />
@@ -103,9 +105,11 @@ export function StatsSection() {
               textAlign: 'center',
               padding: '40px 24px',
               borderRadius: 20,
-              background: 'rgba(124,58,237,0.04)',
-              border: '1px solid rgba(124,58,237,0.14)',
-              boxShadow: '0 0 0 1px rgba(124,58,237,0.05), 0 0 40px rgba(124,58,237,0.06), 0 16px 40px rgba(0,0,0,0.35)',
+              background: mk.card,
+              backdropFilter: mk.blur,
+              WebkitBackdropFilter: mk.blur,
+              border: `1px solid ${mk.border}`,
+              boxShadow: `${mk.shadowMd}, 0 0 0 1px ${mk.purpleA(0.08)}`,
             }}
           >
             <div
@@ -113,17 +117,14 @@ export function StatsSection() {
                 fontSize: 'clamp(2.4rem, 5vw, 3.6rem)',
                 fontWeight: 900,
                 letterSpacing: '-0.04em',
-                background: 'linear-gradient(135deg, #F8FAFC, #a855f7)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                ...mk.gradHeadingText,
                 lineHeight: 1.1,
                 marginBottom: 10,
               }}
             >
               <AnimatedCounter value={stat.value} suffix={stat.suffix} />
             </div>
-            <p style={{ fontSize: 14, color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 14, color: mk.inkSoft, margin: 0, lineHeight: 1.5 }}>
               {stat.label}
             </p>
           </div>

@@ -7,6 +7,7 @@
 // ============================================================================
 
 import { useEffect, useRef } from 'react';
+import { mk } from '../theme';
 
 export function CursorFollower() {
   const dotRef = useRef<HTMLDivElement>(null);
@@ -54,12 +55,12 @@ export function CursorFollower() {
           width: 10,
           height: 10,
           borderRadius: '50%',
-          background: 'rgba(168, 85, 247, 0.7)',
-          boxShadow: '0 0 12px rgba(168, 85, 247, 0.5)',
+          background: mk.purpleA(0.55),
+          boxShadow: `0 0 12px ${mk.purpleA(0.4)}`,
           pointerEvents: 'none',
           zIndex: 9999,
           willChange: 'transform',
-          mixBlendMode: 'screen',
+          mixBlendMode: 'multiply',
           transform: 'translate(-200px, -200px)',
         }}
       />

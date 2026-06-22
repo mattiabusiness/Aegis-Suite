@@ -3,12 +3,14 @@
 // ============================================================================
 // AEGIS BEAUTY - LEGAL PAGE CONTENT
 // File: apps/aegis-beauty/app/(marketing)/legal/_LegalContent.tsx
+// Tema: light premium (crema + ametista).
 // ============================================================================
 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { Navbar } from '../_components/Navbar';
 import { Footer } from '../_components/Footer';
+import { mk } from '../_components/theme';
 import { TermsManager } from './_docs/TermsManager';
 import { PrivacyManager } from './_docs/PrivacyManager';
 import { DPA } from './_docs/DPA';
@@ -54,10 +56,10 @@ export function LegalContent() {
       <Navbar />
 
       {/* Mobile dropdown nav */}
-      <div className="legal-mobile-nav" style={{ backgroundColor: '#0A0A0F', borderBottom: '1px solid rgba(124,58,237,0.1)', position: 'sticky', top: 72, zIndex: 40 }}>
+      <div className="legal-mobile-nav" style={{ backgroundColor: mk.glass, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: `1px solid ${mk.border}`, position: 'sticky', top: 72, zIndex: 40 }}>
         <button
           onClick={() => setMobileOpen((v) => !v)}
-          style={{ width: '100%', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', color: '#a855f7', fontSize: 14, fontWeight: 600 }}
+          style={{ width: '100%', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', color: mk.purpleDeep, fontSize: 14, fontWeight: 600 }}
         >
           {documents.find((d) => d.id === activeId)?.title ?? 'Documenti legali'}
           <ChevronDown size={16} style={{ transition: 'transform 0.2s', transform: mobileOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
@@ -71,14 +73,14 @@ export function LegalContent() {
                 onClick={() => setMobileOpen(false)}
                 style={{
                   display: 'block', padding: '10px 12px', borderRadius: 8, fontSize: 14, textDecoration: 'none',
-                  color: activeId === doc.id ? '#a855f7' : doc.ready ? '#64748B' : '#334155',
+                  color: activeId === doc.id ? mk.purpleDeep : doc.ready ? mk.inkSoft : mk.inkFaint,
                   fontWeight: activeId === doc.id ? 600 : 400,
-                  backgroundColor: activeId === doc.id ? 'rgba(168,85,247,0.08)' : 'transparent',
+                  backgroundColor: activeId === doc.id ? mk.purpleA(0.08) : 'transparent',
                 }}
               >
                 {doc.title}
                 {!doc.ready && (
-                  <span style={{ fontSize: 11, color: '#374151', marginLeft: 8, fontStyle: 'italic' }}>in arrivo</span>
+                  <span style={{ fontSize: 11, color: mk.inkFaint, marginLeft: 8, fontStyle: 'italic' }}>in arrivo</span>
                 )}
               </a>
             ))}
@@ -86,7 +88,7 @@ export function LegalContent() {
         )}
       </div>
 
-      <main style={{ minHeight: '100vh', backgroundColor: '#0A0A0F', paddingTop: 88, position: 'relative' }}>
+      <main style={{ minHeight: '100vh', backgroundColor: mk.bg, paddingTop: 88, position: 'relative' }}>
         {/* Ambient glow (clipped wrapper — keeps sticky sidebar intact) */}
         <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 520, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
           <div
@@ -98,7 +100,7 @@ export function LegalContent() {
               width: 900,
               height: 500,
               borderRadius: '50%',
-              background: 'radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 65%)',
+              background: `radial-gradient(ellipse, ${mk.purpleA(0.07)} 0%, transparent 65%)`,
             }}
           />
         </div>
@@ -111,15 +113,15 @@ export function LegalContent() {
           <aside style={{ position: 'sticky', top: 108 }} className="legal-sidebar">
             <a
               href="/"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#64748B', textDecoration: 'none', fontSize: 13, marginBottom: 32, transition: 'color 0.2s' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#94A3B8')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#64748B')}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: mk.inkSoft, textDecoration: 'none', fontSize: 13, marginBottom: 32, transition: 'color 0.2s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = mk.purple)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = mk.inkSoft)}
             >
               <ArrowLeft size={13} />
               Home
             </a>
 
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#1e293b', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: mk.inkFaint, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>
               Documenti legali
             </p>
 
@@ -133,28 +135,28 @@ export function LegalContent() {
                     style={{
                       display: 'block', padding: '8px 12px', borderRadius: 8, textDecoration: 'none',
                       fontSize: 13, lineHeight: 1.4, transition: 'all 0.2s',
-                      color: isActive ? '#a855f7' : doc.ready ? '#64748B' : '#2d3748',
-                      backgroundColor: isActive ? 'rgba(168,85,247,0.08)' : 'transparent',
-                      borderLeft: `2px solid ${isActive ? '#7c3aed' : 'transparent'}`,
+                      color: isActive ? mk.purpleDeep : doc.ready ? mk.inkSoft : mk.inkFaint,
+                      backgroundColor: isActive ? mk.purpleA(0.08) : 'transparent',
+                      borderLeft: `2px solid ${isActive ? mk.purpleDeep : 'transparent'}`,
                       fontWeight: isActive ? 600 : 400,
                       pointerEvents: doc.ready ? 'auto' : 'none',
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive && doc.ready) {
-                        e.currentTarget.style.color = '#94A3B8';
-                        e.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.04)';
+                        e.currentTarget.style.color = mk.purple;
+                        e.currentTarget.style.backgroundColor = mk.purpleA(0.05);
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.color = doc.ready ? '#64748B' : '#2d3748';
+                        e.currentTarget.style.color = doc.ready ? mk.inkSoft : mk.inkFaint;
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }
                     }}
                   >
                     {doc.title}
                     {!doc.ready && (
-                      <span style={{ display: 'block', fontSize: 11, color: '#334155', marginTop: 2, fontStyle: 'italic' }}>
+                      <span style={{ display: 'block', fontSize: 11, color: mk.inkFaint, marginTop: 2, fontStyle: 'italic' }}>
                         In arrivo
                       </span>
                     )}
@@ -168,10 +170,10 @@ export function LegalContent() {
           <div style={{ minWidth: 0 }}>
             {/* Page title */}
             <div style={{ marginBottom: 56 }}>
-              <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 10px', lineHeight: 1.2, background: 'linear-gradient(120deg, #F8FAFC 30%, #c084fc 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', display: 'inline-block' }}>
+              <h1 style={{ fontFamily: mk.serif, fontSize: 'clamp(1.9rem, 4vw, 2.5rem)', fontWeight: 600, letterSpacing: '-0.02em', margin: '0 0 10px', lineHeight: 1.2, ...mk.gradHeadingText, display: 'inline-block' }}>
                 Privacy &amp; Legal
               </h1>
-              <p style={{ fontSize: 14, color: '#475569', margin: 0 }}>
+              <p style={{ fontSize: 14, color: mk.inkSoft, margin: 0 }}>
                 Tutti i documenti legali di Aegis Beauty — aggiornati a Marzo 2026.
               </p>
             </div>
@@ -182,7 +184,7 @@ export function LegalContent() {
             </section>
 
             {/* Divider */}
-            <div style={{ borderTop: '1px solid rgba(124,58,237,0.12)', marginBottom: 80 }} />
+            <div style={{ borderTop: `1px solid ${mk.border}`, marginBottom: 80 }} />
 
             {/* Privacy Policy Gestore */}
             <section id="privacy-manager" style={{ scrollMarginTop: 120, marginBottom: 80 }}>
@@ -190,7 +192,7 @@ export function LegalContent() {
             </section>
 
             {/* Divider */}
-            <div style={{ borderTop: '1px solid rgba(124,58,237,0.12)', marginBottom: 80 }} />
+            <div style={{ borderTop: `1px solid ${mk.border}`, marginBottom: 80 }} />
 
             {/* DPA */}
             <section id="dpa" style={{ scrollMarginTop: 120, marginBottom: 80 }}>
@@ -198,7 +200,7 @@ export function LegalContent() {
             </section>
 
             {/* Divider */}
-            <div style={{ borderTop: '1px solid rgba(124,58,237,0.12)', marginBottom: 80 }} />
+            <div style={{ borderTop: `1px solid ${mk.border}`, marginBottom: 80 }} />
 
             {/* Terms Customer */}
             <section id="terms-customer" style={{ scrollMarginTop: 120, marginBottom: 80 }}>
@@ -206,7 +208,7 @@ export function LegalContent() {
             </section>
 
             {/* Divider */}
-            <div style={{ borderTop: '1px solid rgba(124,58,237,0.12)', marginBottom: 80 }} />
+            <div style={{ borderTop: `1px solid ${mk.border}`, marginBottom: 80 }} />
 
             {/* Privacy Customer */}
             <section id="privacy-customer" style={{ scrollMarginTop: 120, marginBottom: 80 }}>
@@ -214,7 +216,7 @@ export function LegalContent() {
             </section>
 
             {/* Divider */}
-            <div style={{ borderTop: '1px solid rgba(124,58,237,0.12)', marginBottom: 80 }} />
+            <div style={{ borderTop: `1px solid ${mk.border}`, marginBottom: 80 }} />
 
             {/* Cookie Policy */}
             <section id="cookies" style={{ scrollMarginTop: 120, marginBottom: 80 }}>
@@ -224,16 +226,16 @@ export function LegalContent() {
             {/* Upcoming documents */}
             {documents.filter((d) => !d.ready).map((doc, i, arr) => (
               <section key={doc.id} id={doc.id} style={{ scrollMarginTop: 120, marginBottom: 80 }}>
-                <div style={{ padding: '24px 28px', borderRadius: 16, background: 'rgba(124,58,237,0.02)', border: '1px solid rgba(124,58,237,0.06)', opacity: 0.5 }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
+                <div style={{ padding: '24px 28px', borderRadius: 16, background: mk.cardTint, border: `1px solid ${mk.border}`, opacity: 0.7 }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: mk.purpleDeep, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
                     In arrivo
                   </p>
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#475569', margin: 0 }}>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: mk.inkSoft, margin: 0 }}>
                     {doc.title}
                   </h2>
                 </div>
                 {i < arr.length - 1 && (
-                  <div style={{ borderTop: '1px solid rgba(124,58,237,0.08)', marginTop: 80 }} />
+                  <div style={{ borderTop: `1px solid ${mk.border}`, marginTop: 80 }} />
                 )}
               </section>
             ))}

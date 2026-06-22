@@ -4,6 +4,7 @@
 // AEGIS BEAUTY - MARKETING HERO
 // File: apps/aegis-beauty/app/(marketing)/_components/Hero.tsx
 // Fullscreen hero — FloatingParticles + Framer Motion + typewriter
+// Tema: light premium (panna + ametista), titolo serif.
 // ============================================================================
 
 import { useEffect, useRef, useState } from 'react';
@@ -11,6 +12,7 @@ import { motion } from 'framer-motion';
 import { ChevronDown, Sparkles, Check } from 'lucide-react';
 import Link from 'next/link';
 import { FloatingParticles } from '@aegis/ui';
+import { mk } from './theme';
 
 const TYPEWRITER_PHRASES = [
   'prenoti in 30 secondi.',
@@ -72,20 +74,27 @@ export function Hero() {
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        backgroundColor: '#0A0A0F',
+        backgroundColor: mk.bg,
+        // containing block: confina le particelle "fixed" all'hero
+        // (altrimenti orbs/particelle sfondano sulle sezioni sotto = "banda viola")
+        transform: 'translateZ(0)',
       }}
     >
-      {/* Background */}
-      <FloatingParticles />
+      {/* Background — particelle calibrate per sfondo chiaro */}
+      <FloatingParticles
+        particleColor={mk.fp.particle}
+        particleGlow={mk.fp.glow}
+        gridColor={mk.fp.grid}
+        orbOpacity={mk.fp.orbOpacity}
+      />
 
-      {/* Gradient overlay */}
+      {/* Gradient overlay — alone viola soffuso dall'alto */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
           inset: 0,
-          background:
-            'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(124,58,237,0.08) 0%, transparent 70%)',
+          background: `radial-gradient(ellipse 70% 60% at 50% 0%, ${mk.purpleA(0.06)} 0%, transparent 70%)`,
           pointerEvents: 'none',
           zIndex: 1,
         }}
@@ -118,11 +127,11 @@ export function Hero() {
               gap: 8,
               padding: '6px 16px',
               borderRadius: 100,
-              background: 'rgba(124,58,237,0.12)',
-              border: '1px solid rgba(124,58,237,0.3)',
+              background: mk.purpleA(0.1),
+              border: `1px solid ${mk.purpleA(0.25)}`,
               fontSize: 13,
-              fontWeight: 500,
-              color: '#c084fc',
+              fontWeight: 600,
+              color: mk.purpleDeep,
               animation: 'badgePulse 2.5s ease-in-out infinite',
             }}
           >
@@ -131,7 +140,7 @@ export function Hero() {
                 width: 7,
                 height: 7,
                 borderRadius: '50%',
-                background: '#a855f7',
+                background: mk.purpleBright,
                 animation: 'dotP 1.8s ease-in-out infinite',
                 flexShrink: 0,
               }}
@@ -141,20 +150,21 @@ export function Hero() {
           </span>
         </motion.div>
 
-        {/* Headline */}
+        {/* Headline — serif editoriale */}
         <motion.h1
           variants={itemVariants}
           style={{
-            fontSize: 'clamp(2.4rem, 6vw, 5rem)',
-            fontWeight: 800,
+            fontFamily: mk.serif,
+            fontSize: 'clamp(2.6rem, 6.2vw, 5.2rem)',
+            fontWeight: 600,
             lineHeight: 1.08,
-            letterSpacing: '-0.03em',
+            letterSpacing: '-0.02em',
             margin: 0,
           }}
         >
           <span
             style={{
-              background: 'linear-gradient(135deg, #F8FAFC 30%, #a855f7 100%)',
+              background: mk.gradHeadingSoft,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -165,7 +175,7 @@ export function Hero() {
           <br />
           <span
             style={{
-              background: 'linear-gradient(135deg, #a855f7 0%, #c084fc 100%)',
+              background: mk.gradHeading,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -180,21 +190,21 @@ export function Hero() {
           variants={itemVariants}
           style={{
             fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)',
-            color: '#94A3B8',
+            color: mk.inkSoft,
             margin: 0,
             minHeight: '2em',
             fontWeight: 400,
           }}
         >
           Con Aegis Beauty{' '}
-          <span style={{ color: '#a855f7', fontWeight: 600 }}>
+          <span style={{ color: mk.purple, fontWeight: 600 }}>
             {displayText}
             <span
               style={{
                 display: 'inline-block',
                 width: 2,
                 height: '1.1em',
-                background: '#a855f7',
+                background: mk.purple,
                 marginLeft: 2,
                 verticalAlign: 'text-bottom',
                 animation: 'cursorBlink 1s step-end infinite',
@@ -208,7 +218,7 @@ export function Hero() {
           variants={itemVariants}
           style={{
             fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
-            color: '#64748B',
+            color: mk.inkSoft,
             maxWidth: 560,
             lineHeight: 1.7,
             margin: 0,
@@ -230,22 +240,22 @@ export function Hero() {
               display: 'inline-flex',
               alignItems: 'center',
               padding: '14px 32px',
-              borderRadius: 12,
-              background: 'linear-gradient(135deg, #6b21a8, #7c3aed, #a855f7)',
-              color: '#fff',
+              borderRadius: 14,
+              background: mk.gradBrand,
+              color: mk.onPurple,
               fontWeight: 700,
               fontSize: 16,
               textDecoration: 'none',
-              boxShadow: '0 0 30px rgba(124,58,237,0.4), 0 4px 20px rgba(0,0,0,0.3)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
+              boxShadow: mk.glow,
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.03) translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 0 45px rgba(124,58,237,0.6), 0 8px 30px rgba(0,0,0,0.4)';
+              e.currentTarget.style.transform = 'scale(1.02) translateY(-1px)';
+              e.currentTarget.style.boxShadow = mk.glowStrong;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1) translateY(0)';
-              e.currentTarget.style.boxShadow = '0 0 30px rgba(124,58,237,0.4), 0 4px 20px rgba(0,0,0,0.3)';
+              e.currentTarget.style.boxShadow = mk.glow;
             }}
           >
             Prenota una demo gratuita
@@ -257,22 +267,22 @@ export function Hero() {
               display: 'inline-flex',
               alignItems: 'center',
               padding: '14px 32px',
-              borderRadius: 12,
+              borderRadius: 14,
               background: 'transparent',
-              color: '#a855f7',
+              color: mk.purpleDeep,
               fontWeight: 600,
               fontSize: 16,
               textDecoration: 'none',
-              border: '1px solid rgba(168,85,247,0.4)',
-              transition: 'background 0.2s, border-color 0.2s',
+              border: `1px solid ${mk.purpleA(0.35)}`,
+              transition: 'background 0.3s ease, border-color 0.3s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(124,58,237,0.08)';
-              e.currentTarget.style.borderColor = 'rgba(168,85,247,0.7)';
+              e.currentTarget.style.background = mk.purpleA(0.06);
+              e.currentTarget.style.borderColor = mk.purpleA(0.6);
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)';
+              e.currentTarget.style.borderColor = mk.purpleA(0.35);
             }}
           >
             Diventa Pioneer
@@ -291,8 +301,8 @@ export function Hero() {
           }}
         >
           {['Nessuna carta di credito', 'Setup in 30 minuti', 'Cancelli quando vuoi'].map((t) => (
-            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#64748B' }}>
-              <Check size={14} color="#a855f7" strokeWidth={2.5} />
+            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: mk.inkFaint }}>
+              <Check size={14} color={mk.purple} strokeWidth={2.5} />
               {t}
             </span>
           ))}
@@ -311,18 +321,18 @@ export function Hero() {
           flexDirection: 'column',
           alignItems: 'center',
           gap: 4,
-          opacity: 0.4,
+          opacity: 0.5,
           animation: 'scrollBounce 2s ease-in-out infinite',
           cursor: 'default',
         }}
       >
-        <ChevronDown size={24} color="#94A3B8" />
+        <ChevronDown size={24} color={mk.inkFaint} />
       </div>
 
       <style>{`
         @keyframes badgePulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0); }
-          50% { box-shadow: 0 0 0 6px rgba(124,58,237,0.08); }
+          0%, 100% { box-shadow: 0 0 0 0 ${mk.purpleA(0)}; }
+          50% { box-shadow: 0 0 0 6px ${mk.purpleA(0.08)}; }
         }
         @keyframes dotP {
           0%, 100% { opacity: 0.5; transform: scale(1); }

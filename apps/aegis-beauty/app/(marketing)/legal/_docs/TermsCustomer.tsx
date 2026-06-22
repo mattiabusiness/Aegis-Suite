@@ -10,15 +10,15 @@ import type { ReactNode } from 'react';
 function DocHeader() {
   return (
     <div style={{ padding: '24px 28px', borderRadius: 16, background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(168,85,247,0.2)', marginBottom: 40 }}>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
         Documento legale
       </p>
-      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', margin: '0 0 16px', lineHeight: 1.2 }}>
+      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2D2D2D', margin: '0 0 16px', lineHeight: 1.2 }}>
         Termini di Servizio — Cliente Finale
       </h2>
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', paddingTop: 14, borderTop: '1px solid rgba(124,58,237,0.12)' }}>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Versione: <strong style={{ color: '#a855f7' }}>1.0 (Fase Beta)</strong></span>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Ultimo aggiornamento: <strong style={{ color: '#94A3B8' }}>29 Marzo 2026</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Versione: <strong style={{ color: '#7e22ce' }}>1.0 (Fase Beta)</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Ultimo aggiornamento: <strong style={{ color: '#4F4858' }}>29 Marzo 2026</strong></span>
       </div>
     </div>
   );
@@ -26,7 +26,7 @@ function DocHeader() {
 
 function AT({ children }: { children: ReactNode }) {
   return (
-    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC', borderLeft: '4px solid #7c3aed', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
+    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#2D2D2D', borderLeft: '4px solid #7e22ce', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
       {children}
     </h3>
   );
@@ -34,22 +34,22 @@ function AT({ children }: { children: ReactNode }) {
 
 function Sub({ children }: { children: ReactNode }) {
   return (
-    <p style={{ color: '#a855f7', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '20px 0 6px' }}>
+    <p style={{ color: '#7e22ce', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '20px 0 6px' }}>
       {children}
     </p>
   );
 }
 
 function P({ children }: { children: ReactNode }) {
-  return <p style={{ fontSize: 15, color: '#94A3B8', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
+  return <p style={{ fontSize: 15, color: '#4F4858', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
 }
 
 function Ul({ items }: { items: ReactNode[] }) {
   return (
     <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {items.map((item, i) => (
-        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#94A3B8', lineHeight: 1.7 }}>
-          <span style={{ color: '#7c3aed', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
+        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#4F4858', lineHeight: 1.7 }}>
+          <span style={{ color: '#7e22ce', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
           <span>{item}</span>
         </li>
       ))}
@@ -59,7 +59,7 @@ function Ul({ items }: { items: ReactNode[] }) {
 
 function Callout({ children }: { children: ReactNode }) {
   return (
-    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(76,29,149,0.15)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
+    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(147,51,234,0.07)', border: '1px solid rgba(147,51,234,0.2)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
       {children}
     </div>
   );
@@ -67,7 +67,7 @@ function Callout({ children }: { children: ReactNode }) {
 
 function Note({ children }: { children: ReactNode }) {
   return (
-    <p style={{ fontSize: 13, color: '#475569', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
+    <p style={{ fontSize: 13, color: '#6E6678', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
       {children}
     </p>
   );
@@ -168,13 +168,13 @@ export function TermsCustomer() {
       <Ul
         items={[
           <>
-            <strong style={{ color: '#F8FAFC' }}>Minori di 14 anni:</strong> non possono
+            <strong style={{ color: '#2D2D2D' }}>Minori di 14 anni:</strong> non possono
             registrarsi. Il trattamento dei dati è lecito solo con il consenso espresso di un
             genitore o tutore legale. Se hai meno di 14 anni, chiedi a un genitore di completare la
             registrazione per te.
           </>,
           <>
-            <strong style={{ color: '#F8FAFC' }}>Dai 14 anni in su:</strong> puoi registrarti e
+            <strong style={{ color: '#2D2D2D' }}>Dai 14 anni in su:</strong> puoi registrarti e
             utilizzare la piattaforma in completa autonomia, in conformità alla legge italiana.
           </>,
         ]}
@@ -244,7 +244,7 @@ export function TermsCustomer() {
       </P>
       <P>
         Per cancellare definitivamente il tuo account, scrivi a{' '}
-        <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#a855f7', textDecoration: 'none' }}>
+        <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#7e22ce', textDecoration: 'none' }}>
           mattia@aegisbeauty.app
         </a>
         . Il tuo account e tutti i tuoi dati personali verranno eliminati in modo sicuro entro 30
@@ -266,7 +266,7 @@ export function TermsCustomer() {
         appuntamenti e alle schede cliente sono trattati dal Salone in qualità di Titolare del
         Trattamento, con Aegis Beauty che agisce come Responsabile del Trattamento per conto del
         Salone. Per esercitare i tuoi diritti (accesso, rettifica, cancellazione) puoi scrivere a{' '}
-        <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#a855f7', textDecoration: 'none' }}>
+        <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#7e22ce', textDecoration: 'none' }}>
           mattia@aegisbeauty.app
         </a>{' '}
         o rivolgerti direttamente al Salone per i dati degli appuntamenti.
@@ -315,7 +315,7 @@ export function TermsCustomer() {
       <P>
         In caso di sospensione, Aegis Beauty ti comunicherà il motivo via email. Se ritieni la
         sospensione ingiustificata, puoi contattarci a{' '}
-        <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#a855f7', textDecoration: 'none' }}>
+        <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#7e22ce', textDecoration: 'none' }}>
           mattia@aegisbeauty.app
         </a>{' '}
         per richiedere una verifica.
@@ -333,7 +333,7 @@ export function TermsCustomer() {
           href="https://ec.europa.eu/consumers/odr"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: '#a855f7', fontSize: 14, wordBreak: 'break-all' }}
+          style={{ color: '#7e22ce', fontSize: 14, wordBreak: 'break-all' }}
         >
           https://ec.europa.eu/consumers/odr
         </a>
@@ -341,7 +341,7 @@ export function TermsCustomer() {
       <P>
         Prima di ricorrere alla piattaforma ODR o all&apos;autorità giudiziaria, ti invitiamo a
         contattarci direttamente a{' '}
-        <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#a855f7', textDecoration: 'none' }}>
+        <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#7e22ce', textDecoration: 'none' }}>
           mattia@aegisbeauty.app
         </a>
         : nella maggior parte dei casi siamo in grado di risolvere qualsiasi problema in modo rapido
@@ -407,7 +407,7 @@ export function TermsCustomer() {
         items={[
           <>
             Email:{' '}
-            <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#a855f7', textDecoration: 'none' }}>
+            <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#7e22ce', textDecoration: 'none' }}>
               mattia@aegisbeauty.app
             </a>
           </>,

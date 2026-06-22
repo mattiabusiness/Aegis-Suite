@@ -4,17 +4,18 @@
 // Soft glowing hairline between sections
 // ============================================================================
 
+import { mk } from '../theme';
+
 export function SectionDivider() {
   return (
-    <div aria-hidden="true" style={{ position: 'relative', height: 1, backgroundColor: '#0A0A0F' }}>
+    <div aria-hidden="true" style={{ position: 'relative', height: 1, backgroundColor: mk.bg }}>
       <div
         style={{
           position: 'absolute',
           inset: 0,
           maxWidth: 1100,
           margin: '0 auto',
-          background:
-            'linear-gradient(90deg, transparent 0%, rgba(124,58,237,0.35) 50%, transparent 100%)',
+          background: `linear-gradient(90deg, transparent 0%, ${mk.purpleA(0.25)} 50%, transparent 100%)`,
         }}
       />
     </div>

@@ -10,15 +10,15 @@ import type { ReactNode, CSSProperties } from 'react';
 function DocHeader() {
   return (
     <div style={{ padding: '24px 28px', borderRadius: 16, background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(168,85,247,0.2)', marginBottom: 40 }}>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
         Documento legale
       </p>
-      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', margin: '0 0 16px', lineHeight: 1.2 }}>
+      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2D2D2D', margin: '0 0 16px', lineHeight: 1.2 }}>
         Termini di Servizio — Gestore
       </h2>
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', paddingTop: 14, borderTop: '1px solid rgba(124,58,237,0.12)' }}>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Versione: <strong style={{ color: '#a855f7' }}>1.0 (Fase Beta)</strong></span>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Ultimo aggiornamento: <strong style={{ color: '#94A3B8' }}>29 Marzo 2026</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Versione: <strong style={{ color: '#7e22ce' }}>1.0 (Fase Beta)</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Ultimo aggiornamento: <strong style={{ color: '#4F4858' }}>29 Marzo 2026</strong></span>
       </div>
     </div>
   );
@@ -26,7 +26,7 @@ function DocHeader() {
 
 function AT({ children }: { children: ReactNode }) {
   return (
-    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC', borderLeft: '4px solid #7c3aed', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
+    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#2D2D2D', borderLeft: '4px solid #7e22ce', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
       {children}
     </h3>
   );
@@ -34,22 +34,22 @@ function AT({ children }: { children: ReactNode }) {
 
 function Sub({ children }: { children: ReactNode }) {
   return (
-    <p style={{ color: '#a855f7', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '20px 0 6px' }}>
+    <p style={{ color: '#7e22ce', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '20px 0 6px' }}>
       {children}
     </p>
   );
 }
 
 function P({ children }: { children: ReactNode }) {
-  return <p style={{ fontSize: 15, color: '#94A3B8', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
+  return <p style={{ fontSize: 15, color: '#4F4858', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
 }
 
 function Ul({ items }: { items: ReactNode[] }) {
   return (
     <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {items.map((item, i) => (
-        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#94A3B8', lineHeight: 1.7 }}>
-          <span style={{ color: '#7c3aed', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
+        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#4F4858', lineHeight: 1.7 }}>
+          <span style={{ color: '#7e22ce', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
           <span>{item}</span>
         </li>
       ))}
@@ -59,7 +59,7 @@ function Ul({ items }: { items: ReactNode[] }) {
 
 function Callout({ children }: { children: ReactNode }) {
   return (
-    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(76,29,149,0.15)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
+    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(147,51,234,0.07)', border: '1px solid rgba(147,51,234,0.2)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
       {children}
     </div>
   );
@@ -68,25 +68,25 @@ function Callout({ children }: { children: ReactNode }) {
 function Def({ term, children }: { term: string; children: ReactNode }) {
   return (
     <div style={{ padding: '14px 18px', borderRadius: 10, background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)', marginBottom: 10 }}>
-      <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 4px' }}>{term}</p>
-      <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>{children}</p>
+      <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 4px' }}>{term}</p>
+      <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>{children}</p>
     </div>
   );
 }
 
 function Note({ children }: { children: ReactNode }) {
   return (
-    <p style={{ fontSize: 13, color: '#475569', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
+    <p style={{ fontSize: 13, color: '#6E6678', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
       {children}
     </p>
   );
 }
 
 function B({ children }: { children: ReactNode }) {
-  return <strong style={{ color: '#F8FAFC', fontWeight: 600 }}>{children}</strong>;
+  return <strong style={{ color: '#2D2D2D', fontWeight: 600 }}>{children}</strong>;
 }
 
-const mail: CSSProperties = { color: '#a855f7', textDecoration: 'none', fontWeight: 600 };
+const mail: CSSProperties = { color: '#7e22ce', textDecoration: 'none', fontWeight: 600 };
 
 // ---- Component --------------------------------------------------------------
 
@@ -281,11 +281,11 @@ export function TermsManager() {
       <AT>Art. 19 — Comunicazioni ufficiali</AT>
       <P>Tutte le comunicazioni ufficiali tra le parti devono avvenire per iscritto via email.</P>
       <Callout>
-        <p style={{ fontSize: 14, color: '#94A3B8', margin: '0 0 8px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, color: '#4F4858', margin: '0 0 8px', lineHeight: 1.7 }}>
           Comunicazioni ad Aegis Beauty:{' '}
           <a href="mailto:mattia@aegisbeauty.app" style={mail}>mattia@aegisbeauty.app</a>
         </p>
-        <p style={{ fontSize: 14, color: '#94A3B8', margin: 0, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, color: '#4F4858', margin: 0, lineHeight: 1.7 }}>
           Comunicazioni al Gestore: inviate all&apos;indirizzo email fornito in fase di registrazione.
         </p>
       </Callout>
@@ -328,11 +328,11 @@ export function TermsManager() {
       <AT>Art. 27 — Contatti</AT>
       <P>Per qualsiasi domanda, richiesta di supporto o comunicazione legale relativa ai presenti Termini, il Gestore può contattare Aegis Beauty ai seguenti recapiti:</P>
       <Callout>
-        <p style={{ fontSize: 14, color: '#94A3B8', margin: '0 0 8px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, color: '#4F4858', margin: '0 0 8px', lineHeight: 1.7 }}>
           Email: <a href="mailto:mattia@aegisbeauty.app" style={mail}>mattia@aegisbeauty.app</a>
         </p>
-        <p style={{ fontSize: 14, color: '#94A3B8', margin: 0, lineHeight: 1.7 }}>
-          Sito web: <span style={{ color: '#94A3B8' }}>aegisbeauty.app</span>
+        <p style={{ fontSize: 14, color: '#4F4858', margin: 0, lineHeight: 1.7 }}>
+          Sito web: <span style={{ color: '#4F4858' }}>aegisbeauty.app</span>
         </p>
       </Callout>
       <Note>Aegis Beauty risponde alle comunicazioni di natura legale entro 15 giorni lavorativi dal ricevimento.</Note>

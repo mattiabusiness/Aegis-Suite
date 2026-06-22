@@ -4,6 +4,7 @@
 // AEGIS BEAUTY - SOLUTION SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/SolutionSection.tsx
 // Alternating premium SaaS layout — 3D tilt, ambient glow, scroll connector
+// Tema: light premium (crema + ametista), titoli serif in gradiente.
 // ============================================================================
 
 import { useEffect, useRef, useState } from 'react';
@@ -17,6 +18,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
+import { mk } from '../theme';
 
 // Intrinsic dimensions (from PNG IHDR) — required by next/image for aspect ratio
 const DIMS: Record<string, { w: number; h: number }> = {
@@ -88,9 +90,9 @@ const IMG_BASE: React.CSSProperties = {
   height: 'auto',
   display: 'block',
   borderRadius: 16,
-  border: '1px solid rgba(168,85,247,0.28)',
+  border: `1px solid ${mk.purpleA(0.22)}`,
   boxShadow:
-    '0 0 0 1px rgba(124,58,237,0.08), 0 0 60px rgba(124,58,237,0.16), 0 28px 60px rgba(0,0,0,0.55)',
+    `0 0 0 1px ${mk.purpleA(0.06)}, 0 0 50px ${mk.purpleA(0.14)}, 0 24px 50px ${mk.amethystA(0.16)}`,
 };
 
 // ─── 3D Tilt wrapper (desktop pointer only) ─────────────────────────────────
@@ -162,7 +164,7 @@ function FeatureMedia({ feat }: { feat: Feature }) {
             right: -14,
             bottom: -18,
             boxShadow:
-              '0 0 0 1px rgba(124,58,237,0.12), 0 0 50px rgba(124,58,237,0.22), 0 24px 50px rgba(0,0,0,0.6)',
+              `0 0 0 1px ${mk.purpleA(0.1)}, 0 0 40px ${mk.purpleA(0.18)}, 0 24px 50px ${mk.amethystA(0.18)}`,
           }}
         />
       </div>
@@ -199,7 +201,7 @@ export function SolutionSection() {
   }, []);
 
   return (
-    <section id="solution" style={{ backgroundColor: '#0D0D16', padding: '100px 24px', scrollMarginTop: 80, overflow: 'hidden' }}>
+    <section id="solution" style={{ backgroundColor: mk.bgAlt, padding: '128px 24px', scrollMarginTop: 80, overflow: 'hidden' }}>
       <div style={{ maxWidth: 1140, margin: '0 auto' }}>
         {/* Header */}
         <ScrollReveal>
@@ -209,9 +211,9 @@ export function SolutionSection() {
                 display: 'inline-block',
                 padding: '4px 14px',
                 borderRadius: 100,
-                background: 'rgba(124,58,237,0.1)',
-                border: '1px solid rgba(124,58,237,0.2)',
-                color: '#a855f7',
+                background: mk.purpleA(0.08),
+                border: `1px solid ${mk.purpleA(0.18)}`,
+                color: mk.purpleDeep,
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: '0.08em',
@@ -223,17 +225,18 @@ export function SolutionSection() {
             </span>
             <h2
               style={{
-                fontSize: 'clamp(1.8rem, 4vw, 2.8rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
-                color: '#F8FAFC',
+                fontFamily: mk.serif,
+                fontSize: 'clamp(1.9rem, 4vw, 2.9rem)',
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+                ...mk.gradHeadingText,
                 margin: '0 0 16px',
                 lineHeight: 1.2,
               }}
             >
               Un solo sistema. Tutto quello che serve.
             </h2>
-            <p style={{ color: '#64748B', fontSize: 16, maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
+            <p style={{ color: mk.inkSoft, fontSize: 16, maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
               Progettato per i professionisti italiani della bellezza. Costruito per durare decenni.
             </p>
           </div>
@@ -245,11 +248,11 @@ export function SolutionSection() {
           {/* Connector spine (desktop) */}
           <div className="sol-spine" aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 2, transform: 'translateX(-50%)', pointerEvents: 'none', zIndex: 0 }}>
             {/* Track */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(124,58,237,0.12) 8%, rgba(124,58,237,0.12) 92%, transparent)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent, ${mk.purpleA(0.14)} 8%, ${mk.purpleA(0.14)} 92%, transparent)` }} />
             {/* Progress fill */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: `${progress * 100}%`, background: 'linear-gradient(to bottom, rgba(168,85,247,0.7), rgba(124,58,237,0.5))', boxShadow: '0 0 12px rgba(168,85,247,0.5)', transition: 'height 0.1s linear' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: `${progress * 100}%`, background: `linear-gradient(to bottom, ${mk.brightA(0.7)}, ${mk.purpleA(0.5)})`, boxShadow: `0 0 12px ${mk.brightA(0.5)}`, transition: 'height 0.1s linear' }} />
             {/* Leading dot */}
-            <div style={{ position: 'absolute', top: `calc(${progress * 100}% - 5px)`, left: '50%', transform: 'translateX(-50%)', width: 10, height: 10, borderRadius: '50%', background: '#a855f7', boxShadow: '0 0 16px rgba(168,85,247,0.9), 0 0 4px #fff', opacity: progress > 0.01 && progress < 0.99 ? 1 : 0, transition: 'opacity 0.3s' }} />
+            <div style={{ position: 'absolute', top: `calc(${progress * 100}% - 5px)`, left: '50%', transform: 'translateX(-50%)', width: 10, height: 10, borderRadius: '50%', background: mk.purpleBright, boxShadow: `0 0 16px ${mk.brightA(0.7)}`, opacity: progress > 0.01 && progress < 0.99 ? 1 : 0, transition: 'opacity 0.3s' }} />
           </div>
 
           {features.map((feat, i) => {
@@ -274,34 +277,32 @@ export function SolutionSection() {
                       style={{
                         width: 48,
                         height: 48,
-                        borderRadius: 12,
-                        background: 'linear-gradient(135deg, rgba(124,58,237,0.22), rgba(168,85,247,0.1))',
-                        border: '1px solid rgba(168,85,247,0.28)',
+                        borderRadius: 14,
+                        background: `linear-gradient(135deg, ${mk.purpleA(0.16)}, ${mk.purpleA(0.06)})`,
+                        border: `1px solid ${mk.purpleA(0.25)}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         marginBottom: 22,
-                        boxShadow: '0 0 24px rgba(124,58,237,0.18)',
+                        boxShadow: `0 6px 20px ${mk.purpleA(0.12)}`,
                       }}
                     >
-                      <Icon size={22} color="#a855f7" />
+                      <Icon size={22} color={mk.purple} />
                     </div>
                     <h3
                       style={{
+                        fontFamily: mk.serif,
                         fontSize: 'clamp(1.4rem, 2.4vw, 1.9rem)',
-                        fontWeight: 800,
-                        letterSpacing: '-0.02em',
+                        fontWeight: 600,
+                        letterSpacing: '-0.01em',
                         margin: '0 0 14px',
                         lineHeight: 1.2,
-                        background: 'linear-gradient(120deg, #F8FAFC 25%, #c084fc 75%, #a855f7 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
+                        ...mk.gradHeadingText,
                       }}
                     >
                       {feat.title}
                     </h3>
-                    <p style={{ fontSize: 16, color: '#94A3B8', margin: 0, lineHeight: 1.75 }}>
+                    <p style={{ fontSize: 16, color: mk.inkSoft, margin: 0, lineHeight: 1.75 }}>
                       {feat.description}
                     </p>
                   </div>
@@ -314,7 +315,7 @@ export function SolutionSection() {
                       style={{
                         position: 'absolute',
                         inset: '-12% -10%',
-                        background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.30) 0%, rgba(124,58,237,0.08) 45%, transparent 72%)',
+                        background: `radial-gradient(ellipse at center, ${mk.purpleA(0.18)} 0%, ${mk.purpleA(0.05)} 45%, transparent 72%)`,
                         filter: 'blur(44px)',
                         zIndex: 0,
                         pointerEvents: 'none',

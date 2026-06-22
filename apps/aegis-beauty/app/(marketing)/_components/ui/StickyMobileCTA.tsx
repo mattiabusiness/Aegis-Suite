@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { mk } from '../theme';
 
 export function StickyMobileCTA() {
   const [show, setShow] = useState(false);
@@ -31,7 +32,7 @@ export function StickyMobileCTA() {
         zIndex: 55,
         padding: '12px 16px calc(14px + env(safe-area-inset-bottom))',
         background:
-          'linear-gradient(to top, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.9) 60%, transparent 100%)',
+          'linear-gradient(to top, rgba(239,230,210,0.98) 0%, rgba(239,230,210,0.9) 60%, transparent 100%)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         transform: show ? 'translateY(0)' : 'translateY(130%)',
@@ -48,12 +49,12 @@ export function StickyMobileCTA() {
           gap: 8,
           padding: '15px',
           borderRadius: 14,
-          background: 'linear-gradient(135deg, #6b21a8, #7c3aed, #a855f7)',
-          color: '#fff',
+          background: mk.gradBrand,
+          color: mk.onPurple,
           fontWeight: 700,
           fontSize: 16,
           textDecoration: 'none',
-          boxShadow: '0 8px 32px rgba(124,58,237,0.45), 0 2px 8px rgba(0,0,0,0.4)',
+          boxShadow: mk.glow,
         }}
       >
         Prenota la tua demo gratuita

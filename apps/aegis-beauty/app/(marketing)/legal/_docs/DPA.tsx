@@ -10,18 +10,18 @@ import type { ReactNode, CSSProperties } from 'react';
 function DocHeader() {
   return (
     <div style={{ padding: '24px 28px', borderRadius: 16, background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(168,85,247,0.2)', marginBottom: 40 }}>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
         Documento legale
       </p>
-      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', margin: '0 0 4px', lineHeight: 1.2 }}>
+      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2D2D2D', margin: '0 0 4px', lineHeight: 1.2 }}>
         Data Processing Agreement (DPA)
       </h2>
-      <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 16px' }}>
+      <p style={{ fontSize: 13, color: '#6E6678', margin: '0 0 16px' }}>
         Accordo sul Trattamento dei Dati Personali ai sensi dell&apos;Art. 28 GDPR
       </p>
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', paddingTop: 14, borderTop: '1px solid rgba(124,58,237,0.12)' }}>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Versione: <strong style={{ color: '#a855f7' }}>1.0 (Fase Beta)</strong></span>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Ultimo aggiornamento: <strong style={{ color: '#94A3B8' }}>29 Marzo 2026</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Versione: <strong style={{ color: '#7e22ce' }}>1.0 (Fase Beta)</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Ultimo aggiornamento: <strong style={{ color: '#4F4858' }}>29 Marzo 2026</strong></span>
       </div>
     </div>
   );
@@ -29,7 +29,7 @@ function DocHeader() {
 
 function AT({ children }: { children: ReactNode }) {
   return (
-    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC', borderLeft: '4px solid #7c3aed', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
+    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#2D2D2D', borderLeft: '4px solid #7e22ce', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
       {children}
     </h3>
   );
@@ -37,22 +37,22 @@ function AT({ children }: { children: ReactNode }) {
 
 function Sub({ children }: { children: ReactNode }) {
   return (
-    <p style={{ color: '#a855f7', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '20px 0 6px' }}>
+    <p style={{ color: '#7e22ce', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '20px 0 6px' }}>
       {children}
     </p>
   );
 }
 
 function P({ children }: { children: ReactNode }) {
-  return <p style={{ fontSize: 15, color: '#94A3B8', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
+  return <p style={{ fontSize: 15, color: '#4F4858', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
 }
 
 function Ul({ items }: { items: ReactNode[] }) {
   return (
     <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {items.map((item, i) => (
-        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#94A3B8', lineHeight: 1.7 }}>
-          <span style={{ color: '#7c3aed', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
+        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#4F4858', lineHeight: 1.7 }}>
+          <span style={{ color: '#7e22ce', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
           <span>{item}</span>
         </li>
       ))}
@@ -62,7 +62,7 @@ function Ul({ items }: { items: ReactNode[] }) {
 
 function Callout({ children }: { children: ReactNode }) {
   return (
-    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(76,29,149,0.15)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
+    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(147,51,234,0.07)', border: '1px solid rgba(147,51,234,0.2)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
       {children}
     </div>
   );
@@ -71,25 +71,25 @@ function Callout({ children }: { children: ReactNode }) {
 function Def({ term, children }: { term: string; children: ReactNode }) {
   return (
     <div style={{ padding: '14px 18px', borderRadius: 10, background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)', marginBottom: 10 }}>
-      <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 4px' }}>{term}</p>
-      <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>{children}</p>
+      <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 4px' }}>{term}</p>
+      <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>{children}</p>
     </div>
   );
 }
 
 function Note({ children }: { children: ReactNode }) {
   return (
-    <p style={{ fontSize: 13, color: '#475569', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
+    <p style={{ fontSize: 13, color: '#6E6678', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
       {children}
     </p>
   );
 }
 
 function B({ children }: { children: ReactNode }) {
-  return <strong style={{ color: '#F8FAFC', fontWeight: 600 }}>{children}</strong>;
+  return <strong style={{ color: '#2D2D2D', fontWeight: 600 }}>{children}</strong>;
 }
 
-const mail: CSSProperties = { color: '#a855f7', textDecoration: 'none', fontWeight: 600 };
+const mail: CSSProperties = { color: '#7e22ce', textDecoration: 'none', fontWeight: 600 };
 
 // ---- Component --------------------------------------------------------------
 
@@ -103,12 +103,12 @@ export function DPA() {
       <P>Il DPA costituisce parte integrante e sostanziale dei Termini di Servizio (ToS) di Aegis Beauty. In caso di conflitto tra le disposizioni del presente DPA e quelle dei ToS in materia di protezione dei dati personali, le disposizioni del presente DPA prevalgono.</P>
 
       <Callout>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>Parti dell&apos;Accordo</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>Parti dell&apos;Accordo</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 14, color: '#4F4858', lineHeight: 1.7, margin: 0 }}>
             <B>Titolare del Trattamento (Data Controller):</B> il Gestore — professionista o titolare di salone di acconciatura o centro estetico che utilizza la Piattaforma e determina finalità e mezzi del trattamento dei dati dei propri Clienti Finali.
           </p>
-          <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 14, color: '#4F4858', lineHeight: 1.7, margin: 0 }}>
             <B>Responsabile del Trattamento (Data Processor):</B> Aegis Beauty — Mattia Papa, sviluppatore indipendente residente a Torino, Italia (<a href="mailto:mattia@aegisbeauty.app" style={mail}>mattia@aegisbeauty.app</a>) — che tratta i dati dei Clienti Finali per conto del Gestore nell&apos;ambito della fornitura della Piattaforma.
           </p>
         </div>
@@ -192,20 +192,20 @@ export function DPA() {
       <Sub>4.2 Elenco dei Sub-Responsabili approvati</Sub>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '16px 0' }}>
         <Callout>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 6px' }}>Supabase Inc.</p>
-          <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 6px' }}>Supabase Inc.</p>
+          <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>
             Finalità: archiviazione del database (PostgreSQL) e gestione dell&apos;autenticazione. Sede legale: USA. Localizzazione dati: <B>Zurigo, Svizzera (AWS eu-central-2)</B>. La Svizzera beneficia di decisione di adeguatezza UE ai sensi dell&apos;Art. 45 GDPR. DPA stipulato con Supabase.
           </p>
         </Callout>
         <Callout>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 6px' }}>ZeptoMail by Zoho</p>
-          <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 6px' }}>ZeptoMail by Zoho</p>
+          <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>
             Finalità: invio di reminder automatici di appuntamento ai Clienti Finali. Sede: USA/India. Localizzazione server: Unione Europea. DPA stipulato con ZeptoMail.
           </p>
         </Callout>
         <Callout>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 6px' }}>Vercel Inc.</p>
-          <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 6px' }}>Vercel Inc.</p>
+          <p style={{ fontSize: 14, color: '#6E6678', lineHeight: 1.7, margin: 0 }}>
             Finalità: hosting e distribuzione dell&apos;applicazione web. Sede: USA. Vercel non archivia Dati Personali dei Clienti Finali in modo permanente, elaborando esclusivamente dati tecnici transitori di routing necessari al funzionamento dell&apos;infrastruttura.
           </p>
         </Callout>
@@ -226,8 +226,8 @@ export function DPA() {
         <><B>Standard Contractual Clauses (SCC):</B> clausole contrattuali tipo approvate dalla Commissione Europea ai sensi dell&apos;Art. 46.2.c GDPR, utilizzate come meccanismo parallelo e di fallback indipendente.</>,
       ]} />
       <Callout>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Aggiornamento Marzo 2026 — Stato del DPF</p>
-        <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7, margin: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Aggiornamento Marzo 2026 — Stato del DPF</p>
+        <p style={{ fontSize: 14, color: '#4F4858', lineHeight: 1.7, margin: 0 }}>
           Il General Court dell&apos;UE ha confermato la validità del DPF il 3 settembre 2025 (causa T-553/23). Il meccanismo è tuttavia soggetto a ulteriore revisione della CGUE. In ragione di questa incertezza strutturale, Aegis Beauty si avvale contestualmente delle SCC come garanzia aggiuntiva indipendente, assicurando la continuità della conformità ai trasferimenti extra-SEE.
         </p>
       </Callout>
@@ -331,12 +331,12 @@ export function DPA() {
       <AT>Art. 16 — Contatti</AT>
       <P>Per qualsiasi comunicazione relativa al presente DPA, le parti utilizzano i seguenti recapiti:</P>
       <Callout>
-        <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 8px' }}>Aegis Beauty — Responsabile del Trattamento</p>
-        <p style={{ fontSize: 14, color: '#94A3B8', margin: '0 0 16px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 8px' }}>Aegis Beauty — Responsabile del Trattamento</p>
+        <p style={{ fontSize: 14, color: '#4F4858', margin: '0 0 16px', lineHeight: 1.7 }}>
           Mattia Papa — <a href="mailto:mattia@aegisbeauty.app" style={mail}>mattia@aegisbeauty.app</a> — aegisbeauty.app
         </p>
-        <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 8px' }}>Gestore — Titolare del Trattamento</p>
-        <p style={{ fontSize: 14, color: '#94A3B8', margin: 0, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 8px' }}>Gestore — Titolare del Trattamento</p>
+        <p style={{ fontSize: 14, color: '#4F4858', margin: 0, lineHeight: 1.7 }}>
           L&apos;indirizzo email fornito in fase di registrazione alla Piattaforma.
         </p>
       </Callout>

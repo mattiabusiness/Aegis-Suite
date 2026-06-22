@@ -3,16 +3,18 @@
 // ============================================================================
 // AEGIS BEAUTY - MARKETING FOOTER
 // File: apps/aegis-beauty/app/(marketing)/_components/Footer.tsx
+// Tema: light premium (crema + ametista).
 // ============================================================================
 
 import Link from 'next/link';
+import { mk } from './theme';
 
 export function Footer() {
   return (
     <footer
       style={{
-        backgroundColor: '#0A0A0F',
-        borderTop: '1px solid rgba(124,58,237,0.12)',
+        backgroundColor: mk.bgAlt,
+        borderTop: `1px solid ${mk.border}`,
         padding: '60px 24px 36px',
       }}
     >
@@ -33,18 +35,18 @@ export function Footer() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-marketing.png?v=4" alt="Aegis Beauty" style={{ height: 48, width: 'auto', display: 'block' }} />
           </div>
-          <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7, maxWidth: 280, margin: '0 0 20px' }}>
+          <p style={{ fontSize: 14, color: mk.inkSoft, lineHeight: 1.7, maxWidth: 280, margin: '0 0 20px' }}>
             Il gestionale che mette il tuo brand al centro.
           </p>
-          <p style={{ fontSize: 13, color: '#334155', margin: 0 }}>
+          <p style={{ fontSize: 13, color: mk.inkFaint, margin: 0 }}>
             Un prodotto di{' '}
-            <span style={{ color: '#64748B', fontWeight: 500 }}>Aegis Group</span>
+            <span style={{ color: mk.inkSoft, fontWeight: 500 }}>Aegis Group</span>
           </p>
         </div>
 
         {/* Navigation column */}
         <div>
-          <h4 style={{ fontSize: 13, fontWeight: 600, color: '#64748B', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 20px' }}>
+          <h4 style={{ fontSize: 13, fontWeight: 600, color: mk.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 20px' }}>
             Navigazione
           </h4>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -58,9 +60,9 @@ export function Footer() {
               <a
                 key={link.href}
                 href={link.href}
-                style={{ color: '#475569', textDecoration: 'none', fontSize: 14, transition: 'color 0.2s' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#94A3B8')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
+                style={{ color: mk.inkSoft, textDecoration: 'none', fontSize: 14, transition: 'color 0.2s' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = mk.purple)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = mk.inkSoft)}
               >
                 {link.label}
               </a>
@@ -70,23 +72,23 @@ export function Footer() {
 
         {/* Legal column */}
         <div>
-          <h4 style={{ fontSize: 13, fontWeight: 600, color: '#64748B', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 20px' }}>
+          <h4 style={{ fontSize: 13, fontWeight: 600, color: mk.inkFaint, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 20px' }}>
             Legale
           </h4>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Link
               href="/legal"
-              style={{ color: '#475569', textDecoration: 'none', fontSize: 14, transition: 'color 0.2s' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#94A3B8')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
+              style={{ color: mk.inkSoft, textDecoration: 'none', fontSize: 14, transition: 'color 0.2s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = mk.purple)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = mk.inkSoft)}
             >
               Privacy & Legal
             </Link>
             <a
               href="mailto:mattia@aegisbeauty.app"
-              style={{ color: '#475569', textDecoration: 'none', fontSize: 14, transition: 'color 0.2s' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#a855f7')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
+              style={{ color: mk.inkSoft, textDecoration: 'none', fontSize: 14, transition: 'color 0.2s' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = mk.purple)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = mk.inkSoft)}
             >
               mattia@aegisbeauty.app
             </a>
@@ -100,7 +102,7 @@ export function Footer() {
           maxWidth: 1100,
           margin: '0 auto',
           paddingTop: 28,
-          borderTop: '1px solid rgba(124,58,237,0.08)',
+          borderTop: `1px solid ${mk.hairline}`,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -108,10 +110,10 @@ export function Footer() {
           gap: 12,
         }}
       >
-        <p style={{ fontSize: 13, color: '#334155', margin: 0 }}>
+        <p style={{ fontSize: 13, color: mk.inkFaint, margin: 0 }}>
           © 2026 Aegis Group. Tutti i diritti riservati.
         </p>
-        <p style={{ fontSize: 12, color: '#1e293b', margin: 0 }}>
+        <p style={{ fontSize: 12, color: mk.inkFaint, margin: 0 }}>
           Aegis Beauty è il primo prodotto di Aegis Group
         </p>
       </div>

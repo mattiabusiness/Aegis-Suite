@@ -3,11 +3,12 @@
 // ============================================================================
 // AEGIS BEAUTY - TRUST BAR
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/TrustBar.tsx
-// Slim security / credibility band
+// Slim security / credibility band — tema light premium.
 // ============================================================================
 
 import { ShieldCheck, Lock, BadgeCheck, Scale } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
+import { mk } from '../theme';
 
 const badges = [
   { icon: ShieldCheck, label: 'Server in Svizzera', sub: 'Data center a Zurigo' },
@@ -18,7 +19,7 @@ const badges = [
 
 export function TrustBar() {
   return (
-    <section style={{ backgroundColor: '#0A0A0F', padding: '56px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ backgroundColor: mk.bg, padding: '56px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"
@@ -30,7 +31,7 @@ export function TrustBar() {
           width: 900,
           height: 240,
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(124,58,237,0.06) 0%, transparent 70%)',
+          background: `radial-gradient(ellipse, ${mk.purpleA(0.05)} 0%, transparent 70%)`,
           pointerEvents: 'none',
         }}
       />
@@ -44,7 +45,7 @@ export function TrustBar() {
               fontWeight: 600,
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              color: '#475569',
+              color: mk.inkFaint,
               margin: '0 0 28px',
             }}
           >
@@ -63,8 +64,11 @@ export function TrustBar() {
                     gap: 14,
                     padding: '16px 18px',
                     borderRadius: 14,
-                    background: 'rgba(124,58,237,0.04)',
-                    border: '1px solid rgba(124,58,237,0.12)',
+                    background: mk.card,
+                    backdropFilter: mk.blur,
+                    WebkitBackdropFilter: mk.blur,
+                    border: `1px solid ${mk.border}`,
+                    boxShadow: mk.shadowSm,
                   }}
                 >
                   <div
@@ -73,21 +77,21 @@ export function TrustBar() {
                       height: 40,
                       borderRadius: 10,
                       flexShrink: 0,
-                      background: 'linear-gradient(135deg, rgba(124,58,237,0.22), rgba(168,85,247,0.1))',
-                      border: '1px solid rgba(168,85,247,0.25)',
+                      background: `linear-gradient(135deg, ${mk.purpleA(0.16)}, ${mk.purpleA(0.06)})`,
+                      border: `1px solid ${mk.purpleA(0.25)}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 0 18px rgba(124,58,237,0.15)',
+                      boxShadow: `0 4px 14px ${mk.purpleA(0.12)}`,
                     }}
                   >
-                    <Icon size={19} color="#a855f7" />
+                    <Icon size={19} color={mk.purple} />
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#E2E8F0', margin: '0 0 2px', lineHeight: 1.2 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: mk.ink, margin: '0 0 2px', lineHeight: 1.2 }}>
                       {b.label}
                     </p>
-                    <p style={{ fontSize: 12, color: '#475569', margin: 0, lineHeight: 1.3 }}>{b.sub}</p>
+                    <p style={{ fontSize: 12, color: mk.inkFaint, margin: 0, lineHeight: 1.3 }}>{b.sub}</p>
                   </div>
                 </div>
               );

@@ -3,20 +3,22 @@
 // ============================================================================
 // AEGIS BEAUTY - CTA SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/CTASection.tsx
+// Climax: banda ametista profonda (unica zona "colorata" del sito light).
 // ============================================================================
 
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
+import { mk } from '../theme';
 
 export function CTASection() {
   return (
     <section
       style={{
         position: 'relative',
-        padding: '120px 24px',
+        padding: '128px 24px',
         overflow: 'hidden',
-        background: 'linear-gradient(145deg, #080010 0%, #1a0040 50%, #0A0A0F 100%)',
+        background: 'linear-gradient(145deg, #5A2A7A 0%, #7e22ce 55%, #9333ea 100%)',
       }}
     >
       {/* Glow orb */}
@@ -30,7 +32,7 @@ export function CTASection() {
           width: 600,
           height: 600,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(192,132,252,0.3) 0%, transparent 70%)',
           pointerEvents: 'none',
           filter: 'blur(40px)',
         }}
@@ -40,17 +42,18 @@ export function CTASection() {
         <ScrollReveal>
           <h2
             style={{
-              fontSize: 'clamp(2rem, 5vw, 3.4rem)',
-              fontWeight: 900,
-              letterSpacing: '-0.03em',
-              color: '#F8FAFC',
+              fontFamily: mk.serif,
+              fontSize: 'clamp(2.1rem, 5vw, 3.4rem)',
+              fontWeight: 600,
+              letterSpacing: '-0.02em',
+              color: '#fff',
               margin: '0 0 20px',
               lineHeight: 1.15,
             }}
           >
             <span
               style={{
-                background: 'linear-gradient(135deg, #F8FAFC 40%, #a855f7 100%)',
+                background: 'linear-gradient(135deg, #FFFFFF 40%, #E9D5FF 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -59,9 +62,9 @@ export function CTASection() {
               Il posto è tuo.
             </span>
             <br />
-            <span style={{ color: '#a855f7' }}>Finché c&apos;è.</span>
+            <span style={{ color: '#E9D5FF' }}>Finché c&apos;è.</span>
           </h2>
-          <p style={{ fontSize: 17, color: '#94A3B8', margin: '0 0 44px', lineHeight: 1.7 }}>
+          <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.82)', margin: '0 0 44px', lineHeight: 1.7 }}>
             40 saloni. 9 mesi gratuiti. Un&apos;opportunità che non si ripete.
           </p>
 
@@ -73,21 +76,21 @@ export function CTASection() {
               gap: 10,
               padding: '18px 40px',
               borderRadius: 14,
-              background: 'linear-gradient(135deg, #6b21a8, #7c3aed, #a855f7)',
-              color: '#fff',
+              background: '#FFFFFF',
+              color: mk.purpleDeep,
               fontWeight: 700,
               fontSize: 18,
               textDecoration: 'none',
-              boxShadow: '0 0 50px rgba(124,58,237,0.5), 0 8px 30px rgba(0,0,0,0.4)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
+              boxShadow: '0 12px 40px rgba(45,20,60,0.35)',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.04) translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 0 70px rgba(124,58,237,0.7), 0 12px 40px rgba(0,0,0,0.5)';
+              e.currentTarget.style.boxShadow = '0 18px 52px rgba(45,20,60,0.45)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1) translateY(0)';
-              e.currentTarget.style.boxShadow = '0 0 50px rgba(124,58,237,0.5), 0 8px 30px rgba(0,0,0,0.4)';
+              e.currentTarget.style.boxShadow = '0 12px 40px rgba(45,20,60,0.35)';
             }}
           >
             Prenota la tua demo gratuita
@@ -105,8 +108,8 @@ export function CTASection() {
             }}
           >
             {['Nessuna carta di credito', 'Setup in 30 minuti', 'Cancelli quando vuoi'].map((t) => (
-              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#64748B' }}>
-                <Check size={14} color="#a855f7" strokeWidth={2.5} />
+              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'rgba(255,255,255,0.72)' }}>
+                <Check size={14} color="#E9D5FF" strokeWidth={2.5} />
                 {t}
               </span>
             ))}

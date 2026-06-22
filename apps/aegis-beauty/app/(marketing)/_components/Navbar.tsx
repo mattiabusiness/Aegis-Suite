@@ -4,11 +4,13 @@
 // AEGIS BEAUTY - MARKETING NAVBAR
 // File: apps/aegis-beauty/app/(marketing)/_components/Navbar.tsx
 // Fixed top nav with scroll-hide/show + mobile hamburger
+// Tema: light premium — glass panna (effetto Apple).
 // ============================================================================
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
+import { mk } from './theme';
 
 export function Navbar() {
   const [visible, setVisible] = useState(true);
@@ -44,8 +46,8 @@ export function Navbar() {
           transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          borderBottom: '1px solid rgba(124,58,237,0.15)',
+          backgroundColor: mk.glass,
+          borderBottom: `1px solid ${mk.border}`,
         }}
       >
         <div
@@ -72,14 +74,14 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 style={{
-                  color: '#94A3B8',
+                  color: mk.inkSoft,
                   textDecoration: 'none',
                   fontSize: 15,
                   fontWeight: 500,
                   transition: 'color 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#a855f7')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
+                onMouseEnter={(e) => (e.currentTarget.style.color = mk.purple)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = mk.inkSoft)}
               >
                 {link.label}
               </a>
@@ -95,29 +97,29 @@ export function Navbar() {
                 alignItems: 'center',
                 gap: 8,
                 padding: '8px 20px',
-                borderRadius: 10,
-                background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-                color: '#fff',
+                borderRadius: 12,
+                background: mk.gradBrand,
+                color: mk.onPurple,
                 fontWeight: 700,
                 fontSize: 14,
                 textDecoration: 'none',
-                boxShadow: '0 6px 24px rgba(124,58,237,0.38), 0 2px 8px rgba(0,0,0,0.3)',
-                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: mk.glow,
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                 position: 'relative',
                 overflow: 'hidden',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 10px 32px rgba(124,58,237,0.55), 0 2px 8px rgba(0,0,0,0.3)';
+                e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+                e.currentTarget.style.boxShadow = mk.glowStrong;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 6px 24px rgba(124,58,237,0.38), 0 2px 8px rgba(0,0,0,0.3)';
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = mk.glow;
               }}
             >
               <div style={{
                 position: 'absolute', inset: 0, pointerEvents: 'none',
-                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%)',
                 animation: 'navShimmer 2.8s ease-in-out infinite',
               }} />
               <span style={{ position: 'relative', zIndex: 1 }}>Prenota demo</span>
@@ -134,7 +136,7 @@ export function Navbar() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#94A3B8',
+                color: mk.inkSoft,
                 cursor: 'pointer',
                 padding: 4,
                 display: 'none',
@@ -150,7 +152,7 @@ export function Navbar() {
           <div
             style={{
               padding: '16px 24px 24px',
-              borderTop: '1px solid rgba(124,58,237,0.1)',
+              borderTop: `1px solid ${mk.border}`,
               display: 'flex',
               flexDirection: 'column',
               gap: 16,
@@ -163,7 +165,7 @@ export function Navbar() {
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
                 style={{
-                  color: '#94A3B8',
+                  color: mk.inkSoft,
                   textDecoration: 'none',
                   fontSize: 16,
                   fontWeight: 500,

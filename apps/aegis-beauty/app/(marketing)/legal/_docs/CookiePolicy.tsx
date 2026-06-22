@@ -10,15 +10,15 @@ import type { ReactNode } from 'react';
 function DocHeader() {
   return (
     <div style={{ padding: '24px 28px', borderRadius: 16, background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(168,85,247,0.2)', marginBottom: 40 }}>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>
         Documento legale
       </p>
-      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', margin: '0 0 16px', lineHeight: 1.2 }}>
+      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2D2D2D', margin: '0 0 16px', lineHeight: 1.2 }}>
         Cookie Policy
       </h2>
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', paddingTop: 14, borderTop: '1px solid rgba(124,58,237,0.12)' }}>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Versione: <strong style={{ color: '#a855f7' }}>1.0 (Fase Beta)</strong></span>
-        <span style={{ fontSize: 13, color: '#64748B' }}>Ultimo aggiornamento: <strong style={{ color: '#94A3B8' }}>29 Marzo 2026</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Versione: <strong style={{ color: '#7e22ce' }}>1.0 (Fase Beta)</strong></span>
+        <span style={{ fontSize: 13, color: '#6E6678' }}>Ultimo aggiornamento: <strong style={{ color: '#4F4858' }}>29 Marzo 2026</strong></span>
       </div>
     </div>
   );
@@ -26,22 +26,22 @@ function DocHeader() {
 
 function AT({ children }: { children: ReactNode }) {
   return (
-    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC', borderLeft: '4px solid #7c3aed', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
+    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#2D2D2D', borderLeft: '4px solid #7e22ce', paddingLeft: 14, margin: '40px 0 16px', lineHeight: 1.4 }}>
       {children}
     </h3>
   );
 }
 
 function P({ children }: { children: ReactNode }) {
-  return <p style={{ fontSize: 15, color: '#94A3B8', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
+  return <p style={{ fontSize: 15, color: '#4F4858', lineHeight: 1.8, margin: '0 0 12px' }}>{children}</p>;
 }
 
 function Ul({ items }: { items: ReactNode[] }) {
   return (
     <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {items.map((item, i) => (
-        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#94A3B8', lineHeight: 1.7 }}>
-          <span style={{ color: '#7c3aed', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
+        <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15, color: '#4F4858', lineHeight: 1.7 }}>
+          <span style={{ color: '#7e22ce', flexShrink: 0, marginTop: '0.15em', fontWeight: 700 }}>—</span>
           <span>{item}</span>
         </li>
       ))}
@@ -51,7 +51,7 @@ function Ul({ items }: { items: ReactNode[] }) {
 
 function Callout({ children }: { children: ReactNode }) {
   return (
-    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(76,29,149,0.15)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
+    <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(147,51,234,0.07)', border: '1px solid rgba(147,51,234,0.2)', borderRadius: 12, padding: '20px 24px', margin: '20px 0' }}>
       {children}
     </div>
   );
@@ -59,7 +59,7 @@ function Callout({ children }: { children: ReactNode }) {
 
 function Note({ children }: { children: ReactNode }) {
   return (
-    <p style={{ fontSize: 13, color: '#475569', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
+    <p style={{ fontSize: 13, color: '#6E6678', fontStyle: 'italic', lineHeight: 1.7, margin: '10px 0' }}>
       {children}
     </p>
   );
@@ -96,7 +96,7 @@ function CookieTable() {
         <thead>
           <tr>
             {['Cookie / Strumento', 'Finalità', 'Durata', 'Tipo'].map((h) => (
-              <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 11, fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid rgba(124,58,237,0.15)', whiteSpace: 'nowrap' }}>
+              <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 11, fontWeight: 700, color: '#7e22ce', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid rgba(124,58,237,0.15)', whiteSpace: 'nowrap' }}>
                 {h}
               </th>
             ))}
@@ -105,11 +105,11 @@ function CookieTable() {
         <tbody>
           {cookies.map((c, i) => (
             <tr key={i} style={{ borderBottom: '1px solid rgba(124,58,237,0.08)' }}>
-              <td style={{ padding: '14px', color: '#F8FAFC', fontWeight: 600, verticalAlign: 'top', minWidth: 200 }}>{c.name}</td>
-              <td style={{ padding: '14px', color: '#94A3B8', lineHeight: 1.6, verticalAlign: 'top', minWidth: 240 }}>{c.purpose}</td>
-              <td style={{ padding: '14px', color: '#64748B', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{c.duration}</td>
+              <td style={{ padding: '14px', color: '#2D2D2D', fontWeight: 600, verticalAlign: 'top', minWidth: 200 }}>{c.name}</td>
+              <td style={{ padding: '14px', color: '#4F4858', lineHeight: 1.6, verticalAlign: 'top', minWidth: 240 }}>{c.purpose}</td>
+              <td style={{ padding: '14px', color: '#6E6678', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{c.duration}</td>
               <td style={{ padding: '14px', verticalAlign: 'top' }}>
-                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(124,58,237,0.12)', color: '#a855f7', whiteSpace: 'nowrap' }}>
+                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: 'rgba(124,58,237,0.12)', color: '#7e22ce', whiteSpace: 'nowrap' }}>
                   {c.type}
                 </span>
               </td>
@@ -122,11 +122,11 @@ function CookieTable() {
       <div className="cookie-table-mobile" style={{ display: 'none', flexDirection: 'column', gap: 16 }}>
         {cookies.map((c, i) => (
           <div key={i} style={{ padding: '16px', borderRadius: 12, background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.1)' }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#F8FAFC', margin: '0 0 8px' }}>{c.name}</p>
-            <p style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, margin: '0 0 10px' }}>{c.purpose}</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#2D2D2D', margin: '0 0 8px' }}>{c.name}</p>
+            <p style={{ fontSize: 13, color: '#4F4858', lineHeight: 1.6, margin: '0 0 10px' }}>{c.purpose}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, color: '#64748B' }}>{c.duration}</span>
-              <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 20, background: 'rgba(124,58,237,0.12)', color: '#a855f7', fontWeight: 600 }}>
+              <span style={{ fontSize: 12, color: '#6E6678' }}>{c.duration}</span>
+              <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 20, background: 'rgba(124,58,237,0.12)', color: '#7e22ce', fontWeight: 600 }}>
                 {c.type}
               </span>
             </div>
@@ -185,7 +185,7 @@ export function CookiePolicy() {
       <AT>2. Perché non vedi nessun banner cookie</AT>
       <Callout>
         <P>
-          <strong style={{ color: '#F8FAFC' }}>Nessun banner. È tutto legale.</strong>
+          <strong style={{ color: '#2D2D2D' }}>Nessun banner. È tutto legale.</strong>
         </P>
         <P>
           Aegis Beauty utilizza esclusivamente cookie tecnici strettamente necessari. Ai sensi del
@@ -224,20 +224,20 @@ export function CookiePolicy() {
       <P>
         Hai sempre il diritto di gestire, bloccare o cancellare i cookie direttamente dalle
         impostazioni del tuo browser. Di solito trovi queste opzioni nel menu{' '}
-        <strong style={{ color: '#94A3B8' }}>Impostazioni → Privacy e Sicurezza → Cookie</strong>.
+        <strong style={{ color: '#4F4858' }}>Impostazioni → Privacy e Sicurezza → Cookie</strong>.
       </P>
       <P>Principali browser e relative guide:</P>
       <Ul
         items={[
-          <><strong style={{ color: '#F8FAFC' }}>Google Chrome:</strong> Impostazioni → Privacy e sicurezza → Cookie e altri dati dei siti</>,
-          <><strong style={{ color: '#F8FAFC' }}>Safari:</strong> Preferenze → Privacy → Gestisci dati sito web</>,
-          <><strong style={{ color: '#F8FAFC' }}>Firefox:</strong> Impostazioni → Privacy e Sicurezza → Cookie e dati dei siti web</>,
-          <><strong style={{ color: '#F8FAFC' }}>Microsoft Edge:</strong> Impostazioni → Cookie e autorizzazioni sito → Cookie e dati archiviati</>,
+          <><strong style={{ color: '#2D2D2D' }}>Google Chrome:</strong> Impostazioni → Privacy e sicurezza → Cookie e altri dati dei siti</>,
+          <><strong style={{ color: '#2D2D2D' }}>Safari:</strong> Preferenze → Privacy → Gestisci dati sito web</>,
+          <><strong style={{ color: '#2D2D2D' }}>Firefox:</strong> Impostazioni → Privacy e Sicurezza → Cookie e dati dei siti web</>,
+          <><strong style={{ color: '#2D2D2D' }}>Microsoft Edge:</strong> Impostazioni → Cookie e autorizzazioni sito → Cookie e dati archiviati</>,
         ]}
       />
       <Callout>
         <P>
-          <strong style={{ color: '#F8FAFC' }}>Attenzione: disabilitare i cookie tecnici compromette il funzionamento.</strong>
+          <strong style={{ color: '#2D2D2D' }}>Attenzione: disabilitare i cookie tecnici compromette il funzionamento.</strong>
         </P>
         <Note>
           Poiché Aegis Beauty usa solo cookie tecnici fondamentali, disabilitarli completamente dal
@@ -293,7 +293,7 @@ export function CookiePolicy() {
         items={[
           <>
             Email:{' '}
-            <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#a855f7', textDecoration: 'none' }}>
+            <a href="mailto:mattia@aegisbeauty.app" style={{ color: '#7e22ce', textDecoration: 'none' }}>
               mattia@aegisbeauty.app
             </a>
           </>,

@@ -3,11 +3,13 @@
 // ============================================================================
 // AEGIS BEAUTY - FAQ SECTION
 // File: apps/aegis-beauty/app/(marketing)/_components/sections/FAQSection.tsx
+// Tema: light premium (crema + ametista).
 // ============================================================================
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
+import { mk } from '../theme';
 
 const faqs = [
   {
@@ -46,9 +48,12 @@ function FAQItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
     <div
       style={{
         borderRadius: 14,
-        border: `1px solid ${open ? 'rgba(168,85,247,0.25)' : 'rgba(124,58,237,0.12)'}`,
-        background: open ? 'rgba(124,58,237,0.06)' : 'rgba(255,255,255,0.02)',
-        transition: 'border-color 0.3s, background 0.3s',
+        border: `1px solid ${open ? mk.purpleA(0.3) : mk.border}`,
+        background: open ? mk.cardTint : mk.card,
+        backdropFilter: mk.blur,
+        WebkitBackdropFilter: mk.blur,
+        boxShadow: open ? `0 0 0 1px ${mk.purpleA(0.12)}, ${mk.shadowMd}` : mk.shadowSm,
+        transition: 'border-color 0.3s, background 0.3s, box-shadow 0.3s',
         overflow: 'hidden',
       }}
     >
@@ -71,7 +76,7 @@ function FAQItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
           style={{
             fontSize: 'clamp(0.95rem, 1.8vw, 1.05rem)',
             fontWeight: 600,
-            color: open ? '#F8FAFC' : '#CBD5E1',
+            color: open ? mk.heading : mk.ink,
             lineHeight: 1.4,
             transition: 'color 0.3s',
           }}
@@ -81,7 +86,7 @@ function FAQItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
         <ChevronDown
           size={20}
           style={{
-            color: '#a855f7',
+            color: mk.purple,
             flexShrink: 0,
             transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -100,7 +105,7 @@ function FAQItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean
           <p
             style={{
               fontSize: 15,
-              color: '#94A3B8',
+              color: mk.inkSoft,
               lineHeight: 1.8,
               margin: 0,
               padding: '0 24px 22px',
@@ -118,7 +123,7 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section style={{ background: 'linear-gradient(180deg, #0A0A0F 0%, #080010 100%)', padding: '100px 24px', position: 'relative', overflow: 'hidden' }}>
+    <section style={{ background: `linear-gradient(180deg, ${mk.bg} 0%, ${mk.bgAlt} 100%)`, padding: '128px 24px', position: 'relative', overflow: 'hidden' }}>
       {/* Ambient glow */}
       <div
         aria-hidden="true"
@@ -130,7 +135,7 @@ export function FAQSection() {
           width: 800,
           height: 400,
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(124,58,237,0.07) 0%, transparent 70%)',
+          background: `radial-gradient(ellipse, ${mk.purpleA(0.07)} 0%, transparent 70%)`,
           pointerEvents: 'none',
         }}
       />
@@ -144,9 +149,9 @@ export function FAQSection() {
                 display: 'inline-block',
                 padding: '4px 14px',
                 borderRadius: 100,
-                background: 'rgba(124,58,237,0.1)',
-                border: '1px solid rgba(124,58,237,0.2)',
-                color: '#a855f7',
+                background: mk.purpleA(0.08),
+                border: `1px solid ${mk.purpleA(0.18)}`,
+                color: mk.purpleDeep,
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: '0.08em',
@@ -158,15 +163,13 @@ export function FAQSection() {
             </span>
             <h2
               style={{
-                fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
+                fontFamily: mk.serif,
+                fontSize: 'clamp(1.9rem, 3.5vw, 2.7rem)',
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
                 margin: 0,
                 lineHeight: 1.2,
-                background: 'linear-gradient(120deg, #F8FAFC 25%, #c084fc 80%, #a855f7 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                ...mk.gradHeadingText,
               }}
             >
               Le domande che stai già facendo.

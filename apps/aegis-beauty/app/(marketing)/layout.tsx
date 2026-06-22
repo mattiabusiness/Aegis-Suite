@@ -5,15 +5,23 @@
 // ============================================================================
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Fraunces } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { CursorFollowerLoader } from './_components/ui/CursorFollowerLoader';
+import { mk } from './_components/theme';
 
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   preload: true,
   variable: '--font-inter',
+});
+
+// Serif editoriale per i titoli — look "beauty alta gamma" (variable font)
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-serif',
 });
 
 export const metadata: Metadata = {
@@ -49,17 +57,17 @@ export const metadata: Metadata = {
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
     <div
-      className={inter.variable}
+      className={`${inter.variable} ${fraunces.variable}`}
       style={{
-        fontFamily: 'var(--font-inter), system-ui, sans-serif',
-        backgroundColor: '#0A0A0F',
-        color: '#F8FAFC',
+        fontFamily: mk.sans,
+        backgroundColor: mk.bg,
+        color: mk.ink,
         minHeight: '100vh',
       }}
     >
       <CursorFollowerLoader />
       {children}
-      {/* Film grain overlay — premium dark texture */}
+      {/* Film grain overlay — texture "carta" premium su panna */}
       <div
         aria-hidden="true"
         style={{
@@ -67,8 +75,8 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
           inset: 0,
           zIndex: 100,
           pointerEvents: 'none',
-          opacity: 0.05,
-          mixBlendMode: 'overlay',
+          opacity: 0.03,
+          mixBlendMode: 'multiply',
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
         }}
