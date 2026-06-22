@@ -62,9 +62,9 @@ export function Navbar() {
           }}
         >
           {/* Logo */}
-          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-marketing.png?v=4" alt="Aegis Beauty" style={{ height: 52, width: 'auto', display: 'block' }} />
+            <img src="/logo-marketing.png?v=4" alt="Aegis Beauty" className="mk-nav-logo" style={{ height: 52, width: 'auto', display: 'block', objectFit: 'contain', flexShrink: 0 }} />
           </Link>
 
           {/* Desktop nav */}
@@ -92,6 +92,7 @@ export function Navbar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link
               href="/demo"
+              className="mk-nav-cta"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -182,6 +183,8 @@ export function Navbar() {
         @media (max-width: 768px) {
           .marketing-nav-desktop { display: none !important; }
           .marketing-hamburger { display: flex !important; }
+          .mk-nav-logo { height: 40px !important; }
+          .mk-nav-cta { padding: 7px 13px !important; font-size: 13px !important; }
         }
         @keyframes navShimmer {
           0%, 100% { transform: translateX(-100%); }

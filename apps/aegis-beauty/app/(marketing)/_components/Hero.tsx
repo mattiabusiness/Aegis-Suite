@@ -105,6 +105,7 @@ export function Hero() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
+        className="mk-hero-inner"
         style={{
           position: 'relative',
           zIndex: 2,
@@ -155,7 +156,7 @@ export function Hero() {
           variants={itemVariants}
           style={{
             fontFamily: mk.serif,
-            fontSize: 'clamp(2.6rem, 6.2vw, 5.2rem)',
+            fontSize: 'clamp(2.15rem, 6.5vw, 5.2rem)',
             fontWeight: 600,
             lineHeight: 1.08,
             letterSpacing: '-0.02em',
@@ -292,6 +293,7 @@ export function Hero() {
         {/* Reassurance microcopy */}
         <motion.div
           variants={itemVariants}
+          className="mk-hero-reassure"
           style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -345,6 +347,10 @@ export function Hero() {
         @keyframes scrollBounce {
           0%, 100% { transform: translateX(-50%) translateY(0); }
           50% { transform: translateX(-50%) translateY(6px); }
+        }
+        @media (max-width: 640px) {
+          .mk-hero-inner { padding: 70px 20px 40px !important; gap: 16px !important; }
+          .mk-hero-reassure { gap: 6px 14px !important; }
         }
       `}</style>
     </section>

@@ -519,7 +519,7 @@ export function ROICalculatorSection() {
         }
         @media (max-width: 540px) {
           .roi-mk-grid > div {
-            padding: 28px 20px !important;
+            padding: 20px 16px !important;
           }
           .roi-mk-tab-btn {
             font-size: 11px !important;

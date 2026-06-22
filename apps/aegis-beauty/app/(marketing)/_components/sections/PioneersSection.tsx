@@ -12,9 +12,11 @@ import { ScrollReveal } from '../ui/ScrollReveal';
 import { mk } from '../theme';
 
 const spotsRaw = process.env.NEXT_PUBLIC_BETA_SPOTS_AVAILABLE;
-const spotsAvailable = spotsRaw ? parseInt(spotsRaw, 10) : 40;
+// Contatore posti mostrato SOLO se la variabile Vercel è impostata: togliendola, sparisce.
+const hasSpots = spotsRaw != null && spotsRaw.trim() !== '';
+const spotsAvailable = spotsRaw ? parseInt(spotsRaw, 10) : 0;
 const totalSpots = 40;
-const isFull = spotsAvailable <= 0;
+const isFull = hasSpots && spotsAvailable <= 0;
 
 const benefits = [
   { icon: Zap, text: 'Accesso completo a tutte le funzionalità — gratis fino a gennaio 2027.' },
@@ -98,7 +100,8 @@ export function PioneersSection() {
               Accesso gratuito per 9 mesi. In cambio, il tuo feedback. Niente di più.
             </p>
 
-            {/* Spots counter */}
+            {/* Spots counter — solo se la variabile Vercel NEXT_PUBLIC_BETA_SPOTS_AVAILABLE è impostata */}
+            {hasSpots && (
             <div
               style={{
                 display: 'inline-flex',
@@ -127,6 +130,7 @@ export function PioneersSection() {
                   : `${spotsAvailable} / ${totalSpots} posti disponibili`}
               </span>
             </div>
+            )}
 
             {/* Benefits */}
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 40px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 12 }}>
