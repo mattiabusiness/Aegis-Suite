@@ -418,6 +418,9 @@ export function StaffModal({
   isOpen, onClose, onSubmit, initialData = null, title, submitText, error, hideOwnerRole = false, isIncomplete = false,
 }: StaffModalProps) {
   const isEditing = !!initialData?.fullName;
+  // Email bloccata SOLO se già salvata (staff già invitato). Se assente (es. aggiunto
+  // in onboarding senza email), il campo resta editabile per inserirla e invitare.
+  const emailLocked = isEditing && !!initialData?.email?.trim();
   const isCompletingProfile = isEditing && isIncomplete;
   const modalTitle = title || (isCompletingProfile ? 'Completa profilo' : isEditing ? 'Modifica membro' : 'Nuovo membro dello staff');
   const buttonText = submitText || (isCompletingProfile ? 'Salva e genera QR' : isEditing ? 'Salva modifiche' : 'Crea e genera QR');
@@ -465,8 +468,8 @@ export function StaffModal({
           e.preventDefault();
           setFormError('');
           if (!formData.fullName.trim()) { setFormError('Inserisci il nome completo *'); doShake(); return; }
-          if (!isEditing && !formData.email.trim()) { setFormError('Inserisci l\'email *'); doShake(); return; }
-          if (!isEditing && formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { setFormError('Email non valida *'); doShake(); return; }
+          if (!emailLocked && !formData.email.trim()) { setFormError('Inserisci l\'email *'); doShake(); return; }
+          if (!emailLocked && formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { setFormError('Email non valida *'); doShake(); return; }
           if (!formData.phone.trim()) { setFormError('Inserisci il telefono *'); doShake(); return; }
 
           setLoading(true);
@@ -504,9 +507,9 @@ export function StaffModal({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Email {!isEditing && <span className="text-red-400">*</span>}
+                    Email {!emailLocked && <span className="text-red-400">*</span>}
                   </label>
-                  <input type="email" value={formData.email} onChange={(e) => update('email', e.target.value)} placeholder="email@esempio.it" maxLength={254} disabled={isEditing} className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={{ ...inputStyle, ...(isEditing ? { opacity: 0.55, cursor: 'not-allowed', background: 'rgba(0,0,0,0.04)' } : {}) }} {...(isEditing ? {} : focusHandlers)} />
+                  <input type="email" value={formData.email} onChange={(e) => update('email', e.target.value)} placeholder="email@esempio.it" maxLength={254} disabled={emailLocked} className="w-full px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none" style={{ ...inputStyle, ...(emailLocked ? { opacity: 0.55, cursor: 'not-allowed', background: 'rgba(0,0,0,0.04)' } : {}) }} {...(emailLocked ? {} : focusHandlers)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefono <span className="text-red-400">*</span></label>
