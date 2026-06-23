@@ -25,23 +25,13 @@ export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
         <header className="relative z-10 bg-white/80 backdrop-blur-sm border-b border-purple-100/50">
           <div className="max-w-3xl mx-auto px-4 py-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-violet-600 rounded-xl flex items-center justify-center shadow-md shadow-purple-200">
-                <svg
-                  className="w-5 h-5 text-white"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">Aegis <span className="text-purple-600">Beauty</span></h1>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-orizzontale.png?v=4"
+                alt="Aegis Beauty"
+                style={{ height: 44, width: 'auto', objectFit: 'contain', display: 'block' }}
+              />
+              <div className="pl-3 border-l border-purple-100">
                 <p className="text-xs text-gray-400 font-medium tracking-wide">Configurazione attività</p>
               </div>
             </div>
