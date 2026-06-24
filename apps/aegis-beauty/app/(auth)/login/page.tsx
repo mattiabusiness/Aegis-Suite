@@ -288,7 +288,11 @@ function LoginContent() {
       businessSlug,
     });
     if (!result.success) { setRegisterError(result.error || 'Errore'); throw new Error(result.error); }
-    setRegisterSuccess("Registrazione completata! Controlla la tua email per confermare l'account.");
+    // TEMP (ZeptoMail bloccato + "Confirm email" OFF su Supabase): nessuna email parte,
+    // l'account è gia attivo => invitiamo ad accedere. RIPRISTINARE il messaggio sotto
+    // appena ZeptoMail riattiva l'invio e si riaccende "Confirm email".
+    // setRegisterSuccess("Registrazione completata! Controlla la tua email per confermare l'account.");
+    setRegisterSuccess("Registrazione completata! Fai l'accesso per entrare nell'app.");
   };
 
   if (processingInvite) {
