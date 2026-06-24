@@ -293,11 +293,7 @@ function LoginContent() {
     if (businessSlug) {
       try { await fetch('/api/customer/provision', { method: 'POST' }); } catch { /* non-critical */ }
     }
-    // TEMP (ZeptoMail bloccato + "Confirm email" OFF su Supabase): nessuna email parte,
-    // l'account è gia attivo => invitiamo ad accedere. RIPRISTINARE il messaggio sotto
-    // appena ZeptoMail riattiva l'invio e si riaccende "Confirm email".
-    // setRegisterSuccess("Registrazione completata! Controlla la tua email per confermare l'account.");
-    setRegisterSuccess("Registrazione completata! Fai l'accesso per entrare nell'app.");
+    setRegisterSuccess("Registrazione completata! Controlla la tua email per confermare l'account.");
   };
 
   if (processingInvite) {
