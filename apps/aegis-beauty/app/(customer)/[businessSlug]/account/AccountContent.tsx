@@ -854,7 +854,7 @@ export function AccountContent({
           </div>
 
           {/* Hints contestuali */}
-          {!pushEnv.supported && (
+          {!pushEnv.supported && !pushEnv.ios && (
             <div style={{ marginTop: 12, fontSize: '0.76rem', color: '#9ca3af', lineHeight: 1.5 }}>
               Il tuo browser non supporta le notifiche push.
             </div>
