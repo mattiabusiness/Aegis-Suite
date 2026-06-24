@@ -19,6 +19,10 @@ export function usePushSubscription() {
       (navigator as unknown as { standalone?: boolean }).standalone === true;
     if (!isStandalone) return;
 
+    // Rispetta l'opt-out esplicito dell'utente (toggle "Notifiche" OFF in account):
+    // senza questo, l'auto-subscribe ri-attiverebbe le notifiche al reload.
+    if (localStorage.getItem('aegis_push_optout') === 'true') return;
+
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!vapidKey) return;
 

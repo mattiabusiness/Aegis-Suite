@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useId, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useId, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -34,8 +34,11 @@ import {
   X,
   Key,
   Users,
+  Smartphone,
+  Share,
+  BellOff,
 } from 'lucide-react';
-import { createClient } from '@aegis/core';
+import { createClient, isPushSupported, getNotificationPermission, subscribeToPush, unsubscribeFromPush } from '@aegis/core';
 import { AppointmentCard, beautyTheme } from '@aegis/ui';
 import type { Business, Customer, Profile } from '@aegis/types';
 
@@ -467,6 +470,90 @@ export function AccountContent({
   const [savingPw,  setSavingPw]  = useState(false);
   const [showHelp,     setShowHelp]     = useState(false);
   const [expandedFaq,  setExpandedFaq]  = useState<string | null>(null);
+  // Notifiche push
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifSubscribed,   setNotifSubscribed]   = useState(false);
+  const [notifPerm,         setNotifPerm]         = useState<NotificationPermission>('default');
+  const [notifBusy,         setNotifBusy]         = useState(false);
+  // Ambiente push rilevato client-side (evita mismatch SSR)
+  const [pushEnv, setPushEnv] = useState({ supported: false, ios: false, standalone: false });
+
+  useEffect(() => {
+    const supported = isPushSupported();
+    const ios = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const standalone = typeof window !== 'undefined' && (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true
+    );
+    setPushEnv({ supported, ios, standalone });
+    if (!supported) return;
+    setNotifPerm(getNotificationPermission());
+    navigator.serviceWorker.ready
+      .then(async (reg) => {
+        const sub = await reg.pushManager.getSubscription();
+        setNotifSubscribed(!!sub && getNotificationPermission() === 'granted');
+      })
+      .catch(() => {});
+  }, []);
+
+  const enableNotifications = useCallback(async () => {
+    const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapid) { toast.error('Notifiche non configurate.'); return; }
+    setNotifBusy(true);
+    try {
+      const sub = await subscribeToPush(vapid); // chiede permesso + sottoscrive
+      setNotifPerm(getNotificationPermission());
+      if (!sub) { toast.error('Permesso notifiche negato.'); return; }
+      const key = sub.getKey('p256dh');
+      const auth = sub.getKey('auth');
+      if (!key || !auth) { toast.error('Errore nella sottoscrizione.'); return; }
+      const p256dh = btoa(String.fromCharCode(...new Uint8Array(key)));
+      const authKey = btoa(String.fromCharCode(...new Uint8Array(auth)));
+      const res = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: sub.endpoint, p256dh, auth_key: authKey }),
+      });
+      if (!res.ok) { toast.error('Errore nel salvataggio.'); return; }
+      localStorage.removeItem('aegis_push_optout');
+      setNotifSubscribed(true);
+      toast.success('Notifiche attivate.');
+    } catch {
+      toast.error('Errore durante l\'attivazione.');
+    } finally {
+      setNotifBusy(false);
+    }
+  }, []);
+
+  const disableNotifications = useCallback(async () => {
+    setNotifBusy(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      const endpoint = sub?.endpoint;
+      await unsubscribeFromPush();
+      if (endpoint) {
+        await fetch('/api/push/unsubscribe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint }),
+        });
+      }
+      localStorage.setItem('aegis_push_optout', 'true');
+      setNotifSubscribed(false);
+      toast.success('Notifiche disattivate.');
+    } catch {
+      toast.error('Errore durante la disattivazione.');
+    } finally {
+      setNotifBusy(false);
+    }
+  }, []);
+
+  const toggleNotifications = useCallback(() => {
+    if (notifBusy) return;
+    if (notifSubscribed) disableNotifications();
+    else enableNotifications();
+  }, [notifBusy, notifSubscribed, enableNotifications, disableNotifications]);
 
   const displayName = profile?.full_name ?? customer?.full_name ?? '';
 
@@ -699,6 +786,134 @@ export function AccountContent({
     );
   }
 
+  function renderNotifications() {
+    const PURPLE = '#9333ea';
+    const blockedIos = pushEnv.ios && !pushEnv.standalone;
+    const canToggle = pushEnv.supported && !blockedIos && notifPerm !== 'denied' && !notifBusy;
+
+    return (
+      <motion.div
+        key="notifications"
+        initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }}
+        transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+        style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+      >
+        {/* Back */}
+        <motion.button
+          onClick={() => setShowNotifications(false)}
+          whileHover={{ x: -2 }} whileTap={{ scale: 0.97 }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', width: 'fit-content' }}
+        >
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(147,51,234,0.1)', border: '1px solid rgba(147,51,234,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ArrowLeft style={{ width: 15, height: 15, color: PURPLE }} />
+          </div>
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: PURPLE }}>Torna ad Altro</span>
+        </motion.button>
+
+        {/* Title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg, rgba(147,51,234,0.12), rgba(147,51,234,0.06))', border: '1px solid rgba(147,51,234,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Bell style={{ width: 18, height: 18, color: PURPLE }} />
+          </div>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#1a1a2e' }}>Notifiche</h2>
+            <p style={{ margin: 0, fontSize: '0.72rem', color: '#9ca3af' }}>Promemoria e avvisi sui tuoi appuntamenti</p>
+          </div>
+        </div>
+
+        {/* Toggle card */}
+        <div style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(16px)', borderRadius: 18, border: '1px solid rgba(255,255,255,0.9)', padding: '16px 18px', boxShadow: '0 4px 24px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 12, flexShrink: 0, background: notifSubscribed ? 'rgba(147,51,234,0.1)' : 'rgba(107,114,128,0.08)', border: `1px solid ${notifSubscribed ? 'rgba(147,51,234,0.2)' : 'rgba(107,114,128,0.15)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {notifSubscribed ? <Bell style={{ width: 18, height: 18, color: PURPLE }} /> : <BellOff style={{ width: 18, height: 18, color: '#9ca3af' }} />}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1a1a2e' }}>Notifiche push</div>
+              <div style={{ fontSize: '0.73rem', color: '#9ca3af', marginTop: 1 }}>
+                {notifSubscribed ? 'Attive su questo dispositivo' : 'Disattivate'}
+              </div>
+            </div>
+            {/* Switch */}
+            <button
+              onClick={toggleNotifications}
+              disabled={!canToggle}
+              aria-label="Attiva o disattiva notifiche"
+              style={{
+                position: 'relative', width: 48, height: 28, borderRadius: 999, border: 'none', flexShrink: 0,
+                cursor: canToggle ? 'pointer' : 'not-allowed',
+                background: notifSubscribed ? PURPLE : 'rgba(0,0,0,0.15)',
+                opacity: canToggle ? 1 : 0.5, transition: 'background 0.2s',
+              }}
+            >
+              <motion.span
+                animate={{ x: notifSubscribed ? 22 : 2 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                style={{ position: 'absolute', top: 2, left: 0, width: 24, height: 24, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+              />
+            </button>
+          </div>
+
+          {/* Hints contestuali */}
+          {!pushEnv.supported && (
+            <div style={{ marginTop: 12, fontSize: '0.76rem', color: '#9ca3af', lineHeight: 1.5 }}>
+              Il tuo browser non supporta le notifiche push.
+            </div>
+          )}
+          {blockedIos && (
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, background: 'rgba(147,51,234,0.05)', border: '1px solid rgba(147,51,234,0.12)', borderRadius: 12, padding: '10px 12px', fontSize: '0.76rem', color: '#6b21a8', lineHeight: 1.5 }}>
+              <Info style={{ width: 16, height: 16, flexShrink: 0, marginTop: 1 }} />
+              <span>Su iPhone/iPad le notifiche funzionano solo dopo aver <strong>installato l&apos;app</strong> sulla schermata Home (vedi sotto).</span>
+            </div>
+          )}
+          {pushEnv.supported && !blockedIos && notifPerm === 'denied' && (
+            <div style={{ marginTop: 12, fontSize: '0.76rem', color: '#dc2626', lineHeight: 1.5 }}>
+              Hai bloccato le notifiche. Riattivale dalle impostazioni del browser/sistema per questo sito.
+            </div>
+          )}
+        </div>
+
+        {/* Istruzioni installazione app */}
+        <div>
+          <p style={{ margin: '0 0 8px 2px', fontSize: '0.69rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Installa l&apos;app
+          </p>
+          {pushEnv.standalone ? (
+            <div style={{ background: 'rgba(5,150,105,0.06)', border: '1px solid rgba(5,150,105,0.15)', borderRadius: 16, padding: '14px 16px', fontSize: '0.82rem', color: '#047857', fontWeight: 600 }}>
+              App installata ✓ — ricevi le notifiche anche ad app chiusa.
+            </div>
+          ) : (
+            <div style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(16px)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.9)', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.04)' }}>
+              {/* Android */}
+              <div style={{ display: 'flex', gap: 12, padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: 'rgba(147,51,234,0.1)', border: '1px solid rgba(147,51,234,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Smartphone style={{ width: 17, height: 17, color: PURPLE }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1a1a2e', marginBottom: 2 }}>Android</div>
+                  <div style={{ fontSize: '0.76rem', color: '#6b7280', lineHeight: 1.5 }}>
+                    Apri il menu del browser (<strong>⋮</strong> in alto a destra) e tocca <strong>&ldquo;Installa app&rdquo;</strong> o <strong>&ldquo;Aggiungi a schermata Home&rdquo;</strong>.
+                  </div>
+                </div>
+              </div>
+              {/* iOS */}
+              <div style={{ display: 'flex', gap: 12, padding: '14px 16px' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: 'rgba(8,145,178,0.1)', border: '1px solid rgba(8,145,178,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Share style={{ width: 16, height: 16, color: '#0891b2' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1a1a2e', marginBottom: 2 }}>iPhone / iPad (Safari)</div>
+                  <div style={{ fontSize: '0.76rem', color: '#6b7280', lineHeight: 1.5 }}>
+                    Tocca <strong>Condividi</strong> (l&apos;icona <strong>□↑</strong>) e scegli <strong>&ldquo;Aggiungi a schermata Home&rdquo;</strong>.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  }
+
   function renderHelp() {
     const FAQS = [
       { id: 'p1', icon: CalendarDays, q: 'Come prenoto un appuntamento?',     a: 'Vai nel tab Prenota, scegli il servizio, poi la data e l\'orario che preferisci. Conferma e il gioco è fatto.' },
@@ -839,7 +1054,7 @@ export function AccountContent({
         iconColor: '#9333ea',
         iconBg: 'rgba(147,51,234,0.1)',
         iconBorder: 'rgba(147,51,234,0.2)',
-        action: () => toast.info('Prossimamente disponibile.'),
+        action: () => setShowNotifications(true),
       },
       {
         icon: Clock,
@@ -868,7 +1083,7 @@ export function AccountContent({
 
     return (
       <AnimatePresence mode="wait">
-        {showHelp ? renderHelp() : (
+        {showHelp ? renderHelp() : showNotifications ? renderNotifications() : (
       <motion.div
         key="other-main"
         variants={containerVariants} initial="hidden" animate="visible"
