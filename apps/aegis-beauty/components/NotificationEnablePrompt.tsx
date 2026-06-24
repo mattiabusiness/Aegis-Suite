@@ -26,12 +26,27 @@ export function NotificationEnablePrompt() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (isIOS()) return;                              // iOS → usa l'install prompt
+    if (isIOS()) return;                                // iOS → usa l'install prompt
     if (!isPushSupported()) return;
-    if (Notification.permission !== 'default') return; // una volta abilitato non riappare
-    // Nessun cooldown: ricompare a OGNI prenotazione finché il cliente non abilita.
-    const t = setTimeout(() => setVisible(true), 1200);
-    return () => clearTimeout(t);
+    if (Notification.permission === 'denied') return;   // bloccato dal browser: non si può ri-chiedere
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let cancelled = false;
+
+    // Mostra a OGNI prenotazione FINCHÉ le notifiche non sono davvero attive
+    // (iscrizione push viva + permesso concesso). Se il cliente le ha disattivate
+    // dal toggle in account, qui riappare per ri-offrirle.
+    (async () => {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (Notification.permission === 'granted' && sub) return; // già attive → niente banner
+      } catch { /* ignore */ }
+      if (cancelled) return;
+      timer = setTimeout(() => setVisible(true), 1200);
+    })();
+
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
   }, []);
 
   const dismiss = useCallback(() => {
@@ -56,6 +71,8 @@ export function NotificationEnablePrompt() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ endpoint: sub.endpoint, p256dh, auth_key: authKey }),
       });
+      // Coerente col toggle in account: l'attivazione annulla l'eventuale opt-out.
+      localStorage.removeItem('aegis_push_optout');
     } catch { /* silent */ }
     finally { setBusy(false); setVisible(false); }
   }, []);
