@@ -76,11 +76,11 @@ function toRomeHHMM(iso: string): string {
  * subject to this window (can book anytime, incl. retroactive walk-ins).
  */
 export function customerBookingWindow(
-  advanceMinHours: number,
+  advanceMinMinutes: number,
   advanceMaxDays: number,
   nowMs: number = Date.now(),
 ): { earliest: number; latest: number } {
-  const earliest = nowMs + Math.max(advanceMinHours, 0) * 3_600_000;
+  const earliest = nowMs + Math.max(advanceMinMinutes, 0) * 60_000;
   const latest = advanceMaxDays > 0 ? nowMs + advanceMaxDays * 86_400_000 : Number.POSITIVE_INFINITY;
   return { earliest, latest };
 }
@@ -109,8 +109,8 @@ export interface LoadedConfig {
   business: {
     workstations: number;
     bufferMinutes: number;
-    /** Minimum advance the customer must book (hours). 0 = no limit. */
-    advanceMinHours: number;
+    /** Minimum advance the customer must book (minutes). 0 = no limit. */
+    advanceMinMinutes: number;
     /** Maximum advance the customer can book (days). 0 = no limit. */
     advanceMaxDays: number;
   };
@@ -316,7 +316,7 @@ export async function loadAvailabilityConfig(
       business: {
         workstations: business.workstations || 1,
         bufferMinutes,
-        advanceMinHours: Math.max(business.booking_advance_min ?? 0, 0),
+        advanceMinMinutes: Math.max(business.booking_advance_min ?? 0, 0),
         advanceMaxDays: Math.max(business.booking_advance_max ?? 0, 0),
       },
     },
@@ -337,7 +337,7 @@ export async function getBookableSlots(
   if (params.onlineOnly) {
     const now = Date.now();
     const { earliest, latest } = customerBookingWindow(
-      res.data.business.advanceMinHours,
+      res.data.business.advanceMinMinutes,
       res.data.business.advanceMaxDays,
       now,
     );
@@ -442,13 +442,13 @@ export async function validateAppointment(
       return { ok: false, status: 409, code: 'PAST_SLOT', reason: 'Questo orario è già passato' };
     }
     const { earliest, latest } = customerBookingWindow(
-      business.advanceMinHours,
+      business.advanceMinMinutes,
       business.advanceMaxDays,
       nowMs,
     );
     if (t < earliest) {
-      const h = business.advanceMinHours;
-      return { ok: false, status: 409, code: 'TOO_SOON', reason: `Devi prenotare con almeno ${h} ${h === 1 ? 'ora' : 'ore'} di anticipo` };
+      const m = business.advanceMinMinutes;
+      return { ok: false, status: 409, code: 'TOO_SOON', reason: `Devi prenotare con almeno ${m} ${m === 1 ? 'minuto' : 'minuti'} di anticipo` };
     }
     if (t > latest) {
       return { ok: false, status: 409, code: 'TOO_FAR', reason: `Puoi prenotare al massimo ${business.advanceMaxDays} giorni in anticipo` };
