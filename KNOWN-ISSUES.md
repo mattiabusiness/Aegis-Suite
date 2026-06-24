@@ -82,10 +82,18 @@ Un singolo account cliente può essere associato a più attività (una riga
 business attivo** trovato (`.limit(1)`), quindi ne sceglie **uno arbitrario**;
 lo stesso vale per `/api/start` (PWA).
 
+**Condizione di trigger (importante)**
+Il problema si presenta **solo se il cliente usa la STESSA email** su più
+attività: stessa email = un solo account auth (`user_id`) con più righe
+`customers` → l'ambiguità sta lì. Con **email diversa per ogni salone** sono
+account distinti, ognuno legato a un solo business → **nessun problema**.
+⚠️ Non è un edge case esotico: in produzione una persona tende a usare la sua
+email di sempre in più saloni/centri → scenario realistico.
+
 **Impatto**
-Se un cliente è cliente di più saloni/centri, al login/avvio PWA potrebbe
-ritrovarsi nel salone "sbagliato" (non quello che si aspettava). Non è una
-fuga di dati — è una scelta di **UX/esperienza** non ancora definita.
+Se un cliente è cliente di più saloni/centri (stessa email), al login/avvio PWA
+potrebbe ritrovarsi nel salone "sbagliato" (non quello che si aspettava). Non è
+una fuga di dati — è una scelta di **UX/esperienza** non ancora definita.
 
 **Workaround attuale**
 Nessuno. Funziona se si accede sempre dal link specifico `/{slug}` del salone.
