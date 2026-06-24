@@ -44,7 +44,7 @@ export default function AuthLayout({
 
       {/* Footer */}
       <footer className="al-footer">
-        <p>© 2025 Aegis Group · Tutti i diritti riservati</p>
+        <p>© 2026 Aegis Group · Tutti i diritti riservati</p>
       </footer>
 
       <style>{`

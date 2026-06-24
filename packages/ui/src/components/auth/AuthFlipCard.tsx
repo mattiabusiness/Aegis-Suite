@@ -395,7 +395,7 @@ export function AuthFlipCard({
 
       </div>
 
-      <p className="afc-powered">Powered by <span className="afc-pow-brand">{brandName} Group</span></p>
+      <p className="afc-powered">Powered by <span className="afc-pow-brand">Aegis Group</span></p>
 
       {/* ═══════════════════ STYLES ═══════════════════ */}
       <style>{`
