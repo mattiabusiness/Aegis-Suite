@@ -74,6 +74,36 @@ Un nuovo staff può ritrovarsi senza i permessi attesi finché non si ri-togglan
 
 ---
 
+## 4. Cliente associato a PIÙ saloni / centri estetici — decisione da prendere
+
+**Comportamento attuale**
+Un singolo account cliente può essere associato a più attività (una riga
+`customers` per ogni business). Al login, il redirect prende **il primo
+business attivo** trovato (`.limit(1)`), quindi ne sceglie **uno arbitrario**;
+lo stesso vale per `/api/start` (PWA).
+
+**Impatto**
+Se un cliente è cliente di più saloni/centri, al login/avvio PWA potrebbe
+ritrovarsi nel salone "sbagliato" (non quello che si aspettava). Non è una
+fuga di dati — è una scelta di **UX/esperienza** non ancora definita.
+
+**Workaround attuale**
+Nessuno. Funziona se si accede sempre dal link specifico `/{slug}` del salone.
+
+**Decisione da prendere (per la produzione)**
+Definire come gestire il cliente multi-salone. Opzioni:
+- pagina "Scegli salone" al login quando ci sono più associazioni;
+- ricordare l'ultimo salone usato;
+- entrare sempre dal contesto del link `/{slug}` e non avere un "salone di
+  default" globale.
+
+**Dove guardare**
+- Redirect login cliente: `app/(auth)/login/page.tsx` (query `customers` con `.limit(1)`).
+- `app/api/start/route.ts` (risoluzione destinazione PWA).
+- Collegato anche al quirk #2 (sessione attiva trasversale tra saloni).
+
+---
+
 ## Note generali
 - Questi punti vanno verificati/sistemati **prima del rollout esteso** ai clienti,
   per evitare attriti in produzione.
