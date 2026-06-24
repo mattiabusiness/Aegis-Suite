@@ -203,7 +203,10 @@ export function DashboardLayoutClient({ data, permissions, children }: Dashboard
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push('/login');
+    // Hard navigation (non router.push): un reload completo fa partire una richiesta
+    // SENZA i cookie di sessione, così il middleware riconosce l'utente come sloggato.
+    // Con la soft-nav il server riusa il contesto vecchio e rimbalza su /dashboard.
+    window.location.href = '/login';
   };
 
   return (
