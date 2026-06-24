@@ -288,6 +288,11 @@ function LoginContent() {
       businessSlug,
     });
     if (!result.success) { setRegisterError(result.error || 'Errore'); throw new Error(result.error); }
+    // Provisiona profilo + record customers SUBITO (non dipende dalla conferma email).
+    // No-op se non c'è sessione (conferma email ON => lo fa /auth/callback). Idempotente.
+    if (businessSlug) {
+      try { await fetch('/api/customer/provision', { method: 'POST' }); } catch { /* non-critical */ }
+    }
     // TEMP (ZeptoMail bloccato + "Confirm email" OFF su Supabase): nessuna email parte,
     // l'account è gia attivo => invitiamo ad accedere. RIPRISTINARE il messaggio sotto
     // appena ZeptoMail riattiva l'invio e si riaccende "Confirm email".
