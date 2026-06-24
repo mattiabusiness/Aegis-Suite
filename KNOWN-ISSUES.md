@@ -112,6 +112,93 @@ Definire come gestire il cliente multi-salone. Opzioni:
 
 ---
 
+## 5. Stato email (ZeptoMail), profili & clienti — riepilogo sessione 2026-06-24
+
+> Sezione di contesto: cos'è successo, come l'abbiamo risolto, e i passi da fare
+> quando ZeptoMail tornerà attivo. Leggere prima del go-live.
+
+### 5.1 — ZeptoMail bloccato (causa a monte di tutto)
+Durante i test massivi, inviando email di prova anche a **indirizzi inesistenti**
+(es. `test@test.it`), il **tasso di hard bounce ha superato il 5%** (16%: 5 bounce
+su 30). ZeptoMail, per proteggere la reputazione del dominio, ha **sospeso l'invio**
+sull'account. Da lì **nessuna email parte** (conferma registrazione, reset password,
+inviti) → l'errore "Impossibile inviare l'email di conferma".
+
+Non è un bug del codice: è l'SMTP (ZeptoMail) che rifiuta a monte. Verifica nei log
+ZeptoMail (Mail Agents → Email Logs) e/o Supabase → Logs → Auth.
+
+**Stato attuale (workaround per poter testare/lanciare):**
+- Su Supabase → **Authentication → Providers → Email → "Confirm email" = OFF**.
+  Così la registrazione non richiede l'email di conferma e si può procedere.
+- Messaggio di registrazione reso temporaneo ("Fai l'accesso per entrare nell'app")
+  in `app/(auth)/login/page.tsx` — l'originale è commentato lì sopra.
+
+### 5.2 — PASSI DA FARE QUANDO ZEPTOMAIL È RIATTIVATO
+1. **Sblocca l'account ZeptoMail** (ticket/chat al supporto: "bounce da test con
+   indirizzi non validi, ho corretto, chiedo riattivazione"). Pulisci la
+   **Suppression List** dagli indirizzi finti.
+2. **Non usare mai più indirizzi inventati** nei test: solo alias reali
+   (es. `aegisbeauty2026+cliente1@gmail.com`), che vengono consegnati e non bounciano.
+3. **Riattiva "Confirm email"** su Supabase (Authentication → Providers → Email).
+4. **Ripristina il messaggio di registrazione** originale in
+   `app/(auth)/login/page.tsx` (scommentare la riga "Controlla la tua email…",
+   rimuovere quella temporanea — vedi commento `TEMP`).
+5. Verifica end-to-end: registrazione cliente → arriva l'email → conferma →
+   accesso → prenotazione.
+
+> Nota: grazie al trigger DB (punto 5.4) profili e flusso funzionano **sia** con
+> Confirm email ON **sia** OFF. La riattivazione serve per qualità dato (email
+> reali verificate) e per reset password/inviti, non per "far funzionare" l'app.
+
+### 5.3 — Rifinitura performance: indici sulle foreign key
+Il controllo finale del DB ha trovato alcune **foreign key secondarie senza indice**
+(le colonne tenant principali — i vari `business_id` — erano già indicizzate). Aggiunti
+indici (migration **non distruttiva**, solo `CREATE INDEX IF NOT EXISTS`) su:
+`notifications.business_id`, `push_subscriptions.business_id`, `reviews.appointment_id`,
+`services.parent_service_id`, `appointments.parent_appointment_id`,
+`appointments.cancelled_by`, `customers.referred_by`, `reviews.replied_by`,
+`support_tickets.resolved_by`.
+Servono solo a **velocizzare** ricerche e cancellazioni a cascata su grandi volumi.
+Non cambiano dati né comportamento. Sopravvivono ai reset (sono schema).
+
+### 5.4 — Problema profili/clienti e soluzione (il punto importante)
+**Sintomo:** dopo un reset dati, registrando un cliente con Confirm email OFF, a
+volte la riga `profiles` non veniva creata → la prenotazione falliva con
+`violates foreign key constraint customers_user_id_fkey` (la `customers.user_id`
+richiede un `profiles.id` esistente). Gli indici NON c'entravano (un indice non può
+causare un errore di foreign key).
+
+**Causa reale:** **non esisteva alcun trigger** sul database che creasse i profili.
+Il profilo veniva creato **solo dall'app**, con percorsi diversi e non garantiti:
+- titolare → durante l'onboarding;
+- staff → `/api/staff/setup` (upsert diretto, affidabile);
+- cliente → **solo** `/api/customer/provision`, che scatta solo in certi percorsi
+  (registrazione con `business_slug`) → da qui i buchi intermittenti.
+
+**Soluzione applicata (DB trigger — definitiva):** aggiunto
+`public.handle_new_user()` + trigger `on_auth_user_created` su `auth.users`, che crea
+**automaticamente** la riga `profiles` per **ogni** nuovo utente, qualunque percorso,
+con Confirm email ON o OFF. Più backfill dei profili mancanti già esistenti.
+(SQL salvato/riferito anche fuori da qui se versionato.)
+
+**Esito:** profilo **garantito a livello database** → l'errore FK non può più capitare.
+
+### 5.5 — Come funziona la creazione di profili e clienti (chiarimento)
+- **`profiles`** → ora creato **automaticamente dal trigger** a ogni nuovo utente
+  auth. Garantito.
+- **`customers`** → NON è creato dal trigger (è legato a un business). Nasce:
+  - alla **prenotazione** (`/api/bookings/create` crea il cliente se manca);
+  - alla **registrazione dalla pagina del salone** (provision, se scatta);
+  - da **dashboard** (gestore) o **importatore**.
+- **Caso limite noto:** un cliente che **si registra ma non prenota mai** potrebbe
+  non avere ancora la riga `customers` → al login finisce nel fallback invece che
+  sul "suo" salone (collegato al punto #4). Non è bloccante: appena prenota si crea.
+- **Possibile blindatura futura:** estendere il trigger perché crei **anche** la riga
+  `customers` leggendo `business_slug` dai metadata della registrazione (rende il
+  cliente solido come il profilo). Opzionale, valutata come miglioria post-lancio.
+
+---
+
 ## Note generali
 - Questi punti vanno verificati/sistemati **prima del rollout esteso** ai clienti,
   per evitare attriti in produzione.
