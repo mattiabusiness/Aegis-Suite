@@ -1,0 +1,5 @@
+# Dump di backup generati da db/backup.sh — contengono dati personali (PII).
+# MAI committarli su git.
+aegis-backup-*.sql
+*.dump
+*.backup
