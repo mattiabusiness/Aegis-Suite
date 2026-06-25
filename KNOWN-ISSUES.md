@@ -117,40 +117,52 @@ Definire come gestire il cliente multi-salone. Opzioni:
 > Sezione di contesto: cos'è successo, come l'abbiamo risolto, e i passi da fare
 > quando ZeptoMail tornerà attivo. Leggere prima del go-live.
 
-### 5.1 — ZeptoMail bloccato (causa a monte di tutto)
-Durante i test massivi, inviando email di prova anche a **indirizzi inesistenti**
-(es. `test@test.it`), il **tasso di hard bounce ha superato il 5%** (16%: 5 bounce
-su 30). ZeptoMail, per proteggere la reputazione del dominio, ha **sospeso l'invio**
-sull'account. Da lì **nessuna email parte** (conferma registrazione, reset password,
-inviti) → l'errore "Impossibile inviare l'email di conferma".
+### 5.1 — Email/SMTP non partivano dall'app — RISOLTO
+**Causa reale (NON era un ban ZeptoMail):** il **token SMTP era stato rigenerato su
+ZeptoMail ma NON aggiornato su Supabase** → Supabase non riusciva ad autenticarsi
+verso ZeptoMail → "error sending confirmation/recovery email" su tutto. ZeptoMail in
+sé era sano (test diretto consegnato, quota intatta, nessun ban reale).
 
-Non è un bug del codice: è l'SMTP (ZeptoMail) che rifiuta a monte. Verifica nei log
-ZeptoMail (Mail Agents → Email Logs) e/o Supabase → Logs → Auth.
+**Fix:** rigenerato il token SMTP su ZeptoMail (tab SMTP) e **re-incollato in
+Supabase → Authentication → Emails → SMTP Settings → Password** (host
+`smtp.zeptomail.eu`, porta 587, username `emailapikey`, mittente
+`noreply@aegisbeauty.app`). Poi **"Confirm email" riattivato** e messaggio di
+registrazione ripristinato all'originale.
 
-**Stato attuale (workaround per poter testare/lanciare):**
-- Su Supabase → **Authentication → Providers → Email → "Confirm email" = OFF**.
-  Così la registrazione non richiede l'email di conferma e si può procedere.
-- Messaggio di registrazione reso temporaneo ("Fai l'accesso per entrare nell'app")
-  in `app/(auth)/login/page.tsx` — l'originale è commentato lì sopra.
+**Promemoria operativo:** mai inviare email di test a **indirizzi inventati** (es.
+`test@test.it`) → generano hard bounce e l'avviso ZeptoMail ">5%". Usare solo alias
+reali (`aegisbeauty2026+xxx@gmail.com`).
 
-### 5.2 — PASSI DA FARE QUANDO ZEPTOMAIL È RIATTIVATO
-1. **Sblocca l'account ZeptoMail** (ticket/chat al supporto: "bounce da test con
-   indirizzi non validi, ho corretto, chiedo riattivazione"). Pulisci la
-   **Suppression List** dagli indirizzi finti.
-2. **Non usare mai più indirizzi inventati** nei test: solo alias reali
-   (es. `aegisbeauty2026+cliente1@gmail.com`), che vengono consegnati e non bounciano.
-3. **Riattiva "Confirm email"** su Supabase (Authentication → Providers → Email).
-4. **Ripristina il messaggio di registrazione** originale in
-   `app/(auth)/login/page.tsx` (scommentare la riga "Controlla la tua email…",
-   rimuovere quella temporanea — vedi commento `TEMP`).
-5. Verifica end-to-end: registrazione cliente → arriva l'email → conferma →
-   accesso → prenotazione.
+### 5.2 — Conferma email cross-dispositivo (token_hash) — RISOLTO
+**Problema:** la conferma registrazione usava il flusso PKCE (`code` +
+`exchangeCodeForSession`), che richiede il code_verifier **nello stesso browser** →
+aprendo il link da un altro dispositivo o dall'app mail (webview) → "Autenticazione
+fallita".
 
-> Nota: grazie al trigger DB (punto 5.4) profili e flusso funzionano **sia** con
-> Confirm email ON **sia** OFF. La riattivazione serve per qualità dato (email
-> reali verificate) e per reset password/inviti, non per "far funzionare" l'app.
+**Fix:** il callback ora gestisce **`token_hash` + `verifyOtp`** (stateless,
+device-independent), tenendo `code` come fallback (`app/auth/callback/route.ts`).
+⚠️ **Requisiti da NON rompere:**
+- Template **"Confirm signup"** su Supabase DEVE usare
+  `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=signup`
+  (NON `{{ .ConfirmationURL }}`).
+- **Site URL** (Authentication → URL Configuration) = dominio di produzione.
+- Se un domani qualcuno ripristina il template di default → la conferma
+  cross-dispositivo si rirompe (riconoscerlo da qui).
 
-### 5.3 — Rifinitura performance: indici sulle foreign key
+### 5.3 — Reset password cross-dispositivo — DA RITESTARE
+Stesso problema PKCE della conferma. **Codice già pronto:** il callback gestisce
+`type=recovery` via `verifyOtp` e per il recovery reindirizza **sempre** a
+`/reset-password`. **Manca solo la verifica finale** dopo aver applicato il template.
+- Template **"Reset Password"** deve usare
+  `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password`.
+- ⚠️ Testare con un'email **generata DOPO** aver salvato il template (le vecchie
+  mantengono il link vecchio → "porta al login").
+- **Stato:** same-device funziona; cross-device da riverificare con email fresca.
+  **Non bloccante** per il lancio (reset cross-dispositivo è un caso raro).
+- Se anche con email fresca cross-device fallisse → sospettare lo scanner anti-phishing
+  della mail che "preclicca" e consuma il token monouso.
+
+### 5.4 — Rifinitura performance: indici sulle foreign key
 Il controllo finale del DB ha trovato alcune **foreign key secondarie senza indice**
 (le colonne tenant principali — i vari `business_id` — erano già indicizzate). Aggiunti
 indici (migration **non distruttiva**, solo `CREATE INDEX IF NOT EXISTS`) su:
@@ -161,7 +173,7 @@ indici (migration **non distruttiva**, solo `CREATE INDEX IF NOT EXISTS`) su:
 Servono solo a **velocizzare** ricerche e cancellazioni a cascata su grandi volumi.
 Non cambiano dati né comportamento. Sopravvivono ai reset (sono schema).
 
-### 5.4 — Problema profili/clienti e soluzione (il punto importante)
+### 5.5 — Problema profili/clienti e soluzione (il punto importante)
 **Sintomo:** dopo un reset dati, registrando un cliente con Confirm email OFF, a
 volte la riga `profiles` non veniva creata → la prenotazione falliva con
 `violates foreign key constraint customers_user_id_fkey` (la `customers.user_id`
@@ -183,7 +195,7 @@ con Confirm email ON o OFF. Più backfill dei profili mancanti già esistenti.
 
 **Esito:** profilo **garantito a livello database** → l'errore FK non può più capitare.
 
-### 5.5 — Come funziona la creazione di profili e clienti (chiarimento)
+### 5.6 — Come funziona la creazione di profili e clienti (chiarimento)
 - **`profiles`** → ora creato **automaticamente dal trigger** a ogni nuovo utente
   auth. Garantito.
 - **`customers`** → NON è creato dal trigger (è legato a un business). Nasce:
