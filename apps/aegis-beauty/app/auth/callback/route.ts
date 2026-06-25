@@ -6,22 +6,23 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type EmailOtpType } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const tokenHash = requestUrl.searchParams.get('token_hash');
   const type = requestUrl.searchParams.get('type');
   // Sanitize next: only allow relative paths (no external redirects)
   const rawNext = requestUrl.searchParams.get('next') ?? '';
   const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard';
 
   // Implicit flow (no code, token in hash) — manda a /login, il browser preserva il hash
-  if (!code && type === 'invite') {
+  if (!code && !tokenHash && type === 'invite') {
     return NextResponse.redirect(new URL('/login?mode=register', request.url));
   }
 
-  if (code) {
+  if (code || tokenHash) {
     // Prepara la response di redirect — i cookie vengono scritti su di essa
     const redirectUrl = new URL('/dashboard', request.url);
     const response = NextResponse.redirect(redirectUrl);
@@ -45,8 +46,13 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    // Scambia il code con la sessione — scrive i cookie sulla response
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    // Ottieni la sessione e scrive i cookie sulla response:
+    // - token_hash (link "Confirm signup") => verifyOtp: STATELESS, funziona anche
+    //   cross-dispositivo / aperto dall'app mail (non serve il code_verifier PKCE).
+    // - code (PKCE) => exchangeCodeForSession: fallback, richiede lo stesso browser.
+    const { data, error } = tokenHash
+      ? await supabase.auth.verifyOtp({ type: (type ?? 'email') as EmailOtpType, token_hash: tokenHash })
+      : await supabase.auth.exchangeCodeForSession(code!);
 
     if (error) {
       console.error('Auth callback error:', error);
@@ -226,8 +232,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Ritorna la response con sessione nei cookie
-    response.headers.set('Location', new URL(next, request.url).toString());
+    // Ritorna la response con sessione nei cookie.
+    // Cliente (business_slug nei metadata) => vai alla sua area; altrimenti `next`.
+    const finalNext = metadata.business_slug ? `/${metadata.business_slug}/account` : next;
+    response.headers.set('Location', new URL(finalNext, request.url).toString());
     return response;
   }
 
