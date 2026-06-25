@@ -233,8 +233,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Ritorna la response con sessione nei cookie.
-    // Cliente (business_slug nei metadata) => vai alla sua area; altrimenti `next`.
-    const finalNext = metadata.business_slug ? `/${metadata.business_slug}/account` : next;
+    // Recovery (reset password) => sempre `next` (es. /reset-password), mai l'area cliente.
+    // Cliente confermato (business_slug nei metadata) => vai alla sua area; altrimenti `next`.
+    const finalNext = (metadata.business_slug && type !== 'recovery') ? `/${metadata.business_slug}/account` : next;
     response.headers.set('Location', new URL(finalNext, request.url).toString());
     return response;
   }
